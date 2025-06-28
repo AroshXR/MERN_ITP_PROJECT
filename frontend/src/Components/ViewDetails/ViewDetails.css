@@ -1,108 +1,236 @@
+/* Heading */
 h1 {
-    padding: 5px;
+    padding: 20px;
     text-align: center;
+    color: #f0e6ff;
+    font-size: 2.5rem;
+    text-shadow: 0 0 10px #6a0dad;
 }
 
+/* Modal Overlay */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(20, 20, 20, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
 }
 
+/* Modal Content */
 .modal-content {
-    background: white;
+    background: linear-gradient(to bottom right, #2a003f, #4b0082);
     padding: 30px;
-    border-radius: 8px;
-    width: 400px;
+    border-radius: 16px;
+    width: 420px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 0 30px rgba(106, 13, 173, 0.4);
+    animation: fadeInUp 0.6s ease-out;
 }
 
 .modal-content input {
-    margin-bottom: 10px;
-    padding: 8px;
+    margin-bottom: 15px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    background: #f9f9f9;
+    color: #222;
+    transition: box-shadow 0.3s ease;
+}
+
+.modal-content input:focus {
+    box-shadow: 0 0 6px #8a2be2;
 }
 
 .modal-content button {
-    margin-right: 10px;
-    padding: 8px;
-    width: 400px;
-}
-
-.print-button-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-.print-button {
-    padding: 10px 20px;
-    width: 150px;
-    background-color: #0077cc;
-    color: white;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 16px;
+    background: linear-gradient(to right, #6a0dad, #8e44ad);
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
+    color: white;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.print-button:hover {
-    background-color: #005fa3;
-}
-
-.searchBar {
-    width: 800px;
-    margin: 1px 2%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: 12px 20px;
-}
-
-.searchBar input {
-    width: 100%;
-    padding: 10px 16px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
-    outline: none;
     transition: all 0.3s ease;
 }
 
-.searchBar input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+.modal-content button:hover {
+    background: #9b59b6;
+    transform: scale(1.03);
 }
 
-.search-button {
-    padding: 10px 20px;
-    width: 150px;
-    background-color: #0077cc;
+/* Print Button */
+.print-button-container {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0;
+}
+
+.print-button {
+    padding: 12px 28px;
+    background: linear-gradient(to right, #6a0dad, #8e44ad);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 18px rgba(142, 68, 173, 0.4);
+}
+
+.print-button:hover {
+    background: #a164d4;
+    transform: scale(1.05);
+}
+
+/* Search Bar Container */
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  gap: 12px; /* spacing between input container and button */
+}
+
+.searchBar {
+  width: 800px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  display: flex;
+  padding: 10px 20px;
+  box-shadow: 0 0 12px rgba(48, 3, 80, 0.055);
+  align-items: center;
+}
+
+.searchBar input {
+  flex: 1;
+  background: #fff;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.searchBar input:focus {
+  box-shadow: 0 0 6px rgba(54, 21, 68, 0.315);
+}
+
+/* Search Button */
+.search-button {
+    margin-left: 12px;
+    padding: 12px 24px;
+    background: #8e44ad;
+    border: none;
+    border-radius: 8px;
+    color: white;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
 .search-button:hover {
-    background-color: #005fa3;
+    background-color: #a164d4;
 }
 
-.search-container {
-    display: flex;
-    justify-content: center;
+/* Animations */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
+
+.view-data-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e, #18013b);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #ffffff;
+    position: relative;
+    z-index: 1;
+
+    /* background-image:
+      repeating-linear-gradient(
+        45deg,                 
+        rgba(32, 2, 82, 0.05),  
+        rgba(196, 4, 230, 0.05) 9px,
+        transparent 5px,
+        transparent 10px
+      ),
+      linear-gradient(135deg, #1a1a2e, #18013b);
+    */   
+}
+/* .background-graffiti {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  z-index: 0;
+
+  pointer-events: none;
+}
+
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.25;
+  filter: blur(90px);
+  animation: float 10s ease-in-out infinite alternate;
+}
+
+.blob1 {
+  width: 300px;
+  height: 300px;
+  background: #ff007f;
+  top: 10%;
+  left: 5%;
+  animation-delay: 0s;
+}
+
+.blob2 {
+  width: 250px;
+  height: 250px;
+  background: #6a0dad;
+  top: 60%;
+  left: 70%;
+  animation-delay: 2s;
+}
+
+.blob3 {
+  width: 200px;
+  height: 200px;
+  background: #00bcd4;
+  top: 30%;
+  left: 50%;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-20px) scale(1.05);
+  }
+} */

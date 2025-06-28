@@ -52,20 +52,56 @@ function ViewDetails() {
 
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
-        doc.setFontSize(16);
-        doc.text("User Details Report", 70, 10);
 
-        let y = 20;
+        // Title styling
+        doc.setFontSize(22);
+        doc.setTextColor("#6a0dad"); // purple-ish
+        doc.setFont("helvetica", "bold");
+        doc.text("User Details Report", 70, 15);
+
+        // Add a colored line under the title
+        doc.setDrawColor(106, 13, 173); // rgb for #6a0dad
+        doc.setLineWidth(1.5);
+        doc.line(20, 20, 190, 20);
+
+        let y = 30;
         users.forEach((user, index) => {
-            doc.setFontSize(12);
-            doc.text(`Name: ${user.name}`, 10, y);
-            doc.text(`Age: ${user.age}`, 10, y + 7);
-            doc.text(`Address: ${user.address}`, 10, y + 14);
-            y += 25;
+            // Alternate row background for readability
+            if (index % 2 === 0) {
+                doc.setFillColor(230, 220, 255, 0.3); // light purple with alpha
+                doc.rect(10, y - 6, 190, 25, "F"); // filled rectangle behind text
+            }
+
+            // User details text style
+            doc.setFontSize(14);
+            doc.setTextColor("#000000");
+
+            doc.setFont("helvetica", "bold");
+            doc.text(`Name:`, 12, y);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${user.name}`, 40, y);
+
+            doc.setFont("helvetica", "bold");
+            doc.text(`Age:`, 12, y + 7);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${user.age}`, 40, y + 7);
+
+            doc.setFont("helvetica", "bold");
+            doc.text(`Address:`, 12, y + 14);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${user.address}`, 40, y + 14);
+
+            y += 30;
+            // Add page break if y exceeds page height (approx 280)
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
         });
 
         doc.save("user_details.pdf");
     };
+
 
     const [searchQuery, setSearchQuery] = useState("");
     const [noResults, setNoResults] = useState(false);
@@ -105,37 +141,52 @@ function ViewDetails() {
     return (
         <div>
             <NavBar />
-            <h1>View User Details</h1>
-            <div className="search-container">
-                <input className='searchBar' type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}></input>
-                <button onClick={handleSearch} className="search-button">Search</button>
-            </div>
-            {noResults ? (
-                <p style={{ textAlign: 'center', color: 'red', fontSize: '16px', fontWeight: 'bold' }}>No results found</p>
-            ) : (
+            {/* <div className="background-graffiti">
+                <div className="blob blob1"></div>
+                <div className="blob blob2"></div>
+                <div className="blob blob3"></div>
+            </div> */}
 
-                <div className="view-details-container">
-                    {users && users.map((user, i) => (
-                        <User key={i} user={user} onEdit={handleEdit} onDelete={handleDelete} />
-                    ))}
-                </div>
-            )};
-            <div className="print-button-container">
-                <button onClick={handleDownloadPDF} className="print-button">Download PDF</button>
-            </div>
-
-            {showModal && selectedUser && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2 style={{ textAlign: 'center' }}>Edit User</h2>
-                        <input name="name" value={selectedUser.name} onChange={handleModalChange} />
-                        <input name="age" type="number" value={selectedUser.age} onChange={handleModalChange} />
-                        <input name="address" value={selectedUser.address} onChange={handleModalChange} />
-                        <button onClick={handleUpdate}>Update</button>
-                        <button onClick={() => setShowModal(false)}>Cancel</button>
+            <div className="view-data-container">
+                <h1>View User Details</h1>
+                <div className="search-container">
+                    <div className="searchBar">
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
+                    <button onClick={handleSearch} className="search-button">Search</button>
                 </div>
-            )}
+                {noResults ? (
+                    <p style={{ textAlign: 'center', color: 'red', fontSize: '16px', fontWeight: 'bold' }}>No results found</p>
+                ) : (
+
+                    <div className="view-details-container">
+                        {users && users.map((user, i) => (
+                            <User key={i} user={user} onEdit={handleEdit} onDelete={handleDelete} />
+                        ))}
+                    </div>
+                )}
+                <div className="print-button-container">
+                    <button onClick={handleDownloadPDF} className="print-button">Download PDF</button>
+                </div>
+
+                {showModal && selectedUser && (
+                    <div className="modal">
+                        <div className="modal-content">
+                            <h2 style={{ textAlign: 'center' }}>Edit User</h2>
+                            <input name="name" value={selectedUser.name} onChange={handleModalChange} />
+                            <input name="age" type="number" value={selectedUser.age} onChange={handleModalChange} />
+                            <input name="address" value={selectedUser.address} onChange={handleModalChange} />
+                            <button onClick={handleUpdate}>Update</button>
+                            <button onClick={() => setShowModal(false)}>Cancel</button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

@@ -1,11 +1,31 @@
-/* src/Components/Home/Home.css */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseButton {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
 
 .home-container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(to bottom right, #e0f7fa, #ffffff);
+  background: linear-gradient(135deg, #1a1a2e, #18013b);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  color: #ffffff;
 }
 
 .home-content {
@@ -16,32 +36,94 @@
   justify-content: center;
   text-align: center;
   padding: 40px 20px;
+  animation: fadeInUp 1s ease-out forwards;
+  position: relative;
+  z-index: 1;
 }
 
 .home-content h1 {
   font-size: 3rem;
-  color: #0077cc;
+  color: #e0b3ff;
   margin-bottom: 20px;
+  animation: fadeInUp 1.2s ease-out forwards;
 }
 
 .home-content p {
   font-size: 1.2rem;
-  color: #333;
+  color: #ccc;
   margin-bottom: 30px;
   max-width: 600px;
+  animation: fadeInUp 1.4s ease-out forwards;
 }
 
 .cta-button {
-  padding: 12px 24px;
-  font-size: 1rem;
-  background-color: #0077cc;
+  padding: 14px 30px;
+  font-size: 1.1rem;
+  background-color: #6a0dad;
   color: white;
   border: none;
   border-radius: 25px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  animation: pulseButton 2s infinite;
+  box-shadow: 0 8px 20px rgba(106, 13, 173, 0.4);
 }
 
 .cta-button:hover {
-  background-color: #005fa3;
+  background-color: #8e44ad;
+  transform: scale(1.05);
+}
+
+.background-graffiti {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.25;
+  filter: blur(90px);
+  animation: float 10s ease-in-out infinite alternate;
+}
+
+.blob1 {
+  width: 300px;
+  height: 300px;
+  background: #ff007f;
+  top: 10%;
+  left: 5%;
+  animation-delay: 0s;
+}
+
+.blob2 {
+  width: 250px;
+  height: 250px;
+  background: #6a0dad;
+  top: 60%;
+  left: 70%;
+  animation-delay: 2s;
+}
+
+.blob3 {
+  width: 200px;
+  height: 200px;
+  background: #00bcd4;
+  top: 30%;
+  left: 50%;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-20px) scale(1.05);
+  }
 }

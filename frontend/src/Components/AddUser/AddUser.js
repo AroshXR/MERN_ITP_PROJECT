@@ -20,7 +20,7 @@ function AddUser() {
         }));
     };
 
-    const handleSubmit =  (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Add User Form Submitted:', inputs);
         // await sendRequest();
@@ -40,6 +40,11 @@ function AddUser() {
     return (
         <div className="user-container">
             <NavBar />
+            <div className="background-graffiti">
+                <div className="blob blob1"></div>
+                <div className="blob blob2"></div>
+                <div className="blob blob3"></div>
+            </div>
             <div className="form-container">
                 <h2>Add User</h2>
                 <form onSubmit={handleSubmit}>
