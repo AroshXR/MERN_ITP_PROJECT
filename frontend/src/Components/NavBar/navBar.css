@@ -1,0 +1,41 @@
+/* src/Components/NavBar.css */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0077cc;
+  padding: 10px 20px;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.navbar a {
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.navbar a:hover {
+  color: #06deee;
+  text-decoration: none;
+}
+
+.logo {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.nav-buttons button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  color: #0077cc;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.nav-buttons button:hover {
+  background-color: #e0e0e0;
+}
