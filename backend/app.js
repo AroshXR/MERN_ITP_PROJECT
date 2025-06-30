@@ -23,10 +23,10 @@ mongoose.connect("mongodb+srv://admin:yNU4tDi4h09jUzol@studentmanagementsystem.c
 require("./models/Register");
 const User = mongoose.model("Register");
 app.post("/register", async (req, res) => {
-    const { name, address, email, password } = req.body;
+    const { username, address, email, password } = req.body;
     try {
         await User.create({
-            name,
+            username,
             address,
             email,
             password
@@ -34,5 +34,24 @@ app.post("/register", async (req, res) => {
         res.send({status: "ok", message: "User registered successfully"});
     } catch (error) {
         res.status(500).send({status: "error", message: "Error registering user"});
+    }
+});
+
+//login
+
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+    try{
+        const user = await User.findOne({username});
+        if(!user){
+            return res.json({status: "error", message: "User not found"});
+        }
+        if(user.password === password){
+            return res.json({status: "ok", message: "Login successful"});
+        }else{
+            return res.json({status: "error", message: "Invalid password"});
+        }
+    }catch (error) {
+        return res.status(500).json({status: "error", message: "Internal server error"});
     }
 });

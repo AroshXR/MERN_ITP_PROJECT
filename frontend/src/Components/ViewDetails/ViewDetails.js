@@ -6,6 +6,7 @@ import User from './user';
 import './ViewDetails.css';
 import { Link } from 'react-router-dom';
 import Footer from '../Footer/Footer'; // Importing the Footer component
+import { useNavigate } from 'react-router-dom'; // Importing useNavigate for navigation
 
 const URL = "http://localhost:5000/users";
 
@@ -14,6 +15,18 @@ const fetchHandler = async () => {
 };
 
 function ViewDetails() {
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const username = localStorage.getItem("username");
+        if (!username) {
+            alert("Please log in to access this page.");
+            navigate("/login");
+        }
+    }, [navigate]);
+
+
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -140,6 +153,8 @@ function ViewDetails() {
         });
     }, [searchQuery]);
 
+    const username = localStorage.getItem("username");
+
     return (
         <div>
             <NavBar />
@@ -150,7 +165,7 @@ function ViewDetails() {
             </div> */}
 
             <div className="view-data-container">
-                <h1>View User Details</h1>
+                <h1>Hello, {username} !</h1>
                 <div className="search-container">
                     <div className="searchBar">
                         <input

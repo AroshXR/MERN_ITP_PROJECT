@@ -10,7 +10,7 @@ function RegisterPage() {
     const history = useNavigate();
 
     const [user, setUser] = useState({
-        name: '',
+        username: '',
         address: '',
         email: '',
         password: '',
@@ -30,7 +30,7 @@ function RegisterPage() {
     const sendRequest = async () => {
         try {
             const response = await axios.post("http://localhost:5000/register", {
-                name: user.name,
+                username: user.username,
                 address: user.address,
                 email: user.email,
                 password: user.password
@@ -70,8 +70,8 @@ function RegisterPage() {
                     <h2>Register</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label htmlFor="name">Name:</label>
-                            <input type="text" id="name" name="name" value={user.name} onChange={handleChange} required />
+                            <label htmlFor="username">Username:</label>
+                            <input type="text" id="username" name="username" value={user.username} onChange={handleChange} required />
                         </div>
                         <div className="form-group">
                             <label htmlFor="address">Address:</label>
