@@ -3,6 +3,7 @@ import React from 'react';
 import NavBar from '../NavBar/navBar'; // Make sure navBar.js uses capital 'N'
 import './Home.css'; // Import CSS
 import { Link } from 'react-router-dom';
+import Footer from '../Footer/Footer'; // Import Footer component
 
 function Home() {
   return (
@@ -16,10 +17,11 @@ function Home() {
       <div className="home-content">
         <h1>Welcome to User Management System</h1>
         <p>Manage your users with ease — Add, Update, or Delete in just a click.</p>
-        <Link to="/viewDetails">
+        <Link to="/login">
           <button className="cta-button">Get Started</button>
         </Link>
       </div>
+      <Footer />
     </div>
   );
 }

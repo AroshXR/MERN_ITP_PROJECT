@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './userStyles.css';
 import NavBar from '../NavBar/navBar'; // Ensure NavBar is imported correctly
 import axios from 'axios';
+import Footer from '../Footer/Footer'; // Import Footer component
 
 function AddUser() {
     const history = useNavigate();
@@ -54,6 +55,7 @@ function AddUser() {
                     <button type="submit">Submit</button>
                 </form>
             </div>
+            <Footer />
         </div>
 
     );

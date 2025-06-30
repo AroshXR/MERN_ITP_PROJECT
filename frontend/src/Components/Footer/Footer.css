@@ -1,0 +1,32 @@
+.footer {
+  background: linear-gradient(to right, #080836, #480177);
+  color: #ccc;
+  padding: 20px 0;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-top: 1px solid #3e1c5a;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.footer-links {
+  margin-bottom: 10px;
+}
+
+.footer-links a {
+  margin: 0 12px;
+  color: #ccc;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #a164d4;
+}
+
+.footer-text {
+  font-size: 14px;
+  opacity: 0.8;
+}

@@ -4,6 +4,8 @@ import NavBar from '../NavBar/navBar';
 import axios from 'axios';
 import User from './user';
 import './ViewDetails.css';
+import { Link } from 'react-router-dom';
+import Footer from '../Footer/Footer'; // Importing the Footer component
 
 const URL = "http://localhost:5000/users";
 
@@ -160,6 +162,11 @@ function ViewDetails() {
                     </div>
                     <button onClick={handleSearch} className="search-button">Search</button>
                 </div>
+
+                <div className="add-buttons">
+                    <Link to="/add"><button>Add User</button></Link>
+                </div>
+
                 {noResults ? (
                     <p style={{ textAlign: 'center', color: 'red', fontSize: '16px', fontWeight: 'bold' }}>No results found</p>
                 ) : (
@@ -187,6 +194,7 @@ function ViewDetails() {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 }
