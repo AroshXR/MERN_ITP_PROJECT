@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './LoginPage.css';
-import regImage from '../images/register-image-png.png';
+import regImage from '../images/register-img.jpg';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../NavBar/navBar'; // Importing the NavBar component
@@ -37,6 +37,7 @@ function RegisterPage() {
             });
             return response.data;
         } catch (error) {
+            console.error('Registration request failed:', error);
             throw error;
         }
     };

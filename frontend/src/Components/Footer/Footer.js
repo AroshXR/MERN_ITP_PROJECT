@@ -1,10 +1,10 @@
+// Footer.js
 import React from 'react';
 import './Footer.css';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 
 function Footer() {
-
     useEffect(() => {
         const link = document.createElement("link");
         link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css";
@@ -14,12 +14,52 @@ function Footer() {
 
   return (
     <footer className="footer">
-      <div className="footer-links">
-        <Link to="#"><i className='fab fa-instagram'></i></Link>
-        <Link to="#"><i className='fab fa-facebook-f'></i></Link>
-        <Link to="#"><i className='fab fa-github'></i></Link>
+      <div className="footer-container">
+        <div className="footer-content">
+          <div className="footer-brand">
+            <h3 className="footer-logo">Klassy Shirts</h3>
+            <p className="footer-tagline">Custom clothing for every style</p>
+          </div>
+          
+          <div className="footer-social">
+            <h4 className="footer-section-title">Follow Us</h4>
+            <div className="footer-links">
+              <Link to="#" aria-label="Instagram">
+                <i className='fab fa-instagram'></i>
+              </Link>
+              <Link to="#" aria-label="Facebook">
+                <i className='fab fa-facebook-f'></i>
+              </Link>
+              <Link to="#" aria-label="Twitter">
+                <i className='fab fa-twitter'></i>
+              </Link>
+              <Link to="#" aria-label="YouTube">
+                <i className='fab fa-youtube'></i>
+              </Link>
+            </div>
+          </div>
+
+          <div className="footer-nav">
+            <h4 className="footer-section-title">Quick Links</h4>
+            <div className="footer-nav-links">
+              <Link to="/about">About</Link>
+              <Link to="/products">Products</Link>
+              <Link to="/contact">Contact</Link>
+              <Link to="/help">Help</Link>
+            </div>
+          </div>
+        </div>
+        
+        <div className="footer-bottom">
+          <p className="footer-text">
+            © {new Date().getFullYear()} Klassy Shirts. All rights reserved.
+          </p>
+          <div className="footer-legal">
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
+          </div>
+        </div>
       </div>
-      <p className="footer-text">© {new Date().getFullYear()} aroshtunes_06. All rights reserved.</p>
     </footer>
   );
 }

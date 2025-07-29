@@ -1,6 +1,6 @@
 import React from 'react'
 import './LoginPage.css';
-import loginImage from '../images/user-login-png.png'; // Assuming you have a CSS file for styling
+import loginImage from '../images/login-img.jpg'; // Assuming you have a CSS file for styling
 import NavBar from '../NavBar/navBar'; // Importing the NavBar component
 import Footer from '../Footer/Footer'; // Importing the Footer component
 import axios from 'axios';
@@ -27,10 +27,16 @@ function LoginPage() {
 
 
   const sendRequest = async () => {
-    return await axios.post("http://localhost:5000/login", {
-      username: user.username,
-      password: user.password
-    }).then((response) => response.data);
+    try {
+      const response = await axios.post("http://localhost:5000/login", {
+        username: user.username,
+        password: user.password
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Login request failed:', error);
+      throw error;
+    }
   };
 
 

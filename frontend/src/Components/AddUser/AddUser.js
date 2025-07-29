@@ -21,20 +21,30 @@ function AddUser() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         console.log('Add User Form Submitted:', inputs);
-        // await sendRequest();
-        // history('viewDetails');
-        sendRequest().then(() => history('/viewDetails')); // Redirect to home after submission
+        try {
+            await sendRequest();
+            history('/viewDetails');
+        } catch (error) {
+            console.error('Failed to add user:', error);
+            alert('Failed to add user. Please try again.');
+        }
     }
 
     const sendRequest = async () => {
-        await axios.post("http://localhost:5000/users", {
-            name: String(inputs.name),
-            age: Number(inputs.age),
-            address: String(inputs.address),
-        }).then((response) => response.data);
+        try {
+            const response = await axios.post("http://localhost:5000/users", {
+                name: String(inputs.name),
+                age: Number(inputs.age),
+                address: String(inputs.address),
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Add user request failed:', error);
+            throw error;
+        }
     }
 
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import jsPDF from 'jspdf'; // <-- import jsPDF
 import NavBar from '../NavBar/navBar';
 import axios from 'axios';
-import User from './user';
+import User from './user.js';
 import './ViewDetails.css';
 import { Link } from 'react-router-dom';
 import Footer from '../Footer/Footer'; // Importing the Footer component
@@ -11,7 +11,13 @@ import { useNavigate } from 'react-router-dom'; // Importing useNavigate for nav
 const URL = "http://localhost:5000/users";
 
 const fetchHandler = async () => {
-    return await axios.get(URL).then((response) => response.data);
+    try {
+        const response = await axios.get(URL);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch users:', error);
+        throw error;
+    }
 };
 
 function ViewDetails() {
@@ -32,9 +38,14 @@ function ViewDetails() {
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
-        fetchHandler().then((data) => {
-            setUsers(data.users);
-        });
+        fetchHandler()
+            .then((data) => {
+                setUsers(data.users);
+            })
+            .catch((error) => {
+                console.error('Failed to load users:', error);
+                alert('Failed to load users. Please try again.');
+            });
     }, []);
 
     const handleEdit = (user) => {

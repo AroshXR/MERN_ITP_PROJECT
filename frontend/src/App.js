@@ -4,6 +4,9 @@ import AddUser from './Components/AddUser/AddUser';
 import ViewDetails from './Components/ViewDetails/ViewDetails';
 import LoginPage from './Components/Login_Register/Login';
 import RegisterPage from './Components/Login_Register/Register';
+import ClothCustomizer from './Components/clothing-customizer/ClothCustomizer';
+import ContactUs from './Components/Home/ContactUs';
+
 
 function App() {
   return (
@@ -13,6 +16,8 @@ function App() {
         <Route path="/viewDetails" element={<ViewDetails />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/customizer" element={<ClothCustomizer />} />
+        <Route path="/contact" element={<ContactUs />} />
       </Routes>
   );
 }

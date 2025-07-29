@@ -1,14 +1,13 @@
-/* Center container on screen */
 /* Form Container */
 .login-container {
   flex: 1;
   max-width: 400px;
   min-width: 280px;
   padding: 40px;
-  background: linear-gradient(135deg, #2e004f, #4a0072);
+  background: linear-gradient(135deg, #ffffff, #f2f2f2); /* Light gray gradient */
   border-radius: 15px;
-  box-shadow: 0 8px 24px rgba(106, 13, 173, 0.3);
-  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  color: #000000; /* Black text */
 }
 
 /* Heading style */
@@ -16,8 +15,8 @@
   text-align: center;
   margin-bottom: 25px;
   font-size: 28px;
-  color: #f0e6ff;
-  text-shadow: 0 0 6px #6a0dad;
+  color: #000000; /* Black text */
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
 }
 
 /* Form input group */
@@ -31,29 +30,31 @@
 .form-group label {
   margin-bottom: 8px;
   font-weight: 600;
+  color: #000000;
 }
 
 /* Inputs */
 .form-group input {
   padding: 12px 14px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid #ccc;
   font-size: 16px;
   outline: none;
-  background: #fff;
-  color: #333;
-  transition: box-shadow 0.3s ease;
+  background: #ffffff;
+  color: #000000;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .form-group input:focus {
-  box-shadow: 0 0 6px #8a2be2;
+  border-color: #000000;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
 }
 
 /* Submit button */
 button[type="submit"] {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(to right, #6a0dad, #8e44ad);
+  background: linear-gradient(to right, #000000, #444444);
   border: none;
   border-radius: 8px;
   color: white;
@@ -64,32 +65,34 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-  background: #a164d4;
+  background: #666666;
   transform: scale(1.03);
 }
 
 .loginPage-container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e, #18013b);
+  background: linear-gradient(135deg, #f5f5f5, #e6e6e6); /* Soft gray background */
   min-height: 100vh;
   display: flex;
-  justify-content: center;   /* Center items horizontally */
-  align-items: center;       /* Center items vertically */
-  gap: 60px;                 /* Space between header and form */
+  justify-content: center;   
+  align-items: center;       
+  gap: 60px;                 
   padding: 40px;
-  flex-wrap: wrap;           /* Allow wrapping on smaller screens */
-  color: #ffffff;
+  flex-wrap: wrap;           
+  color: #000000; /* Black text */
 }
+
+/* Login Header */
 .login-header {
   text-align: center;
   padding: 40px 20px;
   width: 500px;
-  background: linear-gradient(135deg, #2e004f, #4a0072);
+  background: linear-gradient(135deg, #ffffff, #f0f0f0);
   border-radius: 25px;
-  color: #e0b3ff;
+  color: #000000;
   font-size: 2.5rem;
-  text-shadow: 0 0 10px #6a0dad;
-  box-shadow: 0 8px 24px rgba(106, 13, 173, 0.3);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   animation: floatHeader 6s ease-in-out infinite;
   transition: transform 0.3s ease;
 }
@@ -97,13 +100,13 @@ button[type="submit"]:hover {
 .login-header h1 {
   margin-bottom: 10px;
   font-size: 36px;
-  animation: glowText 2s ease-in-out infinite alternate;
+  color: #000000;
 }
 
 .login-header p {
   font-size: 16px;
   margin-bottom: 20px;
-  color: #e6d9f3;
+  color: #252525;
 }
 
 .loginImage {
@@ -115,49 +118,34 @@ button[type="submit"]:hover {
 
 /* Animations */
 @keyframes floatHeader {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
 }
 
-@keyframes glowText {
-  from {
-    text-shadow: 0 0 10px #8e44ad;
-  }
-  to {
-    text-shadow: 0 0 20px #c084f5, 0 0 30px #a164d4;
-  }
-}
-
-.loginImage{
-    width: 300px
-}
+/* Register link */
 .register-link {
   display: block;
   margin-top: 18px;
   text-align: center;
   font-size: 14px;
-  color: #ccc;
+  color: #444444;
   font-weight: 500;
 }
 
 .register-link a {
-  color: #a164d4;
+  color: #000000;
   text-decoration: none;
   font-weight: bold;
   transition: color 0.3s ease;
 }
 
 .register-link a:hover {
-  color: #d8b5ff;
+  color: #555555;
   text-decoration: underline;
 }
+
+/* Error Message */
 .error-message {
   color: #ff4d4d;
   font-size: 13px;

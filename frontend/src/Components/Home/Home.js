@@ -2,8 +2,9 @@
 import React from 'react';
 import NavBar from '../NavBar/navBar'; // Make sure navBar.js uses capital 'N'
 import './Home.css'; // Import CSS
-import { Link } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import Footer from '../Footer/Footer'; // Import Footer component
+import ContactUs from './ContactUs';
 
 function Home() {
   return (
@@ -15,11 +16,13 @@ function Home() {
         <div className="blob blob3"></div>
       </div>
       <div className="home-content">
-        <h1>Welcome to User Management System</h1>
-        <p>Manage your users with ease — Add, Update, or Delete in just a click.</p>
+        <h1>Welcome to Klassy Shirts</h1>
+        <p>Customize your style with our unique shirt designs.</p>
         <Link to="/login">
           <button className="cta-button">Get Started</button>
         </Link>
+        <Outlet />
+        <ContactUs />
       </div>
       <Footer />
     </div>
