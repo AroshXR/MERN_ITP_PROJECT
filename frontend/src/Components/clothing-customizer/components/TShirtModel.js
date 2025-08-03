@@ -1,134 +1,93 @@
-"use client"
-import { Html } from "@react-three/drei"
+import React, { useEffect, useRef } from 'react'
+import { useGLTF } from '@react-three/drei'
 
-// Individual Design Element Component
-function DesignElement({ design }) {
+export function TShirtModel({ selectedColor, scale, position, ...props }) {
+
+  const group = useRef();
+  const { nodes, materials } = useGLTF('/models/t_shirt.glb');
+
+  useEffect(() => {
+    if (materials) {
+      if (materials.Body_FRONT_2664) {
+        materials.Body_FRONT_2664.color.set(selectedColor);
+      }
+      if (materials.Sleeves_FRONT_2669) {
+        materials.Sleeves_FRONT_2669.color.set(selectedColor);
+      }
+    }
+  }, [selectedColor, materials]);
+
   return (
-    <Html
-      position={[design.position.x, design.position.y, 0.07]}
-      transform
-      style={{
-        pointerEvents: "auto",
-        userSelect: "none",
-      }}
+    <group
+      {...props}
+      dispose={null}
+      ref={group}
+      scale={scale || 0.3}
+      position={position || [1.3, -1, 0]}
     >
-      <div
-        style={{
-          width: `${design.size}px`,
-          height: `${design.size}px`,
-          backgroundImage: `url(${design.preview})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          border: design.selected ? "2px solid #3b82f6" : "2px solid rgba(255,255,255,0.8)",
-          borderRadius: "4px",
-          transform: "translate(-50%, -50%)",
-          cursor: "move",
-          position: "relative",
-        }}
-        onClick={(e) => {
-          e.stopPropagation()
-          // Handle design selection
-        }}
-      >
-        {design.selected && (
-          <>
-            {/* Resize handles */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "-5px",
-                right: "-5px",
-                width: "10px",
-                height: "10px",
-                backgroundColor: "#3b82f6",
-                borderRadius: "50%",
-                cursor: "se-resize",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                top: "-5px",
-                right: "-5px",
-                width: "10px",
-                height: "10px",
-                backgroundColor: "#3b82f6",
-                borderRadius: "50%",
-                cursor: "ne-resize",
-              }}
-            />
-          </>
-        )}
-      </div>
-    </Html>
-  )
-}
-
-// T-Shirt Model using geometry
-function TShirtModel({ color = "#ffffff", designs = [], ...props }) {
-  return (
-    <group {...props} dispose={null}>
-      {/* Main body - more realistic t-shirt shape */}
-      <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.4, 1.8, 0.1]} />
-        <meshStandardMaterial color={color} roughness={0.8} metalness={0.1} />
-      </mesh>
-
-      {/* Left sleeve */}
-      <mesh position={[-0.9, 0.4, 0]} rotation={[0, 0, -0.1]} castShadow receiveShadow>
-        <boxGeometry args={[0.4, 0.6, 0.1]} />
-        <meshStandardMaterial color={color} roughness={0.8} metalness={0.1} />
-      </mesh>
-
-      {/* Right sleeve */}
-      <mesh position={[0.9, 0.4, 0]} rotation={[0, 0, 0.1]} castShadow receiveShadow>
-        <boxGeometry args={[0.4, 0.6, 0.1]} />
-        <meshStandardMaterial color={color} roughness={0.8} metalness={0.1} />
-      </mesh>
-
-      {/* Neck opening */}
-      <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.15, 0.15, 0.12]} />
-        <meshStandardMaterial color="#f0f0f0" roughness={0.9} metalness={0.0} />
-      </mesh>
-
-      {/* Sleeve cuffs */}
-      <mesh position={[-0.9, 0.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.12, 0.12, 0.12]} />
-        <meshStandardMaterial color="#f0f0f0" roughness={0.9} metalness={0.0} />
-      </mesh>
-      <mesh position={[0.9, 0.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.12, 0.12, 0.12]} />
-        <meshStandardMaterial color="#f0f0f0" roughness={0.9} metalness={0.0} />
-      </mesh>
-
-      {/* Bottom hem */}
-      <mesh position={[0, -0.85, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.7, 0.7, 0.12]} />
-        <meshStandardMaterial color="#f0f0f0" roughness={0.9} metalness={0.0} />
-      </mesh>
-
-      {/* Design area outline - positioned on chest area */}
-      <Html position={[0, 0.3, 0.06]} transform>
-        <div
-          style={{
-            width: "120px",
-            height: "120px",
-            border: "2px dashed rgba(100, 100, 100, 0.3)",
-            borderRadius: "8px",
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            pointerEvents: "none",
-            transform: "translate(-50%, -50%)",
-          }}
-        />
-      </Html>
-
-      {/* Render placed designs */}
-      {designs.map((design) => (
-        <DesignElement key={design.id} design={design} />
-      ))}
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_6.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_8.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_10.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_11.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_12.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_14.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_15.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_16.geometry}
+        material={materials.Body_FRONT_2664}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_18.geometry}
+        material={materials.Sleeves_FRONT_2669}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_20.geometry}
+        material={materials.Sleeves_FRONT_2669}
+      />
     </group>
   )
 }
 
-export default TShirtModel
+useGLTF.preload('/models/t_shirt.glb')
+

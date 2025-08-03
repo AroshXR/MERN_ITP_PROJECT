@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import './ClothCustomizer.css';
+import { TShirtModel } from './components/TShirtModel';
+import { CropTopModel } from './components/CropTopModel';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Bounds } from '@react-three/drei';
+
 
 function ClothCustomizer() {
   const [selectedColor, setSelectedColor] = useState("#ffffff");
@@ -9,6 +14,7 @@ function ClothCustomizer() {
   const [clothingType, setClothingType] = useState("tshirt");
   const [placedDesigns, setPlacedDesigns] = useState([]);
   const [designSize, setDesignSize] = useState(80);
+  const controlsRef = React.useRef();
 
   // Sample preset designs
   const presetDesigns = [
@@ -56,6 +62,8 @@ function ClothCustomizer() {
     setDesignSize(size);
   };
 
+
+
   // Calculate total price including placed designs
   const totalDesignPrice = placedDesigns.reduce((sum, design) => sum + design.price, 0);
   const basePrice = clothingType === "tshirt" ? 25 : 35;
@@ -75,17 +83,17 @@ function ClothCustomizer() {
             <div className="panel-section">
               <h3>Clothing Type</h3>
               <div className="clothing-options">
-                <button 
+                <button
                   className={`clothing-btn ${clothingType === "tshirt" ? "active" : ""}`}
                   onClick={() => handleClothingTypeChange("tshirt")}
                 >
                   T-Shirt
                 </button>
-                <button 
-                  className={`clothing-btn ${clothingType === "hoodie" ? "active" : ""}`}
-                  onClick={() => handleClothingTypeChange("hoodie")}
+                <button
+                  className={`clothing-btn ${clothingType === "croptop" ? "active" : ""}`}
+                  onClick={() => handleClothingTypeChange("croptop")}
                 >
-                  Hoodie
+                  Crop-Top
                 </button>
               </div>
             </div>
@@ -169,30 +177,68 @@ function ClothCustomizer() {
             </div>
           </div>
 
-          <div className="preview-section">
-            <div className="preview-container">
-              <div 
-                className="clothing-preview"
-                style={{ backgroundColor: selectedColor }}
-              >
-                <div className="clothing-type-indicator">
-                  {clothingType === "tshirt" ? "👕" : "🧥"}
-                </div>
-                {selectedDesign && (
-                  <div 
-                    className="design-preview"
-                    style={{
-                      width: `${designSize}px`,
-                      height: `${designSize}px`,
-                      backgroundImage: `url(${selectedDesign.preview})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
+
+          <div style={{
+            flex: 1,
+            height: '70vh',
+            background: 'linear-gradient(135deg, #6b6b6bff 0%, #000000ff 100%)',
+            borderRadius: '20px'
+          }}>
+
+            {/* T-Shirt/CropTop Component */}
+
+            <Canvas
+              camera={{
+                position: [5, 0, 5],
+                fov: 45
+              }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <ambientLight intensity={0.3} />
+              <directionalLight
+                position={[5, 5, 5]}
+                intensity={0.1}
+                castShadow
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+              />
+              <pointLight position={[-5, 5, 5]} intensity={0.5} />
+
+              <Bounds fit clip observe margin={1.2}>
+                {clothingType === "tshirt" ? (
+                  <TShirtModel
+                    selectedColor={selectedColor}
+                    position={[0, 0, 0]}
+                    scale={2}
+                  />
+                ) : (
+                  <CropTopModel
+                    selectedColor={selectedColor}
+                    position={[0, 0, 0]}
+                    scale={3}
                   />
                 )}
-              </div>
-            </div>
+              </Bounds>
+
+              <OrbitControls
+                ref={controlsRef}
+                enableZoom={true}
+                enablePan={false}
+                enableRotate={true}
+                minDistance={2}
+                maxDistance={8}
+                maxPolarAngle={Math.PI / 2}
+                minPolarAngle={Math.PI / 2}
+                autoRotate={false}
+                autoRotateSpeed={0.5}
+                target={clothingType === "tshirt" ? [0, 2.5, 0] : [0, 3.5, 0]}
+              />
+            </Canvas>
+
+
+
           </div>
+
         </div>
       </div>
       <Footer />
