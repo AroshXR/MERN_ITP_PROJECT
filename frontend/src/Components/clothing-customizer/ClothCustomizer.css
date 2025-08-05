@@ -338,3 +338,243 @@
     height: 70vh;
   }
 }
+
+/* Add these styles to your existing ClothCustomizer.css file */
+
+/* Side Selection Styles */
+.side-options {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.side-btn {
+  flex: 1;
+  padding: 10px 15px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.side-btn.active {
+  background: #000000;
+  color: white;
+  border-color: #000000;
+}
+
+.side-btn:hover {
+  background: #f8f9fa;
+}
+
+.side-btn.active:hover {
+  background: #1a1a1a;
+}
+
+/* Position Controls */
+.position-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.position-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.position-control label {
+  min-width: 80px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.position-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #ddd;
+  outline: none;
+  cursor: pointer;
+}
+
+.position-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #000000;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.position-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #666;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.position-control span {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 500;
+  color: #666;
+}
+
+/* Placed Designs Tabs */
+.placed-designs-tabs {
+  display: flex;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+  color: #000000;
+  border-bottom-color: #000000;
+}
+
+.tab-btn:hover {
+  color: #000000;
+}
+
+/* Selected Design Updates */
+.selected-design {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 2px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.selected-design:hover {
+  border-color: #000000;
+  background: #f8f9fa;
+}
+
+.selected-design.active {
+  border-color: #000000;
+  background: #e3f2fd;
+}
+
+.selected-design img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.design-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.design-info p {
+  margin: 0 0 5px 0;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.design-info .price {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.side-info {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: #e3f2fd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #030303;
+}
+
+.side-info strong {
+  text-transform: capitalize;
+}
+
+.design-item {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.design-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 768px) {
+  .position-controls {
+    gap: 10px;
+  }
+  
+  .position-control {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+  
+  .position-control label {
+    min-width: auto;
+  }
+  
+  .side-options {
+    flex-direction: column;
+  }
+  
+  .placed-designs-tabs {
+    flex-direction: column;
+  }
+}

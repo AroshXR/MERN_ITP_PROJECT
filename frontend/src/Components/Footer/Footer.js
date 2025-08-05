@@ -30,11 +30,8 @@ function Footer() {
               <Link to="#" aria-label="Facebook">
                 <i className='fab fa-facebook-f'></i>
               </Link>
-              <Link to="#" aria-label="Twitter">
-                <i className='fab fa-twitter'></i>
-              </Link>
-              <Link to="#" aria-label="YouTube">
-                <i className='fab fa-youtube'></i>
+              <Link to="#" aria-label="X">
+                <i className='fab fa-x'></i>
               </Link>
             </div>
           </div>

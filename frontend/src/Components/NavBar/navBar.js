@@ -9,6 +9,7 @@ function NavBar() {
   const isHomePage = location.pathname === '/';
   const isLoginPage = location.pathname === '/login';
   const isRegisterPage = location.pathname === '/register';
+  const isCustomizerPage = location.pathname === '/customizer'
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -49,7 +50,7 @@ function NavBar() {
             <i className='bx bx-phone'></i> Contact Us
           </button>
         </Link>
-        {!isHomePage && !isLoginPage && !isRegisterPage && (
+        {!isHomePage && !isLoginPage && !isRegisterPage && !isCustomizerPage &&(
           <button onClick={() => { handleLogout(); setMenuOpen(false); }}>
             <i className='bx bx-log-out'></i> Logout
           </button>

@@ -7,6 +7,13 @@ import { CropTopModel } from './components/CropTopModel';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';
 
+import print1 from './customizer_preset_designs/print 1.jpg'
+import print2 from './customizer_preset_designs/print 2.jpg'
+import print3 from './customizer_preset_designs/print 3.jpg'
+import print4 from './customizer_preset_designs/print 4.jpg'
+import print5 from './customizer_preset_designs/print 5.jpg'
+import print6 from './customizer_preset_designs/print 6.jpg'
+
 
 function ClothCustomizer() {
   const [selectedColor, setSelectedColor] = useState("#ffffff");
@@ -14,19 +21,40 @@ function ClothCustomizer() {
   const [clothingType, setClothingType] = useState("tshirt");
   const [placedDesigns, setPlacedDesigns] = useState([]);
   const [designSize, setDesignSize] = useState(80);
+  const [selectedClothSize, setSelectedClothSize] = useState(null);
+
+
+  //Inputing design
+  const [selectedSide, setSelectedSide] = useState("front"); // front or back
+  const [frontDesigns, setFrontDesigns] = useState([]);
+  const [backDesigns, setBackDesigns] = useState([]);
+  const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
+  const [activeDesignId, setActiveDesignId] = useState(null);
+
   const controlsRef = React.useRef();
+  const [selectedSize, setSelectedSize] = useState(null);
 
   // Sample preset designs
   const presetDesigns = [
-    { id: 1, name: "Vintage Logo", price: 15, preview: "https://via.placeholder.com/100x100/cccccc/666666?text=Logo" },
-    { id: 2, name: "Abstract Art", price: 20, preview: "https://via.placeholder.com/100x100/cccccc/666666?text=Art" },
-    { id: 3, name: "Nature Scene", price: 18, preview: "https://via.placeholder.com/100x100/cccccc/666666?text=Nature" },
-    { id: 4, name: "Geometric Pattern", price: 12, preview: "https://via.placeholder.com/100x100/cccccc/666666?text=Geo" },
-    { id: 5, name: "Typography", price: 10, preview: "https://via.placeholder.com/100x100/cccccc/666666?text=Text" },
-    { id: 6, name: "Minimalist", price: 8, preview: "https://via.placeholder.com/100x100/cccccc/666666?text=Mini" },
+    { id: 1, name: "Design 1", price: 15, preview: print1 },
+    { id: 2, name: "Design 2", price: 20, preview: print2 },
+    { id: 3, name: "Design 3", price: 18, preview: print3 },
+    { id: 4, name: "Design 4", price: 12, preview: print4 },
+    { id: 5, name: "Design 5", price: 10, preview: print5 },
+    { id: 6, name: "Design 6", price: 8, preview: print6 },
   ];
 
-  const colors = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
+  const colors = [
+    "#f5f5f5",
+    "#2e2e2e",
+    "#e57373",
+    "#81c784",
+    "#64b5f6",
+    "#fff176",
+    "#ba68c8",
+    "#4dd0e1"
+  ];
+
 
   const handleImageUpload = (event) => {
     const file = event.target.files?.[0];
@@ -39,7 +67,20 @@ function ClothCustomizer() {
           name: "Custom Image",
           price: 25,
           preview: imageUrl,
+          side: selectedSide,
+          position: { x: 0, y: 0 },
+          size: designSize,
         };
+
+        if (selectedSide === "front") {
+          setFrontDesigns((prev) => [...prev, customDesign]);
+        } else {
+          setBackDesigns((prev) => [...prev, customDesign]);
+        }
+
+        setPlacedDesigns((prev) => [...prev, customDesign]);
+        setActiveDesignId(customDesign.id);
+
         setPlacedDesigns((prev) => [...prev, customDesign]);
       };
       reader.readAsDataURL(file);
@@ -47,7 +88,23 @@ function ClothCustomizer() {
   };
 
   const handleDesignSelect = (design) => {
+    const designWithPlacement = {
+      ...design,
+      id: `${design.id}-${Date.now()}`,
+      side: selectedSide,
+      position: { x: 0, y: 0 },
+      size: designSize,
+    };
+
+    if (selectedSide === "front") {
+      setFrontDesigns((prev) => [...prev, designWithPlacement]);
+    } else {
+      setBackDesigns((prev) => [...prev, designWithPlacement]);
+    }
+
+    setPlacedDesigns((prev) => [...prev, designWithPlacement]);
     setSelectedDesign(design);
+    setActiveDesignId(designWithPlacement.id);
   };
 
   const handleColorSelect = (color) => {
@@ -60,14 +117,81 @@ function ClothCustomizer() {
 
   const handleSizeChange = (size) => {
     setDesignSize(size);
+
+    if (activeDesignId) {
+      updateDesignProperty(activeDesignId, 'size', size);
+    }
+  };
+
+  const handlePositionChange = (axis, value) => {
+    const newPosition = { ...designPosition, [axis]: value };
+    setDesignPosition(newPosition);
+
+    if (activeDesignId) {
+      updateDesignProperty(activeDesignId, 'position', newPosition);
+    }
   };
 
 
+  const updateDesignProperty = (designId, property, value) => {
+    const updateDesign = (designs) =>
+      designs.map(design =>
+        design.id === designId ? { ...design, [property]: value } : design
+      );
+
+    setFrontDesigns(prev => updateDesign(prev));
+    setBackDesigns(prev => updateDesign(prev));
+    setPlacedDesigns(prev => updateDesign(prev));
+  };
+
+  const handleSideSelect = (side) => {
+    setSelectedSide(side);
+    setActiveDesignId(null);
+  };
+
+  const removeDesign = (designId) => {
+    setFrontDesigns(prev => prev.filter(d => d.id !== designId));
+    setBackDesigns(prev => prev.filter(d => d.id !== designId));
+    setPlacedDesigns(prev => prev.filter(d => d.id !== designId));
+    setActiveDesignId(null);
+  };
+
+  const selectDesignForEditing = (design) => {
+    setActiveDesignId(design.id);
+    setSelectedSide(design.side);
+    setDesignPosition(design.position);
+    setDesignSize(design.size);
+  };
+
+  const SizeSelector = ({ onSizeChange }) => {
+    const sizes = ["S", "M", "L", "XL", "XXL"];
+    const [selectedSize, setSelectedSize] = useState(null);
+
+    const handleSelect = (size) => {
+      setSelectedSize(size);
+      if (onSizeChange) onSizeChange(size);
+    };
+  }
+
+  const getSizeExtraPrice = () => {
+    if (selectedSize === "L") return 3;
+    if (selectedSize === "XL") return 5;
+    if (selectedSize === "XXL") return 8;
+    return 0;
+  };
+
+  const [quantity, setQuantity] = useState(1);
+
+  const handleQuantityChange = (value) => {
+    if (value >= 1) setQuantity(value);
+  };
 
   // Calculate total price including placed designs
-  const totalDesignPrice = placedDesigns.reduce((sum, design) => sum + design.price, 0);
+
   const basePrice = clothingType === "tshirt" ? 25 : 35;
-  const totalPrice = basePrice + totalDesignPrice;
+  const designPrice = selectedDesign ? selectedDesign.price : 0;
+  const sizeExtraPrice = getSizeExtraPrice();
+  const totalPrice = basePrice + designPrice + sizeExtraPrice;
 
   return (
     <div className="customizer-container">
@@ -77,7 +201,7 @@ function ClothCustomizer() {
           <h1>Clothing Customizer</h1>
           <p>Design your perfect outfit with our easy-to-use customizer</p>
         </div>
-
+        {/* Cloth type changer */}
         <div className="customizer-main">
           <div className="customizer-panel">
             <div className="panel-section">
@@ -98,6 +222,7 @@ function ClothCustomizer() {
               </div>
             </div>
 
+            {/* Cloth colour changer */}
             <div className="panel-section">
               <h3>Color Selection</h3>
               <div className="color-palette">
@@ -111,6 +236,56 @@ function ClothCustomizer() {
                   />
                 ))}
               </div>
+            </div>
+            {/* Cloth size changer         */}
+            <div className="panel-section">
+              <h3>Design Placement</h3>
+              <div className="side-options">
+                <button
+                  className={`side-btn ${selectedSide === "front" ? "active" : ""}`}
+                  onClick={() => handleSideSelect("front")}
+                >
+                  Front
+                </button>
+                <button
+                  className={`side-btn ${selectedSide === "back" ? "active" : ""}`}
+                  onClick={() => handleSideSelect("back")}
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+
+            {/* Cloth image adding part*/}
+            <div className="panel-section">
+              <h3>Upload Custom Image</h3>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="file-input"
+                style={{ width: '90%' }}
+              />
+              <p className="side-info">Will be placed on: <strong>{selectedSide}</strong></p>
+            </div>
+
+            {/* Cloth design controller*/}
+            <div className="panel-section">
+              <h3>Preset Designs</h3>
+              <div className="design-grid">
+                {presetDesigns.map((design) => (
+                  <div
+                    key={design.id}
+                    className={`design-item ${selectedDesign?.id === design.id ? "selected" : ""}`}
+                    onClick={() => handleDesignSelect(design)}
+                  >
+                    <img src={design.preview} alt={design.name} />
+                    <p>{design.name}</p>
+                    <span className="price">${design.price}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="side-info">Will be placed on: <strong>{selectedSide}</strong></p>
             </div>
 
             <div className="panel-section">
@@ -126,54 +301,87 @@ function ClothCustomizer() {
               <span className="size-value">{designSize}px</span>
             </div>
 
-            <div className="panel-section">
-              <h3>Upload Custom Image</h3>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="file-input"
-              />
-            </div>
-
-            <div className="panel-section">
-              <h3>Preset Designs</h3>
-              <div className="design-grid">
-                {presetDesigns.map((design) => (
-                  <div
-                    key={design.id}
-                    className="design-item"
-                    onClick={() => handleDesignSelect(design)}
-                  >
-                    <img src={design.preview} alt={design.name} />
-                    <p>{design.name}</p>
-                    <span className="price">${design.price}</span>
+            {activeDesignId && (
+              <div className="panel-section">
+                <h3>Design Position</h3>
+                <div className="position-controls">
+                  <div className="position-control">
+                    <label>X Position:</label>
+                    <input
+                      type="range"
+                      min="-50"
+                      max="50"
+                      value={designPosition.x}
+                      onChange={(e) => handlePositionChange('x', parseInt(e.target.value))}
+                      className="position-slider"
+                    />
+                    <span>{designPosition.x}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="panel-section">
-              <h3>Selected Designs</h3>
-              <div className="selected-designs">
-                {placedDesigns.map((design) => (
-                  <div key={design.id} className="selected-design">
-                    <img src={design.preview} alt={design.name} />
-                    <p>{design.name}</p>
-                    <span className="price">${design.price}</span>
+                  <div className="position-control">
+                    <label>Y Position:</label>
+                    <input
+                      type="range"
+                      min="-50"
+                      max="50"
+                      value={designPosition.y}
+                      onChange={(e) => handlePositionChange('y', parseInt(e.target.value))}
+                      className="position-slider"
+                    />
+                    <span>{designPosition.y}</span>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="panel-section">
               <h3>Pricing</h3>
-              <div className="price-breakdown">
-                <p>Base Price: ${basePrice}</p>
-                <p>Designs: ${totalDesignPrice}</p>
-                <p className="total-price">Total: ${totalPrice}</p>
+
+              <div className="size-selector">
+                <p><strong>Select Size:</strong></p>
+                <div className="design-grid" style={{ marginBottom: '15px' }}>
+                  {["S", "M", "L", "XL", "XXL"].map((size) => (
+                    <button
+                      key={size}
+                      className={`clothing-btn ${selectedSize === size ? "active" : ""}`}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <button className="order-btn">Add to Cart</button>
+
+              <div className="quantity-selector" style={{ marginTop: '10px', marginBottom: '15px' }}>
+                <p><strong>Quantity:</strong></p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    onClick={() => handleQuantityChange(quantity - 1)}
+                    disabled={quantity <= 1}
+                    style={{ padding: '5px 10px' }}
+                  >
+                    -
+                  </button>
+                  <span style={{ minWidth: '30px', textAlign: 'center' }}>{quantity}</span>
+                  <button
+                    onClick={() => handleQuantityChange(quantity + 1)}
+                    style={{ padding: '5px 10px' }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="price-breakdown" style={{ marginTop: '10px' }}>
+                <p>Base Price: ${basePrice}</p>
+                <p>Designs: ${designPrice}</p>
+                {selectedSize && <p>Size Extra: ${sizeExtraPrice}</p>}
+                <p><strong>Quantity:</strong> {quantity}</p>
+                <p className="total-price">
+                  Total: ${totalPrice * quantity}
+                </p>
+              </div>
+              
+              <button className="order-btn">Save & Add to Cart</button>
             </div>
           </div>
 
@@ -208,12 +416,16 @@ function ClothCustomizer() {
                 {clothingType === "tshirt" ? (
                   <TShirtModel
                     selectedColor={selectedColor}
+                    frontDesigns={frontDesigns}
+                    backDesigns={backDesigns}
                     position={[0, 0, 0]}
                     scale={2}
                   />
                 ) : (
                   <CropTopModel
                     selectedColor={selectedColor}
+                    frontDesigns={frontDesigns}
+                    backDesigns={backDesigns}
                     position={[0, 0, 0]}
                     scale={3}
                   />
