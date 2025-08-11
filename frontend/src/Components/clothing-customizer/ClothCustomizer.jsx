@@ -13,6 +13,7 @@ import print3 from './customizer_preset_designs/print 3.jpg'
 import print4 from './customizer_preset_designs/print 4.jpg'
 import print5 from './customizer_preset_designs/print 5.jpg'
 import print6 from './customizer_preset_designs/print 6.jpg'
+import { Link } from 'react-router-dom';
 
 
 function ClothCustomizer() {
@@ -22,13 +23,13 @@ function ClothCustomizer() {
   const [placedDesigns, setPlacedDesigns] = useState([]);
   const [designSize, setDesignSize] = useState(80);
   const [selectedClothSize, setSelectedClothSize] = useState(null);
+  const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
 
 
   //Inputing design
   const [selectedSide, setSelectedSide] = useState("front"); // front or back
   const [frontDesigns, setFrontDesigns] = useState([]);
   const [backDesigns, setBackDesigns] = useState([]);
-  const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
   const [activeDesignId, setActiveDesignId] = useState(null);
 
   const controlsRef = React.useRef();
@@ -92,7 +93,7 @@ function ClothCustomizer() {
       ...design,
       id: `${design.id}-${Date.now()}`,
       side: selectedSide,
-      position: { x: 0, y: 0 },
+      position: { x: 0, y: 0 }, // Start at center of chest
       size: designSize,
     };
 
@@ -103,7 +104,6 @@ function ClothCustomizer() {
     }
 
     setPlacedDesigns((prev) => [...prev, designWithPlacement]);
-    setSelectedDesign(design);
     setActiveDesignId(designWithPlacement.id);
   };
 
@@ -144,10 +144,10 @@ function ClothCustomizer() {
     setPlacedDesigns(prev => updateDesign(prev));
   };
 
-  const handleSideSelect = (side) => {
-    setSelectedSide(side);
-    setActiveDesignId(null);
-  };
+  // const handleSideSelect = (side) => {
+  //   setSelectedSide(side);
+  //   setActiveDesignId(null);
+  // };
 
   const removeDesign = (designId) => {
     setFrontDesigns(prev => prev.filter(d => d.id !== designId));
@@ -213,12 +213,12 @@ function ClothCustomizer() {
                 >
                   T-Shirt
                 </button>
-                <button
+                {/* <button
                   className={`clothing-btn ${clothingType === "croptop" ? "active" : ""}`}
                   onClick={() => handleClothingTypeChange("croptop")}
                 >
                   Crop-Top
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -238,7 +238,7 @@ function ClothCustomizer() {
               </div>
             </div>
             {/* Cloth size changer         */}
-            <div className="panel-section">
+            {/* <div className="panel-section">
               <h3>Design Placement</h3>
               <div className="side-options">
                 <button
@@ -254,7 +254,7 @@ function ClothCustomizer() {
                   Back
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Cloth image adding part*/}
             <div className="panel-section">
@@ -380,8 +380,10 @@ function ClothCustomizer() {
                   Total: ${totalPrice * quantity}
                 </p>
               </div>
-              
-              <button className="order-btn">Save & Add to Cart</button>
+              <Link to="/orderManagement">
+                <button className="order-btn">Save & Add to Cart</button>
+              </Link>
+
             </div>
           </div>
 
@@ -416,8 +418,7 @@ function ClothCustomizer() {
                 {clothingType === "tshirt" ? (
                   <TShirtModel
                     selectedColor={selectedColor}
-                    frontDesigns={frontDesigns}
-                    backDesigns={backDesigns}
+                    chestDesignUrl={selectedDesign?.preview || null}
                     position={[0, 0, 0]}
                     scale={2}
                   />
@@ -442,7 +443,7 @@ function ClothCustomizer() {
                 maxPolarAngle={Math.PI / 2}
                 minPolarAngle={Math.PI / 2}
                 autoRotate={false}
-                autoRotateSpeed={0.5}
+                autoRotateSpeed={-2.5}
                 target={clothingType === "tshirt" ? [0, 2.5, 0] : [0, 3.5, 0]}
               />
             </Canvas>

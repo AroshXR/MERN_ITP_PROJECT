@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react'
-import { useGLTF, useTexture } from '@react-three/drei'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
 export function TShirtModel({ selectedColor, frontDesigns = [], backDesigns = [], scale, position, ...props }) {

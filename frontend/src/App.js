@@ -6,6 +6,8 @@ import LoginPage from './Components/Login_Register/Login';
 import RegisterPage from './Components/Login_Register/Register';
 import ClothCustomizer from './Components/clothing-customizer/ClothCustomizer';
 import ContactUs from './Components/Home/ContactUs';
+import OrderManagement from './Components/OrderManagement/OrderManagement';
+import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
 
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/customizer" element={<ClothCustomizer />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/orderManagement" element={<OrderManagement />}/>
+        <Route path='/paymentManagement' element={<PaymentManagement />}/>
       </Routes>
   );
 }
