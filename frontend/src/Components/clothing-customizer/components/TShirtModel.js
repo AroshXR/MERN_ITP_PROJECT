@@ -10,6 +10,8 @@ export function TShirtModel({ selectedColor, presetDesign, chestDesignUrl, front
 
   const designTexture = useTexture(activeDesignUrl || "/logo192.png")
 
+  designTexture.flipY = false;
+
   const designMaterial = useMemo(() => {
     if (activeDesignUrl) {
       const material = new THREE.MeshStandardMaterial({
@@ -18,13 +20,6 @@ export function TShirtModel({ selectedColor, presetDesign, chestDesignUrl, front
         alphaTest: 0.1,
         side: THREE.FrontSide,
       })
-
-      // Configure texture
-      designTexture.flipY = false
-      designTexture.wrapS = THREE.ClampToEdgeWrapping
-      designTexture.wrapT = THREE.ClampToEdgeWrapping
-      designTexture.minFilter = THREE.LinearFilter
-      designTexture.magFilter = THREE.LinearFilter
 
       return material
     }
@@ -97,7 +92,7 @@ export function TShirtModel({ selectedColor, presetDesign, chestDesignUrl, front
           receiveShadow
           geometry={nodes.ChestDesignFace.geometry}
           material={designMaterial}
-          position={[0.004, 0, 0.015]}
+          position={[0.004, 0, 0.0]}
         />
       )}
 
