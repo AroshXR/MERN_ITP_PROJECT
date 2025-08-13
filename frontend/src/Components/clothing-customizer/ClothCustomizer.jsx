@@ -72,12 +72,8 @@ function ClothCustomizer() {
           position: { x: 0, y: 0 },
           size: designSize,
         };
+        setFrontDesigns((prev) => [...prev, customDesign]);
 
-        if (selectedSide === "front") {
-          setFrontDesigns((prev) => [...prev, customDesign]);
-        } else {
-          setBackDesigns((prev) => [...prev, customDesign]);
-        }
 
         setPlacedDesigns((prev) => [...prev, customDesign]);
         setActiveDesignId(customDesign.id);
@@ -89,31 +85,29 @@ function ClothCustomizer() {
   };
 
   const handleDesignSelect = (design) => {
-    const designWithPlacement = {
-      ...design,
-      id: `${design.id}-${Date.now()}`,
-      side: selectedSide,
-      position: { x: 0, y: 0 }, // Start at center of chest
-      size: designSize,
-    };
-
-    if (selectedSide === "front") {
-      setFrontDesigns((prev) => [...prev, designWithPlacement]);
-    } else {
-      setBackDesigns((prev) => [...prev, designWithPlacement]);
-    }
-
-    setPlacedDesigns((prev) => [...prev, designWithPlacement]);
-    setActiveDesignId(designWithPlacement.id);
+  // For preset designs, set as main chest design
+  setSelectedDesign(design);
+  
+  // Also add to frontDesigns if you want it as an additional element
+  const designWithPlacement = {
+    ...design,
+    id: `${design.id}-${Date.now()}`,
+    side: selectedSide,
+    position: { x: 0, y: 0 },
+    size: designSize,
   };
+
+  setFrontDesigns((prev) => [...prev, designWithPlacement]);
+  setActiveDesignId(designWithPlacement.id);
+};
 
   const handleColorSelect = (color) => {
     setSelectedColor(color);
   };
 
-  const handleClothingTypeChange = (type) => {
-    setClothingType(type);
-  };
+  // const handleClothingTypeChange = (type) => {
+  //   setClothingType(type);
+  // };
 
   const handleSizeChange = (size) => {
     setDesignSize(size);
@@ -148,30 +142,6 @@ function ClothCustomizer() {
   //   setSelectedSide(side);
   //   setActiveDesignId(null);
   // };
-
-  const removeDesign = (designId) => {
-    setFrontDesigns(prev => prev.filter(d => d.id !== designId));
-    setBackDesigns(prev => prev.filter(d => d.id !== designId));
-    setPlacedDesigns(prev => prev.filter(d => d.id !== designId));
-    setActiveDesignId(null);
-  };
-
-  const selectDesignForEditing = (design) => {
-    setActiveDesignId(design.id);
-    setSelectedSide(design.side);
-    setDesignPosition(design.position);
-    setDesignSize(design.size);
-  };
-
-  const SizeSelector = ({ onSizeChange }) => {
-    const sizes = ["S", "M", "L", "XL", "XXL"];
-    const [selectedSize, setSelectedSize] = useState(null);
-
-    const handleSelect = (size) => {
-      setSelectedSize(size);
-      if (onSizeChange) onSizeChange(size);
-    };
-  }
 
   const getSizeExtraPrice = () => {
     if (selectedSize === "L") return 3;
@@ -209,7 +179,7 @@ function ClothCustomizer() {
               <div className="clothing-options">
                 <button
                   className={`clothing-btn ${clothingType === "tshirt" ? "active" : ""}`}
-                  onClick={() => handleClothingTypeChange("tshirt")}
+                // onClick={() => handleClothingTypeChange("tshirt")}
                 >
                   T-Shirt
                 </button>
@@ -415,6 +385,16 @@ function ClothCustomizer() {
               <pointLight position={[-5, 5, 5]} intensity={0.5} />
 
               <Bounds fit clip observe margin={1.2}>
+                <TShirtModel
+                  selectedColor={selectedColor}
+                  chestDesignUrl={selectedDesign?.preview || null}
+                  frontDesigns={frontDesigns} 
+                  position={[0, 0, 0]}
+                  scale={2}
+                />
+              </Bounds>
+
+              {/* <Bounds fit clip observe margin={1.2}>
                 {clothingType === "tshirt" ? (
                   <TShirtModel
                     selectedColor={selectedColor}
@@ -431,7 +411,7 @@ function ClothCustomizer() {
                     scale={3}
                   />
                 )}
-              </Bounds>
+              </Bounds> */}
 
               <OrbitControls
                 ref={controlsRef}
