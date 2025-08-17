@@ -27,9 +27,8 @@ function ClothCustomizer() {
 
 
   //Inputing design
-  const [selectedSide, setSelectedSide] = useState("front"); // front or back
+  const [selectedSide] = useState("front"); // front or back
   const [frontDesigns, setFrontDesigns] = useState([]);
-  const [backDesigns, setBackDesigns] = useState([]);
   const [activeDesignId, setActiveDesignId] = useState(null);
 
   const controlsRef = React.useRef();
@@ -68,46 +67,34 @@ function ClothCustomizer() {
           name: "Custom Image",
           price: 25,
           preview: imageUrl,
-          side: selectedSide,
-          position: { x: 0, y: 0 },
+          position: { designPosition },
           size: designSize,
         };
-        setFrontDesigns((prev) => [...prev, customDesign]);
+        setSelectedDesign(customDesign);
 
-
-        setPlacedDesigns((prev) => [...prev, customDesign]);
-        setActiveDesignId(customDesign.id);
-
-        setPlacedDesigns((prev) => [...prev, customDesign]);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleDesignSelect = (design) => {
-  // For preset designs, set as main chest design
-  setSelectedDesign(design);
-  
-  // Also add to frontDesigns if you want it as an additional element
-  const designWithPlacement = {
-    ...design,
-    id: `${design.id}-${Date.now()}`,
-    side: selectedSide,
-    position: { x: 0, y: 0 },
-    size: designSize,
-  };
+    setSelectedDesign(design);
+    
+    const designWithPlacement = {
+      ...design,
+      id: `${design.id}-${Date.now()}`,
+      side: selectedSide,
+      position: { x: 0, y: 0 },
+      size: designSize,
+    };
 
-  setFrontDesigns((prev) => [...prev, designWithPlacement]);
-  setActiveDesignId(designWithPlacement.id);
-};
+    setFrontDesigns((prev) => [...prev, designWithPlacement]);
+    setActiveDesignId(designWithPlacement.id);
+  };
 
   const handleColorSelect = (color) => {
     setSelectedColor(color);
   };
-
-  // const handleClothingTypeChange = (type) => {
-  //   setClothingType(type);
-  // };
 
   const handleSizeChange = (size) => {
     setDesignSize(size);
@@ -134,14 +121,8 @@ function ClothCustomizer() {
       );
 
     setFrontDesigns(prev => updateDesign(prev));
-    setBackDesigns(prev => updateDesign(prev));
     setPlacedDesigns(prev => updateDesign(prev));
   };
-
-  // const handleSideSelect = (side) => {
-  //   setSelectedSide(side);
-  //   setActiveDesignId(null);
-  // };
 
   const getSizeExtraPrice = () => {
     if (selectedSize === "L") return 3;
@@ -388,7 +369,6 @@ function ClothCustomizer() {
                 <TShirtModel
                   selectedColor={selectedColor}
                   chestDesignUrl={selectedDesign?.preview || null}
-                  frontDesigns={frontDesigns} 
                   position={[0, 0, 0]}
                   scale={2}
                 />

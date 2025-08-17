@@ -10,7 +10,7 @@ export default function OrderManagement() {
     const [cartItems, setCartItems] = useState([
         {
             id: "1",
-            name: "Classic White T-Shirt",
+            name: "Customiztion Name",
             price: 29.99,
             quantity: 2,
             size: "M",
@@ -18,19 +18,19 @@ export default function OrderManagement() {
         },
         {
             id: "2",
-            name: "Black Denim Jeans",
+            name: "Customiztion Name",
             price: 79.99,
             quantity: 1,
-            size: "32",
-            color: "Black",
+            size: "XL",
+            color: "Blue",
         },
         {
             id: "3",
-            name: "Striped Long Sleeve",
+            name: "Customiztion Name",
             price: 45.99,
             quantity: 1,
             size: "L",
-            color: "Black/White",
+            color: "Black",
         },
     ]);
 

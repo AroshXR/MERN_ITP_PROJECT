@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
-export function TShirtModel({ selectedColor, presetDesign, chestDesignUrl, frontDesigns = [], scale, position, ...props }) {
+export function TShirtModel({ selectedColor, presetDesign, chestDesignUrl, scale, position, ...props }) {
   const group = useRef();
   const { nodes, materials } = useGLTF('/models/t_shirt.glb');
 
