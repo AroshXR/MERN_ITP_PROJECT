@@ -1,0 +1,137 @@
+.summary-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 5vh 10px; /* reduced from 20vh for mobile */
+  box-sizing: border-box;
+  margin-left: 20vh;
+}
+
+
+.summary-container {
+  margin: 10px auto;
+  padding: 15px;
+  max-width: 650px;
+  width: 83%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.summary-title {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap; /* allow stacking on small screens */
+}
+
+.summary-image img {
+  width: 120px;
+  height: auto;
+  border-radius: 10px;
+  border: 2px solid #eee;
+}
+
+.summary-details {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.summary-details p {
+  margin: 6px 0;
+}
+
+.summary-color-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  border: 1px solid #ccc;
+  vertical-align: middle;
+  border-radius: 4px;
+}
+
+.summary-empty {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  margin: 15px;
+}
+
+.summary-btn {
+  padding: 8px 16px;
+  background-color: #000;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.summary-btn:hover {
+  background-color: #333;
+  transform: translateY(-2px);
+}
+
+.summary-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 60%;
+  margin-right: 8px;
+  box-sizing: border-box;
+}
+
+.summary-input:focus {
+  border-color: #000;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+
+  .summary-wrapper {
+    margin-left: 0vh;
+  }
+
+  .summary-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .summary-image img {
+    width: 140px;
+    margin-bottom: 10px;
+  }
+
+  .summary-details {
+    font-size: 0.9rem;
+  }
+
+  .summary-input {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .summary-btn {
+    width: 100%;
+    padding: 10px 0;
+  }
+}

@@ -8,6 +8,7 @@ import ClothCustomizer from './Components/clothing-customizer/ClothCustomizer';
 import ContactUs from './Components/Home/ContactUs';
 import OrderManagement from './Components/OrderManagement/OrderManagement';
 import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
+import TailorHome from './Components/Tailor_Interface/TailorHome';
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/orderManagement" element={<OrderManagement />}/>
         <Route path='/paymentManagement' element={<PaymentManagement />}/>
+        <Route path='/tailorHome' element={<TailorHome />}/>
       </Routes>
   );
 }

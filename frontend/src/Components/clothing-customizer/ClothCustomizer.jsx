@@ -3,7 +3,6 @@ import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import './ClothCustomizer.css';
 import { TShirtModel } from './components/TShirtModel';
-import { CropTopModel } from './components/CropTopModel';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';
 
@@ -97,12 +96,19 @@ function ClothCustomizer() {
   };
 
   const handleSizeChange = (size) => {
-    setDesignSize(size);
+  setDesignSize(size);
+  
 
-    if (activeDesignId) {
-      updateDesignProperty(activeDesignId, 'size', size);
-    }
-  };
+  if (activeDesignId) {
+    setFrontDesigns(prev => 
+      prev.map(design => 
+        design.id === activeDesignId 
+          ? { ...design, size } 
+          : design
+      )
+    );
+  }
+};
 
   const handlePositionChange = (axis, value) => {
     const newPosition = { ...designPosition, [axis]: value };
@@ -371,6 +377,7 @@ function ClothCustomizer() {
                   chestDesignUrl={selectedDesign?.preview || null}
                   position={[0, 0, 0]}
                   scale={2}
+                  designSize={designSize}
                 />
               </Bounds>
 
