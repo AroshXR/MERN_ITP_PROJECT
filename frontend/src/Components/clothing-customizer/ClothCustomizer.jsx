@@ -25,6 +25,7 @@ function ClothCustomizer() {
   const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
 
 
+
   //Inputing design
   const [selectedSide] = useState("front"); // front or back
   const [frontDesigns, setFrontDesigns] = useState([]);
@@ -78,7 +79,7 @@ function ClothCustomizer() {
 
   const handleDesignSelect = (design) => {
     setSelectedDesign(design);
-    
+
     const designWithPlacement = {
       ...design,
       id: `${design.id}-${Date.now()}`,
@@ -96,19 +97,19 @@ function ClothCustomizer() {
   };
 
   const handleSizeChange = (size) => {
-  setDesignSize(size);
-  
+    setDesignSize(size);
 
-  if (activeDesignId) {
-    setFrontDesigns(prev => 
-      prev.map(design => 
-        design.id === activeDesignId 
-          ? { ...design, size } 
-          : design
-      )
-    );
-  }
-};
+
+    if (activeDesignId) {
+      setFrontDesigns(prev =>
+        prev.map(design =>
+          design.id === activeDesignId
+            ? { ...design, size }
+            : design
+        )
+      );
+    }
+  };
 
   const handlePositionChange = (axis, value) => {
     const newPosition = { ...designPosition, [axis]: value };
@@ -166,16 +167,10 @@ function ClothCustomizer() {
               <div className="clothing-options">
                 <button
                   className={`clothing-btn ${clothingType === "tshirt" ? "active" : ""}`}
-                // onClick={() => handleClothingTypeChange("tshirt")}
                 >
                   T-Shirt
                 </button>
-                {/* <button
-                  className={`clothing-btn ${clothingType === "croptop" ? "active" : ""}`}
-                  onClick={() => handleClothingTypeChange("croptop")}
-                >
-                  Crop-Top
-                </button> */}
+
               </div>
             </div>
 
@@ -194,24 +189,7 @@ function ClothCustomizer() {
                 ))}
               </div>
             </div>
-            {/* Cloth size changer         */}
-            {/* <div className="panel-section">
-              <h3>Design Placement</h3>
-              <div className="side-options">
-                <button
-                  className={`side-btn ${selectedSide === "front" ? "active" : ""}`}
-                  onClick={() => handleSideSelect("front")}
-                >
-                  Front
-                </button>
-                <button
-                  className={`side-btn ${selectedSide === "back" ? "active" : ""}`}
-                  onClick={() => handleSideSelect("back")}
-                >
-                  Back
-                </button>
-              </div>
-            </div> */}
+            
 
             {/* Cloth image adding part*/}
             <div className="panel-section">
@@ -245,51 +223,7 @@ function ClothCustomizer() {
               <p className="side-info">Will be placed on: <strong>{selectedSide}</strong></p>
             </div>
 
-            <div className="panel-section">
-              <h3>Design Size</h3>
-              <input
-                type="range"
-                min="20"
-                max="150"
-                value={designSize}
-                onChange={(e) => handleSizeChange(parseInt(e.target.value))}
-                className="size-slider"
-              />
-              <span className="size-value">{designSize}px</span>
-            </div>
-
-            {activeDesignId && (
-              <div className="panel-section">
-                <h3>Design Position</h3>
-                <div className="position-controls">
-                  <div className="position-control">
-                    <label>X Position:</label>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={designPosition.x}
-                      onChange={(e) => handlePositionChange('x', parseInt(e.target.value))}
-                      className="position-slider"
-                    />
-                    <span>{designPosition.x}</span>
-                  </div>
-                  <div className="position-control">
-                    <label>Y Position:</label>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={designPosition.y}
-                      onChange={(e) => handlePositionChange('y', parseInt(e.target.value))}
-                      className="position-slider"
-                    />
-                    <span>{designPosition.y}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
+          
             <div className="panel-section">
               <h3>Pricing</h3>
 
