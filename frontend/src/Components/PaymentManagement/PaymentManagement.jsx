@@ -223,7 +223,7 @@ const CheckoutPage = () => {
                           checked={paymentMethod === "google"}
                           onChange={(e) => setPaymentMethod(e.target.value)}
                         />
-                        <label htmlFor="google">Google Pay</label>
+                        <label htmlFor="google">Cash On Dilivery</label>
                       </div>
                     </div>
                   </div>
@@ -304,7 +304,7 @@ const CheckoutPage = () => {
                       {paymentMethod === "card" && "Credit Card ending in 3456"}
                       {paymentMethod === "paypal" && "PayPal"}
                       {paymentMethod === "apple" && "Apple Pay"}
-                      {paymentMethod === "google" && "Google Pay"}
+                      {paymentMethod === "google" && "Cash On Dilivery"}
                     </p>
                   </div>
 
