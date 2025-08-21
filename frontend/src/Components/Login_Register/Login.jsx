@@ -73,6 +73,17 @@ function LoginPage() {
           <div className="login-container">
             <h2>Login</h2>
             <form onSubmit={handleSubmit}>
+
+              <div className="form-group">
+                <label htmlFor="type">As a:</label>
+                <select id="type" name="type" value={user.type} onChange={handleChange} required>
+                  <option value="">Select</option>
+                  <option value="customer">Customer</option>
+                  <option value="admin">Admin</option>
+                  <option value="tailor">Tailor</option>
+                </select>
+              </div>
+
               <div className="form-group">
                 <label htmlFor="username">Username:</label>
                 <input type="text" id="username" name="username" value={user.username} onChange={handleChange} required />

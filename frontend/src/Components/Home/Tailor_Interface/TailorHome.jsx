@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import NavBar from '../NavBar/navBar';
-import Footer from '../Footer/Footer';
+import NavBar from '../../NavBar/navBar';
+import Footer from '../../Footer/Footer';
 import { TShirtModel } from './components/TShirtModel';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';

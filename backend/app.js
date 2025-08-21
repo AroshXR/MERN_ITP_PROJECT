@@ -12,7 +12,7 @@ app.use(cors()); //to parse JSON data
 app.use("/users", router);
 
 
-mongoose.connect("mongodb+srv://chearoavitharipasi:bluhbluhbluh123@itp-project-db.7afiybi.mongodb.net/")
+mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
 .then(() => console.log("Connected to mongodb"))
 .then(() => {
     app.listen(5000);

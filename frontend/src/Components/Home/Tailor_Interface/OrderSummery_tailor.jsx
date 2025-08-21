@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./OrderSummery_tailor.css";
-import print1 from "../clothing-customizer/customizer_preset_designs/print 1.jpg"
+import print1 from "../../clothing-customizer/customizer_preset_designs/print 1.jpg"
 
 function OrderSummery_tailor() {
   const [orderId, setOrderId] = useState("");
