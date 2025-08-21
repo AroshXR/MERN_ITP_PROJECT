@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const router = require("./routes/UserRoutes")
-const Design = require("./models/DesignModel");
 
 const app = express();
 
@@ -13,10 +12,10 @@ app.use(cors()); //to parse JSON data
 app.use("/users", router);
 
 
-mongoose.connect("mongodb+srv://chearoavitharipasi:5qtqR9uSTsl8dPcS@itp-project-db.7afiybi.mongodb.net/")
+mongoose.connect("mongodb+srv://chearoavitharipasi:bluhbluhbluh123@itp-project-db.7afiybi.mongodb.net/")
 .then(() => console.log("Connected to mongodb"))
 .then(() => {
-    app.listen(5000);   
+    app.listen(5000);
 })
 .catch((err) => console.log(err));
 
@@ -55,78 +54,4 @@ app.post("/login", async (req, res) => {
     }catch (error) {
         return res.status(500).json({status: "error", message: "Internal server error"});
     }
-});
-
-app.post('/', async (req, res) => {
-  try {
-    const {
-      clothingType,
-      color,
-      presetDesign,
-      customDesign,
-      tshirtSize,
-      sizePrice,
-      designSize,
-      designPosition,
-      quantity,
-      totalPrice,
-      placedDesigns
-    } = req.body;
-
-    const newDesign = new Design({
-      userId: req.user.id,
-      clothingType,
-      color,
-      presetDesign,
-      customDesign,
-      tshirtSize,
-      sizePrice,
-      designSize,
-      designPosition,
-      quantity,
-      totalPrice,
-      placedDesigns
-    });
-
-    const design = await newDesign.save();
-    res.json(design);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-// Get all designs for a user
-app.get('/', async (req, res) => {
-  try {
-    const designs = await Design.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.json(designs);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-// Get a single design
-app.get('/:id', async (req, res) => {
-  try {
-    const design = await Design.findById(req.params.id);
-    
-    if (!design) {
-      return res.status(404).json({ msg: 'Design not found' });
-    }
-    
-    // Check if user owns the design
-    if (design.userId.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-    
-    res.json(design);
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Design not found' });
-    }
-    res.status(500).send('Server Error');
-  }
 });
