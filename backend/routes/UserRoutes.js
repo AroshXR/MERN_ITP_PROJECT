@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 //insert model
-const User = require("../models/UserModel");
+const User = require("../models/User");
 
 //insert user controller
 const userController = require("../controllers/UserController");

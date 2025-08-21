@@ -14,6 +14,7 @@ function LoginPage() {
   const [user, setUser] = useState({
     username: '',
     password: '',
+    type: ''
   });
 
   const handleChange = (e) => {
@@ -30,7 +31,8 @@ function LoginPage() {
     try {
       const response = await axios.post("http://localhost:5000/login", {
         username: user.username,
-        password: user.password
+        password: user.password,
+        type: user.type
       });
       return response.data;
     } catch (error) {
@@ -46,9 +48,9 @@ function LoginPage() {
     try {
       const response = await sendRequest();
       if (response.status === "ok") {
-        localStorage.setItem("username", user.username); // or sessionStorage
+        localStorage.setItem("username", user.username);
         setError(false);
-        history('/viewDetails');
+        history('/userHome');
       } else {  
         setError(true);
       }
@@ -78,9 +80,9 @@ function LoginPage() {
                 <label htmlFor="type">As a:</label>
                 <select id="type" name="type" value={user.type} onChange={handleChange} required>
                   <option value="">Select</option>
-                  <option value="customer">Customer</option>
-                  <option value="admin">Admin</option>
-                  <option value="tailor">Tailor</option>
+                  <option value="Customer">Customer</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Tailor">Tailor</option>  
                 </select>
               </div>
 
@@ -94,7 +96,7 @@ function LoginPage() {
               </div>
               {error && (
                 <small className="error-message">
-                  Invalid username or password
+                  Invalid Credentials
                 </small>
               )}
               <button type="submit">Login</button>

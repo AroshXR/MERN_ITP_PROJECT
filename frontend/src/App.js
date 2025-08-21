@@ -9,6 +9,7 @@ import ContactUs from './Components/Home/ContactUs';
 import OrderManagement from './Components/OrderManagement/OrderManagement';
 import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
+import UserHome from './Components/Home/UserHome/UserHome';
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/orderManagement" element={<OrderManagement />}/>
         <Route path='/paymentManagement' element={<PaymentManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
+        <Route path='/userHome' element={<UserHome />}/>
       </Routes>
   );
 }

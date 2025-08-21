@@ -14,7 +14,8 @@ function RegisterPage() {
         address: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        type: ""
     });
 
     const handleChange = (e) => {
@@ -33,7 +34,8 @@ function RegisterPage() {
                 username: user.username,
                 address: user.address,
                 email: user.email,
-                password: user.password
+                password: user.password,
+                type: user.type || "Customer"
             });
             return response.data;
         } catch (error) {
@@ -55,7 +57,6 @@ function RegisterPage() {
         }
     };
 
-
     return (
 
         <div className="container">
@@ -70,6 +71,10 @@ function RegisterPage() {
                 <div className="login-container">
                     <h2>Register</h2>
                     <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="userType">User Type:</label>
+                            <input type="text" id="userType" name="type" value={"Customer"} readOnly />
+                        </div>
                         <div className="form-group">
                             <label htmlFor="username">Username:</label>
                             <input type="text" id="username" name="username" value={user.username} onChange={handleChange} required />
