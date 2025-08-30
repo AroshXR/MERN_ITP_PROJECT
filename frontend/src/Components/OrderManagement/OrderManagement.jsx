@@ -1,172 +1,390 @@
 "use client";
-
-import { useState} from "react";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import NavBar from '../NavBar/navBar';
+import Footer from '../Footer/Footer';
+import { useState, useEffect } from "react";
+import { Minus, Plus, Trash2, ShoppingBag, Loader2, Edit3 } from "lucide-react";
 import "./OrderManagement.css";
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../../AuthGuard/AuthGuard';
 
 export default function OrderManagement() {
     const history = useNavigate();
-    const [cartItems, setCartItems] = useState([
-        {
-            id: "1",
-            name: "Customiztion Name",
-            price: 29.99,
-            quantity: 2,
-            size: "M",
-            color: "White",
-        },
-        {
-            id: "2",
-            name: "Customiztion Name",
-            price: 79.99,
-            quantity: 1,
-            size: "XL",
-            color: "Blue",
-        },
-        {
-            id: "3",
-            name: "Customiztion Name",
-            price: 45.99,
-            quantity: 1,
-            size: "L",
-            color: "Black",
-        },
-    ]);
+    const { isAuthenticated, getToken, logout } = useAuth();
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [notification, setNotification] = useState(null);
 
+    // Show notification
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+    };
 
+    // Fetch cloth customizer data from backend
+    useEffect(() => {
+        // Temporarily disabled authentication check
+        // if (isAuthenticated()) {
+        fetchClothCustomizers();
+        // } else {
+        //     setError('Please log in to view your cart');
+        //     setLoading(false);
+        // }
+    }, []);
 
-    const updateQuantity = (id, newQuantity) => {
+    const fetchClothCustomizers = async (retryCount = 0) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Temporarily disabled token check
+            // const token = getToken();
+            // if (!token) {
+            //     setError('Authentication token not found. Please log in again.');
+            //     setLoading(false);
+            //     return;
+            // }
+
+            console.log('Fetching cart data without authentication');
+
+            const response = await axios.get('http://localhost:5001/cloth-customizer');
+
+            if (response.data.status === "ok") {
+                // Transform the data to match cart item structure
+                const transformedItems = response.data.data.map((item, index) => ({
+                    id: item._id || `item-${index}`,
+                    name: `Custom ${item.clothingType || 'Clothing'}`,
+                    price: item.totalPrice / item.quantity, // Price per item
+                    quantity: item.quantity,
+                    size: item.size,
+                    color: item.color,
+                    clothingType: item.clothingType,
+                    selectedDesign: item.selectedDesign,
+                    placedDesigns: item.placedDesigns,
+                    customImage: item.customImage,
+                    totalPrice: item.totalPrice,
+                    createdAt: item.createdAt
+                }));
+
+                setCartItems(transformedItems);
+            } else {
+                setError('Failed to fetch cart items');
+            }
+        } catch (error) {
+            console.error('Error fetching cloth customizers:', error);
+            
+            if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+                setError('Cannot connect to server. Please check your connection and try again.');
+            } else if (retryCount < 3) {
+                // Retry up to 3 times for other errors
+                console.log(`Retrying... Attempt ${retryCount + 1}`);
+                setTimeout(() => fetchClothCustomizers(retryCount + 1), 1000 * (retryCount + 1));
+                return;
+            } else {
+                setError('Failed to load cart items. Please try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateQuantity = async (id, newQuantity) => {
         if (newQuantity < 1) return;
-        setCartItems((items) => items.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item)));
+
+        try {
+            // Find the item to update
+            const itemToUpdate = cartItems.find(item => item.id === id);
+            if (!itemToUpdate) return;
+
+            // Calculate new total price
+            const newTotalPrice = (itemToUpdate.price * newQuantity);
+
+            // Update in backend (authentication disabled)
+            // const token = getToken();
+            // if (!token) {
+            //     alert('Authentication token not found. Please log in again.');
+            //     return;
+            // }
+
+            await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
+                quantity: newQuantity,
+                totalPrice: newTotalPrice
+            });
+
+            // Update local state
+            setCartItems((items) => items.map((item) =>
+                item.id === id ? { ...item, quantity: newQuantity, totalPrice: newTotalPrice } : item
+            ));
+            showNotification('Quantity updated successfully!');
+        } catch (error) {
+            console.error('Error updating quantity:', error);
+            alert('Failed to update quantity. Please try again.');
+        }
     };
 
-    const removeItem = (id) => {
-        setCartItems((items) => items.filter((item) => item.id !== id));
+    const removeItem = async (id) => {
+        try {
+            // Show confirmation dialog
+            const isConfirmed = window.confirm('Are you sure you want to remove this item from your cart?');
+            if (!isConfirmed) return;
+
+            // Remove from backend (authentication disabled)
+            // const token = getToken();
+            // if (!token) {
+            //     alert('Authentication token not found. Please log in again.');
+            //     return;
+            // }
+
+            await axios.delete(`http://localhost:5001/cloth-customizer/${id}`);
+
+            // Remove from local state
+            setCartItems((items) => items.filter((item) => item.id !== id));
+            showNotification('Item removed from cart successfully!');
+        } catch (error) {
+            console.error('Error removing item:', error);
+            alert('Failed to remove item. Please try again.');
+        }
     };
 
-    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const shipping = 9.99;
+    const editItem = async (id) => {
+        try {
+            // Get the item data (authentication disabled)
+            // const token = getToken();
+            // if (!token) {
+            //     alert('Authentication token not found. Please log in again.');
+            //     return;
+            // }
+
+            const response = await axios.get(`http://localhost:5001/cloth-customizer/${id}`);
+
+            if (response.data.status === "ok") {
+                // Store the item data in localStorage for the customizer to retrieve
+                localStorage.setItem('editItemData', JSON.stringify(response.data.data));
+
+                // Navigate to the customizer
+                history('/customizer?edit=true');
+            } else {
+                alert('Failed to retrieve item data for editing.');
+            }
+        } catch (error) {
+            console.error('Error retrieving item for editing:', error);
+            alert('Failed to retrieve item for editing. Please try again.');
+        }
+    };
+
+    const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const shipping = cartItems.length > 0 ? 9.99 : 0;
     const tax = subtotal * 0.08;
     const total = subtotal + shipping + tax;
 
     const handlePlaceOrder = () => {
         console.log('Placing order...', { cartItems, total });
-        history("/paymentManagement")
+        history("/paymentManagement");
     };
 
-    return (
-        <div className="order-management-container">
-            <div className="order-content">
-                <div className="order-header">
-                    <h1 className="order-title">Review your items and complete your order</h1>
+    if (loading) {
+        return (
+            <div className="order-management-container">
+                <div className="order-content">
+                    <div className="loading-container">
+                        <Loader2 className="loading-spinner" />
+                        <p>Loading your cart items...</p>
+                    </div>
                 </div>
+            </div>
+        );
+    }
 
-                <div className="order-main">
-                    {/* Cart Section */}
-                    <div className="cart-section">
-                        <div className="order-card">
-                            <div className="card-header">
-                                <h2 className="card-title">
-                                     Shopping Cart ({cartItems.length} items)
-                                </h2>
-                            </div>
-                            <div className="card-content">
-                                {cartItems.length === 0 ? (
-                                    <div className="empty-cart">
-                                        <p>Your cart is empty</p>
-                                    </div>
-                                ) : (
-                                    <div className="items-list">
-                                        {cartItems.map((item) => (
-                                            <div key={item.id} className="cart-item">
-                                                <div className="item-info">
-                                                    <h3 className="item-name">{item.name}</h3>
-                                                    <p className="item-details">
-                                                        Size: {item.size} | Color: {item.color}
-                                                    </p>
-                                                    <p className="item-price">${item.price.toFixed(2)}</p>
-                                                </div>
-                                                <div className="item-actions">
-                                                    <button
-                                                        onClick={() => removeItem(item.id)}
-                                                        className="remove-button"
-                                                    >
-                                                        <Trash2 className="small-icon" />
-                                                    </button>
-                                                    <div className="quantity-controls">
-                                                        <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="quantity-button"
-                                                        >
-                                                            <Minus className="small-icon" />
-                                                        </button>
-                                                        <span className="quantity-value">{item.quantity}</span>
-                                                        <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="quantity-button"
-                                                        >
-                                                            <Plus className="small-icon" />
-                                                        </button>
-                                                    </div>
-                                                    <p className="item-total">${(item.price * item.quantity).toFixed(2)}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+    if (error) {
+        return (
+            <div className="order-management-container">
+                <NavBar />
+                <div className="order-content">
+                    <div className="error-container">
+                        <p className="error-message">{error}</p>
+                        <button onClick={fetchClothCustomizers} className="retry-button">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-                                {cartItems.length > 0 && (
-                                    <div className="cart-footer">
-                                        <div className="subtotal-row">
-                                            <span>Subtotal:</span>
-                                            <span>${subtotal.toFixed(2)}</span>
-                                        </div>
-                                        <button
-                                            onClick={handlePlaceOrder}
-                                            className="checkout-button"
-                                        >
-                                            Proceed to Payment
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+    return (
+        <div>
+            <NavBar />
+            <div className="order-management-container">
+                
+                {/* Notification */}
+                {notification && (
+                    <div className={`notification ${notification.type}`}>
+                        {notification.message}
+                    </div>
+                )}
+
+                <div className="order-content">
+
+                    <div className="order-header">
+                        <h1 className="order-title">Review your items and complete your order</h1>
+                        <div className="header-actions">
+                            <button
+                                onClick={fetchClothCustomizers}
+                                className="refresh-button"
+                                disabled={loading}
+                            >
+                                {loading ? 'Refreshing...' : 'Refresh Cart'}
+                            </button>
+                            <span className="cart-status">
+                                {cartItems.length > 0 ? `${cartItems.length} item(s) in cart` : 'Cart is empty'}
+                            </span>
                         </div>
                     </div>
 
-                    {/* Order Summary Section */}
-                    <div className="summary-section">
-                        <div className="order-card sticky-card">
-                            <div className="card-header">
-                                <h2 className="card-title">Order Summary</h2>
+                    <div className="order-main">
+                        {/* Cart Section */}
+                        <div className="cart-section">
+                            <div className="order-card">
+                                <div className="card-header">
+                                    <h2 className="card-title">
+                                        Shopping Cart ({cartItems.length} items)
+                                    </h2>
+                                </div>
+                                <div className="card-content">
+                                    {cartItems.length === 0 ? (
+                                        <div className="empty-cart">
+                                            <ShoppingBag className="empty-cart-icon" />
+                                            <p>Your cart is empty</p>
+                                            <p className="empty-cart-subtitle">Start customizing your clothing to see items here!</p>
+                                            <button
+                                                onClick={() => history('/customizer?edit=true')}
+                                                className="start-customizing-button"
+                                            >
+                                                Start Customizing
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="items-list">
+                                            {cartItems.map((item) => (
+                                                <div key={item.id} className="cart-item">
+                                                    <div className="item-info">
+                                                        <h3 className="item-name">{item.name}</h3>
+                                                        <div className="item-details">
+                                                            <p><strong>Size:</strong> {item.size}</p>
+                                                            <p><strong>Color:</strong> {item.color}</p>
+                                                            <p><strong>Type:</strong> {item.clothingType}</p>
+                                                            {item.selectedDesign && (
+                                                                <p><strong>Design:</strong> {item.selectedDesign.name}</p>
+                                                            )}
+                                                            {item.placedDesigns && item.placedDesigns.length > 0 && (
+                                                                <p><strong>Designs Applied:</strong> {item.placedDesigns.length}</p>
+                                                            )}
+                                                            {item.selectedDesign?.isCustomUpload && (
+                                                                <p><strong>Custom Image:</strong> Applied</p>
+                                                            )}
+                                                            {item.createdAt && (
+                                                                <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleDateString()}</p>
+                                                            )}
+                                                        </div>
+                                                        <p className="item-price">${item.price.toFixed(2)} per item</p>
+                                                    </div>
+                                                    <div className="item-actions">
+                                                        <button
+                                                            onClick={() => removeItem(item.id)}
+                                                            className="remove-button"
+                                                            title="Remove item"
+                                                        >
+                                                            <Trash2 className="small-icon" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => editItem(item.id)}
+                                                            className="edit-button"
+                                                            title="Edit item"
+                                                        >
+                                                            <Edit3 className="small-icon" />
+                                                        </button>
+                                                        <div className="quantity-controls">
+                                                            <button
+                                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                                className="quantity-button"
+                                                                disabled={item.quantity <= 1}
+                                                            >
+                                                                <Minus className="small-icon" />
+                                                            </button>
+                                                            <span className="quantity-value">{item.quantity}</span>
+                                                            <button
+                                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                                className="quantity-button"
+                                                            >
+                                                                <Plus className="small-icon" />
+                                                            </button>
+                                                        </div>
+                                                        <p className="item-total">${item.totalPrice.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {cartItems.length > 0 && (
+                                        <div className="cart-footer">
+                                            <div className="cart-summary">
+                                                <div className="summary-row">
+                                                    <span>Total Items:</span>
+                                                    <span>{cartItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                                                </div>
+                                                <div className="subtotal-row">
+                                                    <span>Subtotal:</span>
+                                                    <span>${subtotal.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={handlePlaceOrder}
+                                                className="checkout-button"
+                                            >
+                                                Proceed to Payment
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div className="card-content">
-                                <div className="summary-details">
-                                    <div className="summary-row">
-                                        <span>Subtotal:</span>
-                                        <span>${subtotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="summary-row">
-                                        <span>Shipping:</span>
-                                        <span>${shipping.toFixed(2)}</span>
-                                    </div>
-                                    <div className="summary-row">
-                                        <span>Tax:</span>
-                                        <span>${tax.toFixed(2)}</span>
-                                    </div>
-                                    <div className="divider"></div>
-                                    <div className="summary-row total-row">
-                                        <span>Total:</span>
-                                        <span>${total.toFixed(2)}</span>
+                        </div>
+
+                        {/* Order Summary Section */}
+                        <div className="summary-section">
+                            <div className="order-card sticky-card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Order Summary</h2>
+                                </div>
+                                <div className="card-content">
+                                    <div className="summary-details">
+                                        <div className="summary-row">
+                                            <span>Subtotal:</span>
+                                            <span>${subtotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="summary-row">
+                                            <span>Shipping:</span>
+                                            <span>${shipping.toFixed(2)}</span>
+                                        </div>
+                                        <div className="summary-row">
+                                            <span>Tax:</span>
+                                            <span>${tax.toFixed(2)}</span>
+                                        </div>
+                                        <div className="divider"></div>
+                                        <div className="summary-row total-row">
+                                            <span>Total:</span>
+                                            <span>${total.toFixed(2)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                
             </div>
+            <Footer />
         </div>
+
     );
 }
