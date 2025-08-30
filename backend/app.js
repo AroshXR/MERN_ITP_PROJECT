@@ -19,13 +19,8 @@ app.use("/users", router);
 app.use("/users", router1);
 
 
-<<<<<<< HEAD
-mongoose.connect("mongodb+srv://chearoavitharipasi:5qtqR9uSTsl8dPcS@itp-project-db.7afiybi.mongodb.net/")
-.then(() => console.log ("Connected to mongodb"))
-=======
 mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
 .then(() => console.log("Connected to mongodb"))
->>>>>>> 306741f933fa013ce2805a0709458e03553d53bc
 .then(() => {
     app.listen(5001);
 })
