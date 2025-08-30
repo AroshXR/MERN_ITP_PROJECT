@@ -1,9 +1,8 @@
-const User = require("../models/UserModel");
-
+const User = require("../models/User");
 
 //Data display
 const getAllUsers = async (request, response, next) => {
-    let users;
+    let users;  
 
     try{
         users = await User.find();

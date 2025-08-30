@@ -10,30 +10,27 @@ export default function OrderManagement() {
     const [cartItems, setCartItems] = useState([
         {
             id: "1",
-            name: "Classic White T-Shirt",
+            name: "Customiztion Name",
             price: 29.99,
             quantity: 2,
             size: "M",
             color: "White",
-            image: "/placeholder.svg?height=100&width=100",
         },
         {
             id: "2",
-            name: "Black Denim Jeans",
+            name: "Customiztion Name",
             price: 79.99,
             quantity: 1,
-            size: "32",
-            color: "Black",
-            image: "/placeholder.svg?height=100&width=100",
+            size: "XL",
+            color: "Blue",
         },
         {
             id: "3",
-            name: "Striped Long Sleeve",
+            name: "Customiztion Name",
             price: 45.99,
             quantity: 1,
             size: "L",
-            color: "Black/White",
-            image: "/placeholder.svg?height=100&width=100",
+            color: "Black",
         },
     ]);
 
@@ -62,8 +59,7 @@ export default function OrderManagement() {
         <div className="order-management-container">
             <div className="order-content">
                 <div className="order-header">
-                    <h1 className="order-title">Order Management</h1>
-                    <p className="order-subtitle">Review your items and complete your order</p>
+                    <h1 className="order-title">Review your items and complete your order</h1>
                 </div>
 
                 <div className="order-main">
@@ -72,8 +68,7 @@ export default function OrderManagement() {
                         <div className="order-card">
                             <div className="card-header">
                                 <h2 className="card-title">
-                                    <ShoppingBag className="icon" />
-                                    Shopping Cart ({cartItems.length} items)
+                                     Shopping Cart ({cartItems.length} items)
                                 </h2>
                             </div>
                             <div className="card-content">
@@ -85,13 +80,6 @@ export default function OrderManagement() {
                                     <div className="items-list">
                                         {cartItems.map((item) => (
                                             <div key={item.id} className="cart-item">
-                                                <img
-                                                    src={item.image || "/placeholder.svg"}
-                                                    alt={item.name}
-                                                    width={100}
-                                                    height={100}
-                                                    className="item-image"
-                                                />
                                                 <div className="item-info">
                                                     <h3 className="item-name">{item.name}</h3>
                                                     <p className="item-details">

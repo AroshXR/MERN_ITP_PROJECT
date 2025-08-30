@@ -3,7 +3,6 @@ import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import './ClothCustomizer.css';
 import { TShirtModel } from './components/TShirtModel';
-import { CropTopModel } from './components/CropTopModel';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';
 
@@ -26,10 +25,10 @@ function ClothCustomizer() {
   const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
 
 
+
   //Inputing design
-  const [selectedSide, setSelectedSide] = useState("front"); // front or back
+  const [selectedSide] = useState("front"); // front or back
   const [frontDesigns, setFrontDesigns] = useState([]);
-  const [backDesigns, setBackDesigns] = useState([]);
   const [activeDesignId, setActiveDesignId] = useState(null);
 
   const controlsRef = React.useRef();
@@ -68,42 +67,28 @@ function ClothCustomizer() {
           name: "Custom Image",
           price: 25,
           preview: imageUrl,
-          side: selectedSide,
-          position: { x: 0, y: 0 },
+          position: { designPosition },
           size: designSize,
         };
+        setSelectedDesign(customDesign);
 
-        if (selectedSide === "front") {
-          setFrontDesigns((prev) => [...prev, customDesign]);
-        } else {
-          setBackDesigns((prev) => [...prev, customDesign]);
-        }
-
-        setPlacedDesigns((prev) => [...prev, customDesign]);
-        setActiveDesignId(customDesign.id);
-
-        setPlacedDesigns((prev) => [...prev, customDesign]);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleDesignSelect = (design) => {
+    setSelectedDesign(design);
+
     const designWithPlacement = {
       ...design,
       id: `${design.id}-${Date.now()}`,
       side: selectedSide,
-      position: { x: 0, y: 0 }, // Start at center of chest
+      position: { x: 0, y: 0 },
       size: designSize,
     };
 
-    if (selectedSide === "front") {
-      setFrontDesigns((prev) => [...prev, designWithPlacement]);
-    } else {
-      setBackDesigns((prev) => [...prev, designWithPlacement]);
-    }
-
-    setPlacedDesigns((prev) => [...prev, designWithPlacement]);
+    setFrontDesigns((prev) => [...prev, designWithPlacement]);
     setActiveDesignId(designWithPlacement.id);
   };
 
@@ -111,15 +96,18 @@ function ClothCustomizer() {
     setSelectedColor(color);
   };
 
-  const handleClothingTypeChange = (type) => {
-    setClothingType(type);
-  };
-
   const handleSizeChange = (size) => {
     setDesignSize(size);
 
+
     if (activeDesignId) {
-      updateDesignProperty(activeDesignId, 'size', size);
+      setFrontDesigns(prev =>
+        prev.map(design =>
+          design.id === activeDesignId
+            ? { ...design, size }
+            : design
+        )
+      );
     }
   };
 
@@ -140,38 +128,8 @@ function ClothCustomizer() {
       );
 
     setFrontDesigns(prev => updateDesign(prev));
-    setBackDesigns(prev => updateDesign(prev));
     setPlacedDesigns(prev => updateDesign(prev));
   };
-
-  // const handleSideSelect = (side) => {
-  //   setSelectedSide(side);
-  //   setActiveDesignId(null);
-  // };
-
-  const removeDesign = (designId) => {
-    setFrontDesigns(prev => prev.filter(d => d.id !== designId));
-    setBackDesigns(prev => prev.filter(d => d.id !== designId));
-    setPlacedDesigns(prev => prev.filter(d => d.id !== designId));
-    setActiveDesignId(null);
-  };
-
-  const selectDesignForEditing = (design) => {
-    setActiveDesignId(design.id);
-    setSelectedSide(design.side);
-    setDesignPosition(design.position);
-    setDesignSize(design.size);
-  };
-
-  const SizeSelector = ({ onSizeChange }) => {
-    const sizes = ["S", "M", "L", "XL", "XXL"];
-    const [selectedSize, setSelectedSize] = useState(null);
-
-    const handleSelect = (size) => {
-      setSelectedSize(size);
-      if (onSizeChange) onSizeChange(size);
-    };
-  }
 
   const getSizeExtraPrice = () => {
     if (selectedSize === "L") return 3;
@@ -209,16 +167,10 @@ function ClothCustomizer() {
               <div className="clothing-options">
                 <button
                   className={`clothing-btn ${clothingType === "tshirt" ? "active" : ""}`}
-                  onClick={() => handleClothingTypeChange("tshirt")}
                 >
                   T-Shirt
                 </button>
-                {/* <button
-                  className={`clothing-btn ${clothingType === "croptop" ? "active" : ""}`}
-                  onClick={() => handleClothingTypeChange("croptop")}
-                >
-                  Crop-Top
-                </button> */}
+
               </div>
             </div>
 
@@ -237,24 +189,7 @@ function ClothCustomizer() {
                 ))}
               </div>
             </div>
-            {/* Cloth size changer         */}
-            {/* <div className="panel-section">
-              <h3>Design Placement</h3>
-              <div className="side-options">
-                <button
-                  className={`side-btn ${selectedSide === "front" ? "active" : ""}`}
-                  onClick={() => handleSideSelect("front")}
-                >
-                  Front
-                </button>
-                <button
-                  className={`side-btn ${selectedSide === "back" ? "active" : ""}`}
-                  onClick={() => handleSideSelect("back")}
-                >
-                  Back
-                </button>
-              </div>
-            </div> */}
+            
 
             {/* Cloth image adding part*/}
             <div className="panel-section">
@@ -288,51 +223,7 @@ function ClothCustomizer() {
               <p className="side-info">Will be placed on: <strong>{selectedSide}</strong></p>
             </div>
 
-            <div className="panel-section">
-              <h3>Design Size</h3>
-              <input
-                type="range"
-                min="20"
-                max="150"
-                value={designSize}
-                onChange={(e) => handleSizeChange(parseInt(e.target.value))}
-                className="size-slider"
-              />
-              <span className="size-value">{designSize}px</span>
-            </div>
-
-            {activeDesignId && (
-              <div className="panel-section">
-                <h3>Design Position</h3>
-                <div className="position-controls">
-                  <div className="position-control">
-                    <label>X Position:</label>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={designPosition.x}
-                      onChange={(e) => handlePositionChange('x', parseInt(e.target.value))}
-                      className="position-slider"
-                    />
-                    <span>{designPosition.x}</span>
-                  </div>
-                  <div className="position-control">
-                    <label>Y Position:</label>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={designPosition.y}
-                      onChange={(e) => handlePositionChange('y', parseInt(e.target.value))}
-                      className="position-slider"
-                    />
-                    <span>{designPosition.y}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
+          
             <div className="panel-section">
               <h3>Pricing</h3>
 
@@ -415,6 +306,16 @@ function ClothCustomizer() {
               <pointLight position={[-5, 5, 5]} intensity={0.5} />
 
               <Bounds fit clip observe margin={1.2}>
+                <TShirtModel
+                  selectedColor={selectedColor}
+                  chestDesignUrl={selectedDesign?.preview || null}
+                  position={[0, 0, 0]}
+                  scale={2}
+                  designSize={designSize}
+                />
+              </Bounds>
+
+              {/* <Bounds fit clip observe margin={1.2}>
                 {clothingType === "tshirt" ? (
                   <TShirtModel
                     selectedColor={selectedColor}
@@ -431,7 +332,7 @@ function ClothCustomizer() {
                     scale={3}
                   />
                 )}
-              </Bounds>
+              </Bounds> */}
 
               <OrbitControls
                 ref={controlsRef}

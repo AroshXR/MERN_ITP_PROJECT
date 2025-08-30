@@ -7,6 +7,11 @@ const app = express();
 
 const cors = require("cors");
 
+const bcrypt = require("bcryptjs");
+
+const createToken = require('./utils/jwt');
+
+
 //middleware
 app.use(express.json());
 app.use(cors()); //to parse JSON data
@@ -14,24 +19,33 @@ app.use("/users", router);
 app.use("/users", router1);
 
 
+<<<<<<< HEAD
 mongoose.connect("mongodb+srv://chearoavitharipasi:5qtqR9uSTsl8dPcS@itp-project-db.7afiybi.mongodb.net/")
 .then(() => console.log ("Connected to mongodb"))
+=======
+mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
+.then(() => console.log("Connected to mongodb"))
+>>>>>>> 306741f933fa013ce2805a0709458e03553d53bc
 .then(() => {
-    app.listen(5000);
+    app.listen(5001);
 })
 .catch((err) => console.log(err));
 
-//call register model
-require("./models/Register");
-const User = mongoose.model("Register");
+//call user model
+require("./models/User");
+const User = mongoose.model("User");
+
 app.post("/register", async (req, res) => {
-    const { username, address, email, password } = req.body;
+    const { username, address, email, password, type } = req.body;
     try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         await User.create({
             username,
             address,
             email,
-            password
+            password : hashedPassword,
+            type
         });
         res.send({status: "ok", message: "User registered successfully"});
     } catch (error) {
@@ -42,18 +56,31 @@ app.post("/register", async (req, res) => {
 //login
 
 app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, type } = req.body;
     try{
+        const userType = await User.findOne({type});
+        if(!userType){
+            return res.json({status: "error", message: "User not found"});
+        }    
+
         const user = await User.findOne({username});
         if(!user){
             return res.json({status: "error", message: "User not found"});
         }
-        if(user.password === password){
-            return res.json({status: "ok", message: "Login successful"});
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if(isMatch){
+            const token = createToken(user._id);
+            return res.json({status: "ok", message: "Login successful", token});
         }else{
             return res.json({status: "error", message: "Invalid password"});
         }
+
+            
+
     }catch (error) {
+        console.log(error);
         return res.status(500).json({status: "error", message: "Internal server error"});
     }
 });
