@@ -20,7 +20,7 @@ app.use("/users", router);
 mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
 .then(() => console.log("Connected to mongodb"))
 .then(() => {
-    app.listen(5000);
+    app.listen(5001);
 })
 .catch((err) => console.log(err));
 
