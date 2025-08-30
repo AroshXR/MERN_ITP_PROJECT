@@ -14,7 +14,7 @@ const createToken = require('./utils/jwt');
 
 //middleware
 app.use(express.json());
-app.use(cors()); //to parse JSON data
+app.use(cors()); //to parse JSON
 app.use("/users", router);
 app.use("/users", router1);
 
