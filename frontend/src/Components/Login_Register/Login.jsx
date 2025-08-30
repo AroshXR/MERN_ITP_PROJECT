@@ -6,6 +6,7 @@ import Footer from '../Footer/Footer'; // Importing the Footer component
 import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importing useNavigate for navigation
+// import { useAuth } from '../../AuthGuard/authGuard'; // Importing the useAuth hook
 
 function LoginPage() {
 
@@ -16,6 +17,7 @@ function LoginPage() {
     password: '',
     type: ''
   });
+  //  const { login } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,10 +47,13 @@ function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await sendRequest();
       if (response.status === "ok") {
-        localStorage.setItem("username", user.username);
+        const { token, user } = response.data;
+        // login(token, user);
+
         setError(false);
         history('/userHome');
       } else {  
@@ -58,6 +63,7 @@ function LoginPage() {
       console.error('Login failed:', error);
       setError(true);
     }
+
   };
 
 
