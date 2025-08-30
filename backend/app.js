@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const router = require("./routes/UserRoutes")
+const router1 = require("./routes/ApplicantRoutes")
 
 const app = express();
 
@@ -10,10 +11,11 @@ const cors = require("cors");
 app.use(express.json());
 app.use(cors()); //to parse JSON data
 app.use("/users", router);
+app.use("/users", router1);
 
 
 mongoose.connect("mongodb+srv://chearoavitharipasi:5qtqR9uSTsl8dPcS@itp-project-db.7afiybi.mongodb.net/")
-.then(() => console.log("Connected to mongodb"))
+.then(() => console.log ("Connected to mongodb"))
 .then(() => {
     app.listen(5000);
 })
