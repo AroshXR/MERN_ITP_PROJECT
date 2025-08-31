@@ -55,16 +55,16 @@ export default function OrderManagement() {
                 const transformedItems = response.data.data.map((item, index) => ({
                     id: item._id || `item-${index}`,
                     name: `Custom ${item.clothingType || 'Clothing'}`,
-                    price: item.totalPrice / item.quantity, // Price per item
-                    quantity: item.quantity,
-                    size: item.size,
-                    color: item.color,
-                    clothingType: item.clothingType,
-                    selectedDesign: item.selectedDesign,
-                    placedDesigns: item.placedDesigns,
-                    customImage: item.customImage,
-                    totalPrice: item.totalPrice,
-                    createdAt: item.createdAt
+                    price: item.totalPrice && item.quantity ? (item.totalPrice / item.quantity) : (item.totalPrice || 0), // Price per item
+                    quantity: item.quantity || 1,
+                    size: item.size || 'Standard',
+                    color: item.color || 'Default',
+                    clothingType: item.clothingType || 'tshirt',
+                    selectedDesign: item.selectedDesign || null,
+                    placedDesigns: item.placedDesigns || [],
+                    customImage: item.customImage || null,
+                    totalPrice: item.totalPrice || 0,
+                    createdAt: item.createdAt || new Date().toISOString()
                 }));
 
                 setCartItems(transformedItems);
@@ -91,14 +91,26 @@ export default function OrderManagement() {
 
     const updateQuantity = async (id, newQuantity) => {
         if (newQuantity < 1) return;
+        if (!id) {
+            console.error('Invalid item ID for update');
+            alert('Invalid item ID. Please try again.');
+            return;
+        }
 
         try {
+            console.log('Updating quantity for item:', id, 'to:', newQuantity);
+            
             // Find the item to update
             const itemToUpdate = cartItems.find(item => item.id === id);
-            if (!itemToUpdate) return;
+            if (!itemToUpdate) {
+                console.error('Item not found for update:', id);
+                alert('Item not found. Please refresh the page and try again.');
+                return;
+            }
 
             // Calculate new total price
             const newTotalPrice = (itemToUpdate.price * newQuantity);
+            console.log('New total price:', newTotalPrice);
 
             // Update in backend (authentication disabled)
             // const token = getToken();
@@ -107,10 +119,12 @@ export default function OrderManagement() {
             //     return;
             // }
 
-            await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
+            const response = await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
                 quantity: newQuantity,
                 totalPrice: newTotalPrice
             });
+            
+            console.log('Backend update response:', response.data);
 
             // Update local state
             setCartItems((items) => items.map((item) =>
@@ -119,12 +133,28 @@ export default function OrderManagement() {
             showNotification('Quantity updated successfully!');
         } catch (error) {
             console.error('Error updating quantity:', error);
-            alert('Failed to update quantity. Please try again.');
+            console.error('Error details:', error.response?.data || error.message);
+            
+            if (error.response?.status === 404) {
+                alert('Item not found. It may have been removed. Please refresh the page.');
+            } else if (error.response?.status === 500) {
+                alert('Server error. Please try again later.');
+            } else {
+                alert('Failed to update quantity. Please try again.');
+            }
         }
     };
 
     const removeItem = async (id) => {
+        if (!id) {
+            console.error('Invalid item ID for removal');
+            alert('Invalid item ID. Please try again.');
+            return;
+        }
+
         try {
+            console.log('Removing item:', id);
+            
             // Show confirmation dialog
             const isConfirmed = window.confirm('Are you sure you want to remove this item from your cart?');
             if (!isConfirmed) return;
@@ -136,14 +166,23 @@ export default function OrderManagement() {
             //     return;
             // }
 
-            await axios.delete(`http://localhost:5001/cloth-customizer/${id}`);
+            const response = await axios.delete(`http://localhost:5001/cloth-customizer/${id}`);
+            console.log('Backend delete response:', response.data);
 
             // Remove from local state
             setCartItems((items) => items.filter((item) => item.id !== id));
             showNotification('Item removed from cart successfully!');
         } catch (error) {
             console.error('Error removing item:', error);
-            alert('Failed to remove item. Please try again.');
+            console.error('Error details:', error.response?.data || error.message);
+            
+            if (error.response?.status === 404) {
+                alert('Item not found. It may have been removed already. Please refresh the page.');
+            } else if (error.response?.status === 500) {
+                alert('Server error. Please try again later.');
+            } else {
+                alert('Failed to remove item. Please try again.');
+            }
         }
     };
 
@@ -172,6 +211,7 @@ export default function OrderManagement() {
             alert('Failed to retrieve item for editing. Please try again.');
         }
     };
+
 
     const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
     const shipping = cartItems.length > 0 ? 9.99 : 0;
@@ -227,8 +267,8 @@ export default function OrderManagement() {
                 <div className="order-content">
 
                     <div className="order-header">
-                        <h1 className="order-title">Review your items and complete your order</h1>
-                        <div className="header-actions">
+                        <h1 className="order-title">Order Management</h1>
+                        <div className="order-actions">
                             <button
                                 onClick={fetchClothCustomizers}
                                 className="refresh-button"
@@ -269,12 +309,12 @@ export default function OrderManagement() {
                                             {cartItems.map((item) => (
                                                 <div key={item.id} className="cart-item">
                                                     <div className="item-info">
-                                                        <h3 className="item-name">{item.name}</h3>
+                                                        <h3 className="item-name">{item.name || `Custom ${item.clothingType || 'Clothing'}`}</h3>
                                                         <div className="item-details">
-                                                            <p><strong>Size:</strong> {item.size}</p>
-                                                            <p><strong>Color:</strong> {item.color}</p>
-                                                            <p><strong>Type:</strong> {item.clothingType}</p>
-                                                            {item.selectedDesign && (
+                                                            <p><strong>Size:</strong> {item.size || 'N/A'}</p>
+                                                            <p><strong>Color:</strong> {item.color || 'N/A'}</p>
+                                                            <p><strong>Type:</strong> {item.clothingType || 'N/A'}</p>
+                                                            {item.selectedDesign && item.selectedDesign.name && (
                                                                 <p><strong>Design:</strong> {item.selectedDesign.name}</p>
                                                             )}
                                                             {item.placedDesigns && item.placedDesigns.length > 0 && (
@@ -287,7 +327,7 @@ export default function OrderManagement() {
                                                                 <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleDateString()}</p>
                                                             )}
                                                         </div>
-                                                        <p className="item-price">${item.price.toFixed(2)} per item</p>
+                                                        <p className="item-price">${(item.price || 0).toFixed(2)} per item</p>
                                                     </div>
                                                     <div className="item-actions">
                                                         <button
@@ -306,21 +346,21 @@ export default function OrderManagement() {
                                                         </button>
                                                         <div className="quantity-controls">
                                                             <button
-                                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                                onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
                                                                 className="quantity-button"
-                                                                disabled={item.quantity <= 1}
+                                                                disabled={(item.quantity || 1) <= 1}
                                                             >
                                                                 <Minus className="small-icon" />
                                                             </button>
-                                                            <span className="quantity-value">{item.quantity}</span>
+                                                            <span className="quantity-value">{item.quantity || 1}</span>
                                                             <button
-                                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                                onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
                                                                 className="quantity-button"
                                                             >
                                                                 <Plus className="small-icon" />
                                                             </button>
                                                         </div>
-                                                        <p className="item-total">${item.totalPrice.toFixed(2)}</p>
+                                                        <p className="item-total">${(item.totalPrice || 0).toFixed(2)}</p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -362,14 +402,6 @@ export default function OrderManagement() {
                                         <div className="summary-row">
                                             <span>Subtotal:</span>
                                             <span>${subtotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="summary-row">
-                                            <span>Shipping:</span>
-                                            <span>${shipping.toFixed(2)}</span>
-                                        </div>
-                                        <div className="summary-row">
-                                            <span>Tax:</span>
-                                            <span>${tax.toFixed(2)}</span>
                                         </div>
                                         <div className="divider"></div>
                                         <div className="summary-row total-row">

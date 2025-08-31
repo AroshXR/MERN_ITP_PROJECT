@@ -61,11 +61,13 @@ const addClothCustomizer = async (req, res) => {
     }
 };
 
-// Get cloth customizer by ID (only for the authenticated user)
+// Get cloth customizer by ID (temporarily disabled user filtering for testing)
 const getClothCustomizerById = async (req, res) => {
     try {
         const { id } = req.params;
-        const customizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
+        // Temporarily disabled user filtering for testing
+        // const customizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
+        const customizer = await ClothCustomizer.findById(id);
         
         if (!customizer) {
             return res.status(404).json({
@@ -87,14 +89,16 @@ const getClothCustomizerById = async (req, res) => {
     }
 };
 
-// Update cloth customizer (only for the authenticated user)
+// Update cloth customizer (temporarily disabled user filtering for testing)
 const updateClothCustomizer = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
         
+        // Temporarily disabled user filtering for testing
         // Ensure the item belongs to the authenticated user
-        const existingCustomizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
+        // const existingCustomizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
+        const existingCustomizer = await ClothCustomizer.findById(id);
         if (!existingCustomizer) {
             return res.status(404).json({
                 status: "error",
@@ -122,13 +126,15 @@ const updateClothCustomizer = async (req, res) => {
     }
 };
 
-// Delete cloth customizer (only for the authenticated user)
+// Delete cloth customizer (temporarily disabled user filtering for testing)
 const deleteClothCustomizer = async (req, res) => {
     try {
         const { id } = req.params;
         
+        // Temporarily disabled user filtering for testing
         // Ensure the item belongs to the authenticated user
-        const existingCustomizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
+        // const existingCustomizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
+        const existingCustomizer = await ClothCustomizer.findById(id);
         if (!existingCustomizer) {
             return res.status(404).json({
                 status: "error",

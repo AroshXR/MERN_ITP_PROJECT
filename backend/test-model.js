@@ -30,15 +30,15 @@ mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfb
         await ClothCustomizer.findByIdAndDelete(savedCustomizer._id);
         console.log("Test document deleted successfully");
         
-        console.log("✅ ClothCustomizer model is working correctly!");
+        console.log("ClothCustomizer model is working correctly!");
         
     } catch (error) {
-        console.error("❌ Error testing model:", error);
+        console.error("Error testing model:", error);
     } finally {
         mongoose.connection.close();
         console.log("MongoDB connection closed");
     }
 })
 .catch((err) => {
-    console.error("❌ Failed to connect to MongoDB:", err);
+    console.error("Failed to connect to MongoDB:", err);
 }); 

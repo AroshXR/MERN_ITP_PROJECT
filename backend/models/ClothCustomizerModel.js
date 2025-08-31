@@ -10,7 +10,7 @@ const clothCustomizerSchema = new Schema({
     clothingType: {
         type: String,
         required: true,
-        enum: ["tshirt", "croptop"],
+        enum: ["tshirt"],
         default: "tshirt"
     },
     color: {
@@ -21,20 +21,20 @@ const clothCustomizerSchema = new Schema({
         id: { type: String, default: null },
         name: { type: String, default: null },
         price: { type: Number, default: 0 },
-        preview: { type: String, default: null }, // This will store the image URL
+        preview: { type: String, default: null },
         position: {
             x: { type: Number, default: 0 },
             y: { type: Number, default: 0 }
         },
         size: { type: Number, default: 80 },
-        isCustomUpload: { type: Boolean, default: false } // Flag to identify custom uploaded images
+        isCustomUpload: { type: Boolean, default: false }
     },
     placedDesigns: [{
         id: { type: String, required: true },
         name: { type: String, required: true },
         price: { type: Number, required: true },
         preview: { type: String, required: true },
-        side: { type: String, enum: ["front", "back"], default: "front" },
+        side: { type: String, enum: ["front"], default: "front" },
         position: {
             x: { type: Number, default: 0 },
             y: { type: Number, default: 0 }

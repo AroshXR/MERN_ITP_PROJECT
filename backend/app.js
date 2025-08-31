@@ -31,6 +31,34 @@ app.get("/test", (req, res) => {
     res.json({ status: "ok", message: "Backend server is running", timestamp: new Date().toISOString() });
 });
 
+// Test endpoint to verify cart operations
+app.get("/test-cart", async (req, res) => {
+    try {
+        const ClothCustomizer = mongoose.model("ClothCustomizer");
+        const count = await ClothCustomizer.countDocuments();
+        const sampleItem = await ClothCustomizer.findOne();
+        
+        res.json({ 
+            status: "ok", 
+            message: "Cart test endpoint", 
+            totalItems: count,
+            sampleItem: sampleItem ? {
+                id: sampleItem._id,
+                clothingType: sampleItem.clothingType,
+                quantity: sampleItem.quantity,
+                totalPrice: sampleItem.totalPrice
+            } : null,
+            timestamp: new Date().toISOString() 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: "error", 
+            message: "Error testing cart", 
+            error: error.message 
+        });
+    }
+});
+
 mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
 .then(() => console.log("Connected to mongodb"))
 .then(() => {
@@ -44,7 +72,7 @@ require("./models/ClothCustomizerModel");
 require("./models/ApplicantModel");
 const User = mongoose.model("User");
 
-// Custom register endpoint (keeping this as it seems to be specific to your app)
+
 app.post("/register", async (req, res) => {
     const { username, address, email, password, type } = req.body;
     
@@ -94,7 +122,7 @@ app.post("/register", async (req, res) => {
         });
         console.log('User created successfully:', newUser._id);
 
-        // Remove password from response
+
         const userResponse = {
             _id: newUser._id,
             username: newUser.username,
@@ -117,7 +145,7 @@ app.post("/register", async (req, res) => {
     }
 });
 
-// Custom login endpoint (keeping this as it seems to be specific to your app)
+
 app.post("/login", async (req, res) => {
     const { username, password, type } = req.body;
     
