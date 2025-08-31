@@ -39,23 +39,50 @@ const addUsers = async(request, response, next) => {
 const  getById = async (request, response, next) => {
     const id = request.params.id;
 
+    // Validate that id is a valid ObjectId
+    if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+        return response.status(400).json({
+            status: "error",
+            message: "Invalid user ID format"
+        });
+    }
+
     let user;
 
     try{
         user = await User.findById(id);
     }catch(err){
         console.log(err);
+        return response.status(500).json({
+            status: "error",
+            message: "Error finding user",
+            error: err.message
+        });
     }
     if(!user){
-        return response.status(404).json({message:"User not found"});
+        return response.status(404).json({
+            status: "error",
+            message:"User not found"
+        });
     }
-    return response.status(200).json({user});
+    return response.status(200).json({
+        status: "ok",
+        user
+    });
 }
 
 //update user details
 const updateUser = async (request, response, next) => {
     const id = request.params.id;
     const {name, age, address} = request.body;
+
+    // Validate that id is a valid ObjectId
+    if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+        return response.status(400).json({
+            status: "error",
+            message: "Invalid user ID format"
+        });
+    }
 
     let user;
 
@@ -64,16 +91,35 @@ const updateUser = async (request, response, next) => {
         user = await user.save();
     }catch(err){
         console.log(err);
+        return response.status(500).json({
+            status: "error",
+            message: "Error updating user",
+            error: err.message
+        });
     }
     if(!user){
-        return response.status(404).json({message:"Unable to update user"});
+        return response.status(404).json({
+            status: "error",
+            message:"Unable to update user"
+        });
     }
-    return response.status(200).json({user});
+    return response.status(200).json({
+        status: "ok",
+        user
+    });
 };
 
 //delete users
 const deleteUser = async (request, response, next) => {
     const id = request.params.id;
+
+    // Validate that id is a valid ObjectId
+    if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+        return response.status(400).json({
+            status: "error",
+            message: "Invalid user ID format"
+        });
+    }
 
     let user;
 
@@ -81,12 +127,22 @@ const deleteUser = async (request, response, next) => {
         user = await User.findByIdAndDelete(id);
     }catch(err){
         console.log(err);
+        return response.status(500).json({
+            status: "error",
+            message: "Error deleting user",
+            error: err.message
+        });
     }
     if(!user){
-        return response.status(404).json({message:"Unable to delete user"});
+        return response.status(404).json({
+            status: "error",
+            message:"User not found"
+        });
     }
-    return response.status(200).json({message:"User deleted successfully"});
-
+    return response.status(200).json({
+        status: "ok",
+        message:"User deleted successfully"
+    });
 }
 
 exports.getAllUsers = getAllUsers; 

@@ -72,6 +72,34 @@ require("./models/ClothCustomizerModel");
 require("./models/ApplicantModel");
 const User = mongoose.model("User");
 
+// Global error handler for ObjectId casting errors and other validation issues
+app.use((error, req, res, next) => {
+    console.error('Global error handler caught:', error);
+    
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid ID format provided",
+            details: "The ID must be a valid MongoDB ObjectId"
+        });
+    }
+    
+    if (error.name === 'ValidationError') {
+        return res.status(400).json({
+            status: "error",
+            message: "Validation error",
+            details: error.message
+        });
+    }
+    
+    // Default error response
+    res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        details: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+});
+
 
 app.post("/register", async (req, res) => {
     const { username, address, email, password, type } = req.body;

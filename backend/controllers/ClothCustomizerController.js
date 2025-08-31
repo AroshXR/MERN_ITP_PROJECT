@@ -65,6 +65,15 @@ const addClothCustomizer = async (req, res) => {
 const getClothCustomizerById = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        // Validate that id is a valid ObjectId
+        if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid item ID format"
+            });
+        }
+        
         // Temporarily disabled user filtering for testing
         // const customizer = await ClothCustomizer.findOne({ _id: id, userId: req.user._id });
         const customizer = await ClothCustomizer.findById(id);
@@ -94,6 +103,14 @@ const updateClothCustomizer = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
+        
+        // Validate that id is a valid ObjectId
+        if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid item ID format"
+            });
+        }
         
         // Temporarily disabled user filtering for testing
         // Ensure the item belongs to the authenticated user
@@ -130,6 +147,14 @@ const updateClothCustomizer = async (req, res) => {
 const deleteClothCustomizer = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        // Validate that id is a valid ObjectId
+        if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid item ID format"
+            });
+        }
         
         // Temporarily disabled user filtering for testing
         // Ensure the item belongs to the authenticated user

@@ -10,12 +10,6 @@ const userController = require("../controllers/UserController");
 // Import authentication middleware (temporarily disabled)
 // const { protect } = require("../middleware/auth");
 
-router.get("/" , userController.getAllUsers);
-router.post("/" , userController.addUsers);
-router.get("/:id" , userController.getById);
-router.put("/:id", userController.updateUser);
-router.delete("/:id", userController.deleteUser);
-
 // Token verification endpoint (temporarily disabled)
 // router.get("/verify-token", protect, async (req, res) => {
 //     try {
@@ -35,6 +29,13 @@ router.delete("/:id", userController.deleteUser);
 //         });
 //     }
 // });
+
+// Specific routes must come before parameter routes to avoid conflicts
+router.get("/" , userController.getAllUsers);
+router.post("/" , userController.addUsers);
+router.get("/:id" , userController.getById);
+router.put("/:id", userController.updateUser);
+router.delete("/:id", userController.deleteUser);
 
 //export
 module.exports = router;
