@@ -45,6 +45,21 @@ function NavBar() {
             <i className='bx bx-info-circle'></i> Customizer
           </button>
         </Link>
+        <Link to="/career" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-briefcase'></i> Career
+          </button>
+        </Link>
+        <Link to="/applicant-dashboard" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-user-check'></i> My Applications
+          </button>
+        </Link>
+        <Link to="/admin-jobs" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-cog'></i> Manage Jobs
+          </button>
+        </Link>
         <Link to="#" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-phone'></i> Contact Us
