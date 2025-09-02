@@ -13,6 +13,10 @@ const createToken = require('./utils/jwt');
 
 // Import models
 require("./models/User");
+require("./models/ClothCustomizerModel");
+require("./models/ApplicantModel");
+require("./models/SupplierModel");
+require("./models/SupplierOrderModel");
 const User = mongoose.model("User");
 
 const app = express();

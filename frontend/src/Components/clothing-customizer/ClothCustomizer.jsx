@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import './ClothCustomizer.css';
 import { TShirtModel } from './components/TShirtModel';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';
-
+import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../AuthGuard/AuthGuard';
+//
 import print1 from './customizer_preset_designs/print 1.jpg'
 import print2 from './customizer_preset_designs/print 2.jpg'
 import print3 from './customizer_preset_designs/print 3.jpg'
@@ -16,6 +19,12 @@ import { Link } from 'react-router-dom';
 
 
 function ClothCustomizer() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, getToken, currentUser, logout } = useAuth();
+  const isEditMode = new URLSearchParams(location.search).get('edit') === 'true';
+  const [editingItemId, setEditingItemId] = useState(null);
+
   const [selectedColor, setSelectedColor] = useState("#ffffff");
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [clothingType, setClothingType] = useState("tshirt");
@@ -23,8 +32,117 @@ function ClothCustomizer() {
   const [designSize, setDesignSize] = useState(80);
   const [selectedClothSize, setSelectedClothSize] = useState(null);
   const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
+  const [isSaving, setIsSaving] = useState(false);
+  const [showCartButton, setShowCartButton] = useState(false);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
+  // Function to fetch cart items count (authentication disabled for testing)
+  const fetchCartCount = async () => {
+    console.log('Fetching cart count - Authentication disabled for testing');
+    
+    // Temporarily disabled authentication check
+    // if (isAuthenticated()) {
+    try {
+      console.log('Proceeding with cart fetch without authentication');
+      
+      const response = await axios.get('http://localhost:5001/cloth-customizer');
+      console.log('Cart fetch response:', response.data);
+      
+      if (response.data.status === "ok") {
+        setCartItemsCount(response.data.data.length);
+      }
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      setCartItemsCount(0);
+    }
+    // } else {
+    //   console.log('User not authenticated, setting cart count to 0');
+    //   setCartItemsCount(0);
+    // }
+  };
 
+  // Load edit data if in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      loadEditData();
+    } else {
+      fetchCartCount();
+    }
+  }, [isEditMode]);
+
+  // Fetch cart count when authentication state changes
+  useEffect(() => {
+    fetchCartCount();
+  }, [isAuthenticated]);
+
+  // Function to close login prompt
+  const closeLoginPrompt = () => {
+    setShowLoginPrompt(false);
+  };
+
+  // Function to handle overlay click (close prompt when clicking outside)
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      closeLoginPrompt();
+    }
+  };
+
+  const loadEditData = () => {
+    try {
+      const editData = localStorage.getItem('editItemData');
+      if (editData) {
+        const itemData = JSON.parse(editData);
+        setEditingItemId(itemData._id);
+
+        // Load the existing data into the form
+        setSelectedColor(itemData.color || "#ffffff");
+        setClothingType(itemData.clothingType || "tshirt");
+        setSelectedSize(itemData.size);
+        setQuantity(itemData.quantity);
+        setDesignSize(itemData.selectedDesign?.size || 80);
+        setDesignPosition(itemData.selectedDesign?.position || { x: 0, y: 0 });
+
+        // Load selected design
+        if (itemData.selectedDesign) {
+          setSelectedDesign(itemData.selectedDesign);
+        }
+
+        // Load placed designs
+        if (itemData.placedDesigns && itemData.placedDesigns.length > 0) {
+          setPlacedDesigns(itemData.placedDesigns);
+          setFrontDesigns(itemData.placedDesigns);
+        }
+
+        // Clear the localStorage
+        localStorage.removeItem('editItemData');
+      }
+    } catch (error) {
+      console.error('Error loading edit data:', error);
+      alert('Failed to load item data for editing.');
+    }
+  };
+
+  // Function to clear the form
+  const clearForm = () => {
+    setSelectedColor("#ffffff");
+    setSelectedDesign(null);
+    setPlacedDesigns([]);
+    setFrontDesigns([]);
+    setDesignSize(80);
+    setSelectedSize(null);
+    setQuantity(1);
+    setDesignPosition({ x: 0, y: 0 });
+    setActiveDesignId(null);
+    setShowCartButton(false);
+    setEditingItemId(null);
+
+    // Reset URL if in edit mode
+    if (isEditMode) {
+      window.history.replaceState({}, '', '/customizer');
+    }
+  };
 
   //Inputing design
   const [selectedSide] = useState("front"); // front or back
@@ -56,24 +174,46 @@ function ClothCustomizer() {
   ];
 
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result;
-        const customDesign = {
-          id: `custom-${Date.now()}`,
-          name: "Custom Image",
-          price: 25,
-          preview: imageUrl,
-          position: { designPosition },
-          size: designSize,
-        };
-        setSelectedDesign(customDesign);
+      try {
+        setIsUploadingImage(true);
 
-      };
-      reader.readAsDataURL(file);
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // Upload image to backend
+        const uploadResponse = await axios.post('http://localhost:5001/upload/image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (uploadResponse.data.status === "ok") {
+          const imageUrl = `http://localhost:5001${uploadResponse.data.data.url}`;
+
+          const customDesign = {
+            id: `custom-${Date.now()}`,
+            name: "Custom Image",
+            price: 25,
+            preview: imageUrl,
+            position: designPosition,
+            size: designSize,
+            isCustomUpload: true
+          };
+
+          setSelectedDesign(customDesign);
+        } else {
+          alert('Failed to upload image. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Failed to upload image. Please try again.');
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -151,17 +291,177 @@ function ClothCustomizer() {
   const sizeExtraPrice = getSizeExtraPrice();
   const totalPrice = basePrice + designPrice + sizeExtraPrice;
 
+  const saveClothCustomizer = async () => {
+    console.log('Save function called - Authentication disabled for testing');
+    
+    // Temporarily disabled authentication check
+    // if (!isAuthenticated()) {
+    //   console.log('User not authenticated, showing login prompt');
+    //   setShowLoginPrompt(true);
+    //   return;
+    // }
+
+    try {
+      // Validate required fields
+      if (!selectedSize) {
+        alert('Please select a size before saving.');
+        return;
+      }
+
+      if (quantity < 1) {
+        alert('Please select a valid quantity.');
+        return;
+      }
+
+      if (totalPrice <= 0) {
+        alert('Invalid total price. Please check your selections.');
+        return;
+      }
+
+      setIsSaving(true);
+
+      const clothCustomizerData = {
+        clothingType: clothingType,
+        color: selectedColor,
+        selectedDesign: selectedDesign ? {
+          id: selectedDesign.id,
+          name: selectedDesign.name,
+          price: selectedDesign.price,
+          preview: selectedDesign.preview,
+          position: designPosition,
+          size: designSize,
+          isCustomUpload: selectedDesign.isCustomUpload || false
+        } : null,
+        placedDesigns: frontDesigns.map(design => ({
+          id: design.id,
+          name: design.name,
+          price: design.price,
+          preview: design.preview,
+          side: design.side || "front",
+          position: design.position || { x: 0, y: 0 },
+          size: design.size || designSize,
+          isCustomUpload: design.isCustomUpload || false
+        })),
+        size: selectedSize,
+        quantity: quantity,
+        totalPrice: totalPrice * quantity
+      };
+
+      console.log('Sending data to backend:', clothCustomizerData);
+      console.log('Authentication disabled - proceeding without token');
+
+      let response;
+
+      if (isEditMode && editingItemId) {
+        // Update existing item
+        console.log('Updating existing item:', editingItemId);
+        response = await axios.put(`http://localhost:5001/cloth-customizer/${editingItemId}`, clothCustomizerData);
+      } else {
+        // Create new item
+        console.log('Creating new item');
+        response = await axios.post('http://localhost:5001/cloth-customizer', clothCustomizerData);
+      }
+
+      console.log('Backend response:', response.data);
+
+      if (response.data.status === "ok") {
+        const action = isEditMode ? 'updated' : 'saved';
+        setShowCartButton(true);
+        setCartItemsCount(prev => isEditMode ? prev : prev + 1);
+        alert(`Cloth customizer data ${action} successfully!`);
+
+        // If editing, clear edit mode
+        if (isEditMode) {
+          setEditingItemId(null);
+          // Reset URL without page reload
+          window.history.replaceState({}, '', '/customizer');
+        }
+      } else {
+        alert(`Failed to ${isEditMode ? 'update' : 'save'} cloth customizer data.`);
+      }
+    } catch (error) {
+      console.error('Error saving cloth customizer:', error);
+      if (error.response?.data?.message) {
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        alert(`Failed to ${isEditMode ? 'update' : 'save'} cloth customizer data. Please try again.`);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="customizer-container">
       <NavBar />
       <div className="customizer-content">
         <div className="customizer-header">
           <h1>Clothing Customizer</h1>
-          <p>Design your perfect outfit with our easy-to-use customizer</p>
+          <div className="header-controls">
+            {isEditMode && (
+              <div className="edit-mode-badge">
+                <span>✏️ Edit Mode</span>
+              </div>
+            )}
+            <div className="auth-status">
+              {isAuthenticated() ? (
+                <div className="user-info">
+                  <span>Welcome, {currentUser?.username || 'User'}!</span>
+                  <button 
+                    className="logout-btn"
+                    onClick={() => {
+                      logout();
+                      navigate('/login');
+                    }}
+                  >
+                    Logout
+                  </button>
+                  {/* <button 
+                    className="debug-btn"
+                    onClick={() => {
+                      console.log('=== DEBUG INFO ===');
+                      console.log('isAuthenticated():', isAuthenticated());
+                      console.log('token:', getToken());
+                      console.log('currentUser:', currentUser);
+                      console.log('localStorage token:', localStorage.getItem('token'));
+                      console.log('==================');
+                    }}
+                    style={{ fontSize: '12px', padding: '4px 8px', marginLeft: '10px' }}
+                  >
+                    Debug
+                  </button> */}
+                </div>
+              ) : (
+                <div className="guest-info">
+                  <span>Guest User - Login to save designs</span>
+                  <div className="guest-actions">
+                    <button 
+                      className="login-btn"
+                      onClick={() => navigate('/login')}
+                    >
+                      Login
+                    </button>
+                    <button 
+                      className="register-btn"
+                      onClick={() => navigate('/register')}
+                    >
+                      Register
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {isEditMode ? (
+            <p>Edit your existing clothing design</p>
+          ) : (
+            <p>Design your perfect outfit with our easy-to-use customizer</p>
+          )}
         </div>
         {/* Cloth type changer */}
         <div className="customizer-main">
           <div className="customizer-panel">
+            {/* Cloth type changer */}
             <div className="panel-section">
               <h3>Clothing Type</h3>
               <div className="clothing-options">
@@ -189,7 +489,7 @@ function ClothCustomizer() {
                 ))}
               </div>
             </div>
-            
+
 
             {/* Cloth image adding part*/}
             <div className="panel-section">
@@ -200,7 +500,21 @@ function ClothCustomizer() {
                 onChange={handleImageUpload}
                 className="file-input"
                 style={{ width: '90%' }}
+                disabled={isUploadingImage}
               />
+              {isUploadingImage && (
+                <p className="upload-status">Uploading image...</p>
+              )}
+              {selectedDesign?.isCustomUpload && (
+                <div className="custom-image-preview">
+                  <img
+                    src={selectedDesign.preview}
+                    alt="Custom uploaded design"
+                    className="preview-image"
+                  />
+                  <p className="preview-label">Custom Image Preview</p>
+                </div>
+              )}
               <p className="side-info">Will be placed on: <strong>{selectedSide}</strong></p>
             </div>
 
@@ -223,7 +537,7 @@ function ClothCustomizer() {
               <p className="side-info">Will be placed on: <strong>{selectedSide}</strong></p>
             </div>
 
-          
+
             <div className="panel-section">
               <h3>Pricing</h3>
 
@@ -271,21 +585,65 @@ function ClothCustomizer() {
                   Total: ${totalPrice * quantity}
                 </p>
               </div>
-              <Link to="/orderManagement">
-                <button className="order-btn">Save & Add to Cart</button>
-              </Link>
+
+              {isEditMode && (
+                <button
+                  className="cancel-edit-button"
+                  onClick={() => {
+                    setEditingItemId(null);
+                    clearForm();
+                    window.location.href = '/orderManagement';
+                  }}
+                  style={{ marginBottom: '10px' }}
+                >
+                  Cancel Edit
+                </button>
+              )}
+
+              {showCartButton ? (
+                <div className="cart-navigation">
+                  <button
+                    className="view-cart-button"
+                    onClick={() => window.location.href = '/orderManagement'}
+                  >
+                    View Cart
+                  </button>
+                  {!isEditMode && (
+                    <button
+                      className="new-customization-button"
+                      onClick={clearForm}
+                    >
+                      Start New Customization
+                    </button>
+                  )}
+                  {isEditMode && (
+                    <button
+                      className="new-customization-button"
+                      onClick={() => {
+                        setEditingItemId(null);
+                        clearForm();
+                        window.location.href = '/orderManagement';
+                      }}
+                    >
+                      Start New Customization
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  className="order-btn"
+                  onClick={saveClothCustomizer}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : isEditMode ? 'Update & Save Changes' : 'Save & Add to Cart'}
+                </button>
+              )}
 
             </div>
           </div>
 
 
-          <div style={{
-            flex: 1,
-            height: '70vh',
-            background: 'linear-gradient(135deg, #6b6b6bff 0%, #000000ff 100%)',
-            borderRadius: '20px'
-          }}>
-
+          <div className="canvas-container">
             {/* T-Shirt/CropTop Component */}
 
             <Canvas
@@ -356,6 +714,55 @@ function ClothCustomizer() {
         </div>
       </div>
       <Footer />
+      {/* Floating Cart Button */}
+      {isAuthenticated() ? (
+        <Link to="/orderManagement" className="floating-cart-btn">
+          🛒 {cartItemsCount > 0 && <span className="cart-count">{cartItemsCount}</span>}
+        </Link>
+      ) : (
+        <button 
+          className="floating-cart-btn guest-cart-btn"
+          onClick={() => {
+            alert('Please login to view your cart');
+            navigate('/login');
+          }}
+          title="Login to view cart"
+        >
+          🛒 <span className="guest-cart-text">Login</span>
+        </button>
+      )}
+
+      {/* Login Prompt for Guest Users */}
+      {showLoginPrompt && (
+        <div className="login-prompt-overlay" onClick={handleOverlayClick}>
+          <div className="login-prompt-content">
+            <button 
+              className="login-prompt-close"
+              onClick={closeLoginPrompt}
+              aria-label="Close prompt"
+            >
+              ×
+            </button>
+            <h3>Login Required</h3>
+            <p>Please log in to save your customizations and add items to cart.</p>
+            <div className="login-prompt-buttons">
+              <button 
+                className="login-prompt-btn primary"
+                onClick={() => navigate('/login')}
+              >
+                Go to Login
+              </button>
+              <button 
+                className="login-prompt-btn secondary"
+                onClick={closeLoginPrompt}
+              >
+                Continue as Guest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

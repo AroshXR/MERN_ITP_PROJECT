@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './AuthGuard/AuthGuard';
+import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
 // import AddUser from './Components/AddUser/AddUser';
 // import ViewDetails from './Components/ViewDetails/ViewDetails';
@@ -14,28 +16,30 @@ import PaymentManagement from './Components/PaymentManagement/PaymentManagement'
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
-import job from './Components/job/job';
+import Unauthorized from './Components/Unauthorized/Unauthorized';
 
 function App() {
   return (
+    <AuthProvider>
       <Routes>
+        {/* All Routes - No Authentication Required */}
         <Route path="/" element={<Home />} />
-        {/* <Route path="/add" element={<AddUser />} /> */}
-        {/* <Route path="/viewDetails" element={<ViewDetails />} /> */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/customizer" element={<ClothCustomizer />} />
         <Route path="/career" element={<Career />} />
         <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
         <Route path="/admin-jobs" element={<AdminJobManagement />} />
-        <Route path="/contact" element={<ContactUs />} />
         <Route path="/orderManagement" element={<OrderManagement />}/>
         <Route path='/paymentManagement' element={<PaymentManagement />}/>
-        <Route path='/tailorHome' element={<TailorHome />}/>
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
+        <Route path='/tailorHome' element={<TailorHome />}/>
 
       </Routes>
+    </AuthProvider>
   );
 }
 

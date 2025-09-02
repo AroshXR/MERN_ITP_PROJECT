@@ -1,98 +1,13 @@
 "use client"
 import"./SupplierManagement.css"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
-// Mock data for demonstration
-const mockSuppliers = [
-  {
-    id: 1,
-    name: "Fashion Forward Inc.",
-    contact: "John Smith",
-    email: "john@fashionforward.com",
-    phone: "+1-555-0123",
-    status: "active",
-    totalOrders: 45,
-    lastOrder: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "Textile Masters Ltd.",
-    contact: "Sarah Johnson",
-    email: "sarah@textilemaster.com",
-    phone: "+1-555-0124",
-    status: "active",
-    totalOrders: 32,
-    lastOrder: "2024-01-12",
-  },
-  {
-    id: 3,
-    name: "Quality Fabrics Co.",
-    contact: "Mike Wilson",
-    email: "mike@qualityfabrics.com",
-    phone: "+1-555-0125",
-    status: "inactive",
-    totalOrders: 18,
-    lastOrder: "2023-12-20",
-  },
-  {
-    id: 4,
-    name: "Premium Clothing Supply",
-    contact: "Lisa Brown",
-    email: "lisa@premiumclothing.com",
-    phone: "+1-555-0126",
-    status: "active",
-    totalOrders: 67,
-    lastOrder: "2024-01-18",
-  },
-]
 
-const mockOrders = [
-  {
-    id: 1,
-    supplierId: 1,
-    supplierName: "Fashion Forward Inc.",
-    orderDate: "2024-01-15",
-    deliveryDate: "2024-01-25",
-    status: "pending",
-    total: 2500.0,
-    items: "Cotton T-shirts (100), Denim Jeans (50)",
-  },
-  {
-    id: 2,
-    supplierId: 2,
-    supplierName: "Textile Masters Ltd.",
-    orderDate: "2024-01-12",
-    deliveryDate: "2024-01-22",
-    status: "active",
-    total: 1800.0,
-    items: "Silk Scarves (75), Wool Sweaters (25)",
-  },
-  {
-    id: 3,
-    supplierId: 4,
-    supplierName: "Premium Clothing Supply",
-    orderDate: "2024-01-18",
-    deliveryDate: "2024-01-28",
-    status: "active",
-    total: 3200.0,
-    items: "Designer Dresses (30), Leather Jackets (20)",
-  },
-  {
-    id: 4,
-    supplierId: 1,
-    supplierName: "Fashion Forward Inc.",
-    orderDate: "2024-01-10",
-    deliveryDate: "2024-01-20",
-    status: "completed",
-    total: 1500.0,
-    items: "Basic T-shirts (200)",
-  },
-]
 
 export default function SupplierManagement() {
   const [activeTab, setActiveTab] = useState("dashboard")
-  const [suppliers, setSuppliers] = useState(mockSuppliers)
-  const [orders, setOrders] = useState(mockOrders)
+  const [suppliers, setSuppliers] = useState([])
+  const [orders, setOrders] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState("")
@@ -107,6 +22,154 @@ export default function SupplierManagement() {
   })
   const [viewingReport, setViewingReport] = useState(false)
   const [reportContent, setReportContent] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // API base URL
+  const API_BASE_URL = "http://localhost:5001/supplier"
+
+  // API functions
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/suppliers`)
+      if (!response.ok) throw new Error('Failed to fetch suppliers')
+      const data = await response.json()
+      setSuppliers(data)
+    } catch (error) {
+      console.error('Error fetching suppliers:', error)
+      setError('Failed to load suppliers')
+    }
+  }
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders`)
+      if (!response.ok) throw new Error('Failed to fetch orders')
+      const data = await response.json()
+      setOrders(data)
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      setError('Failed to load orders')
+    }
+  }
+
+  const createSupplier = async (supplierData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/suppliers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(supplierData),
+      })
+      if (!response.ok) throw new Error('Failed to create supplier')
+      const data = await response.json()
+      setSuppliers([...suppliers, data])
+      return data
+    } catch (error) {
+      console.error('Error creating supplier:', error)
+      throw error
+    }
+  }
+
+  const updateSupplier = async (id, supplierData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(supplierData),
+      })
+      if (!response.ok) throw new Error('Failed to update supplier')
+      const data = await response.json()
+      setSuppliers(suppliers.map(s => s._id === id ? data : s))
+      return data
+    } catch (error) {
+      console.error('Error updating supplier:', error)
+      throw error
+    }
+  }
+
+  const deleteSupplier = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete supplier')
+      setSuppliers(suppliers.filter(s => s._id !== id))
+      setOrders(orders.filter(o => o.supplierId !== id))
+    } catch (error) {
+      console.error('Error deleting supplier:', error)
+      throw error
+    }
+  }
+
+  const createOrder = async (orderData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      })
+      if (!response.ok) throw new Error('Failed to create order')
+      const data = await response.json()
+      setOrders([...orders, data])
+      return data
+    } catch (error) {
+      console.error('Error creating order:', error)
+      throw error
+    }
+  }
+
+  const updateOrder = async (id, orderData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      })
+      if (!response.ok) throw new Error('Failed to update order')
+      const data = await response.json()
+      setOrders(orders.map(o => o._id === id ? data : o))
+      return data
+    } catch (error) {
+      console.error('Error updating order:', error)
+      throw error
+    }
+  }
+
+  const deleteOrder = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${id}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete order')
+      setOrders(orders.filter(o => o._id !== id))
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      throw error
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
+      try {
+        await Promise.all([fetchSuppliers(), fetchOrders()])
+      } catch (error) {
+        setError('Failed to load data')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
 
   // Dashboard metrics
   const totalSuppliers = suppliers.length
@@ -161,42 +224,49 @@ export default function SupplierManagement() {
     setFormData({})
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (modalType === "supplier") {
-      if (editingItem) {
-        setSuppliers(suppliers.map((s) => (s.id === editingItem.id ? { ...formData, id: editingItem.id } : s)))
-      } else {
-        const newSupplier = { ...formData, id: Date.now(), totalOrders: 0, lastOrder: "Never" }
-        setSuppliers([...suppliers, newSupplier])
-      }
-    } else if (modalType === "order") {
-      if (editingItem) {
-        setOrders(orders.map((o) => (o.id === editingItem.id ? { ...formData, id: editingItem.id } : o)))
-      } else {
-        const supplier = suppliers.find((s) => s.id === Number.parseInt(formData.supplierId))
-        const newOrder = {
-          ...formData,
-          id: Date.now(),
-          supplierId: Number.parseInt(formData.supplierId),
-          supplierName: supplier ? supplier.name : "",
-          total: Number.parseFloat(formData.total),
+    try {
+      if (modalType === "supplier") {
+        if (editingItem) {
+          await updateSupplier(editingItem._id, formData)
+        } else {
+          await createSupplier(formData)
         }
-        setOrders([...orders, newOrder])
+      } else if (modalType === "order") {
+        if (editingItem) {
+          await updateOrder(editingItem._id, formData)
+        } else {
+          const supplier = suppliers.find((s) => s._id === formData.supplierId)
+          const orderData = {
+            ...formData,
+            supplierId: formData.supplierId,
+            supplierName: supplier ? supplier.name : "",
+            total: Number.parseFloat(formData.total),
+          }
+          await createOrder(orderData)
+        }
       }
-    }
 
-    closeModal()
+      closeModal()
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      alert('Error saving data. Please try again.')
+    }
   }
 
-  const handleDelete = (type, id) => {
+  const handleDelete = async (type, id) => {
     if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
-      if (type === "supplier") {
-        setSuppliers(suppliers.filter((s) => s.id !== id))
-        setOrders(orders.filter((o) => o.supplierId !== id))
-      } else if (type === "order") {
-        setOrders(orders.filter((o) => o.id !== id))
+      try {
+        if (type === "supplier") {
+          await deleteSupplier(id)
+        } else if (type === "order") {
+          await deleteOrder(id)
+        }
+      } catch (error) {
+        console.error('Error deleting item:', error)
+        alert('Error deleting item. Please try again.')
       }
     }
   }
@@ -205,7 +275,7 @@ export default function SupplierManagement() {
     const filteredSuppliers =
       reportFilters.supplierFilter === "all"
         ? suppliers
-        : suppliers.filter((s) => s.id === Number.parseInt(reportFilters.supplierFilter))
+        : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
 
     const filteredOrders = orders.filter((order) => {
       const orderDate = new Date(order.orderDate)
@@ -215,7 +285,7 @@ export default function SupplierManagement() {
       const dateMatch = orderDate >= fromDate && orderDate <= toDate
       const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
       const supplierMatch =
-        reportFilters.supplierFilter === "all" || order.supplierId === Number.parseInt(reportFilters.supplierFilter)
+        reportFilters.supplierFilter === "all" || order.supplierId === reportFilters.supplierFilter
 
       return dateMatch && statusMatch && supplierMatch
     })
@@ -254,7 +324,7 @@ Average Order Value: $${reportData.averageOrderValue.toFixed(2)}
 === SUPPLIER PERFORMANCE ===
 ${filteredSuppliers
   .map((s) => {
-    const supplierOrders = filteredOrders.filter((o) => o.supplierId === s.id)
+    const supplierOrders = filteredOrders.filter((o) => o.supplierId === s._id)
     const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
     return `${s.name}:
   - Status: ${s.status.toUpperCase()}
@@ -274,7 +344,7 @@ Orders by Status:
 Recent Orders:
 ${filteredOrders
   .slice(-10)
-  .map((o) => `- Order #${o.id}: ${o.supplierName} - $${o.total.toFixed(2)} (${o.status}) - ${o.orderDate}`)
+  .map((o) => `- Order #${o._id}: ${o.supplierName} - $${o.total.toFixed(2)} (${o.status}) - ${o.orderDate}`)
   .join("\n")}`
     } else if (reportFilters.reportType === "detailed") {
       content = `DETAILED SUPPLIER MANAGEMENT REPORT
@@ -284,7 +354,7 @@ Report Period: ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo
 === DETAILED SUPPLIER INFORMATION ===
 ${filteredSuppliers
   .map((s) => {
-    const supplierOrders = filteredOrders.filter((o) => o.supplierId === s.id)
+    const supplierOrders = filteredOrders.filter((o) => o.supplierId === s._id)
     return `
 SUPPLIER: ${s.name}
 Contact Person: ${s.contact}
@@ -298,7 +368,7 @@ Last Order Date: ${s.lastOrder}
 Orders in Period:
 ${supplierOrders
   .map(
-    (o) => `  - Order #${o.id}: ${o.orderDate} | $${o.total.toFixed(2)} | ${o.status.toUpperCase()}
+    (o) => `  - Order #${o._id}: ${o.orderDate} | $${o.total.toFixed(2)} | ${o.status.toUpperCase()}
     Items: ${o.items}
     Delivery: ${o.deliveryDate}`,
   )
@@ -311,7 +381,7 @@ ${supplierOrders
 ${filteredOrders
   .map(
     (o) => `
-ORDER #${o.id}
+ORDER #${o._id}
 Supplier: ${o.supplierName}
 Order Date: ${o.orderDate}
 Delivery Date: ${o.deliveryDate}
@@ -356,7 +426,7 @@ ${Object.entries(monthlyData)
 === SUPPLIER FINANCIAL PERFORMANCE ===
 ${filteredSuppliers
   .map((s) => {
-    const supplierOrders = filteredOrders.filter((o) => o.supplierId === s.id)
+    const supplierOrders = filteredOrders.filter((o) => o.supplierId === s._id)
     const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
     const percentage = reportData.totalValue > 0 ? ((supplierValue / reportData.totalValue) * 100).toFixed(1) : 0
     return `${s.name}: $${supplierValue.toFixed(2)} (${percentage}% of total)`
@@ -398,7 +468,7 @@ Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
 
 ${orders
   .map(
-    (o) => `Order ID: ${o.id}
+    (o) => `Order ID: ${o._id}
 Supplier: ${o.supplierName}
 Order Date: ${o.orderDate}
 Delivery Date: ${o.deliveryDate}
@@ -425,7 +495,7 @@ Items: ${o.items}
     } else {
       csvData.push(["Order ID", "Supplier", "Order Date", "Delivery Date", "Status", "Total", "Items"])
       orders.forEach((o) => {
-        csvData.push([o.id, o.supplierName, o.orderDate, o.deliveryDate, o.status, o.total, o.items])
+        csvData.push([o._id, o.supplierName, o.orderDate, o.deliveryDate, o.status, o.total, o.items])
       })
     }
 
@@ -437,6 +507,31 @@ Items: ${o.items}
     a.download = `supplier-${reportFilters.reportType}-data-${new Date().toISOString().split("T")[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  if (loading) {
+    return (
+      <div className="supplier-container">
+        <div className="dashboard-header">
+          <h1>Supplier Management System</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="supplier-container">
+        <div className="dashboard-header">
+          <h1>Supplier Management System</h1>
+          <p>Error: {error}</p>
+          <button onClick={() => window.location.reload()} className="btn btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -513,7 +608,7 @@ Items: ${o.items}
               </thead>
               <tbody>
                 {suppliers.slice(0, 5).map((supplier) => (
-                  <tr key={supplier.id}>
+                  <tr key={supplier._id}>
                     <td>{supplier.name}</td>
                     <td>{supplier.lastOrder}</td>
                     <td>
@@ -557,7 +652,7 @@ Items: ${o.items}
             </thead>
             <tbody>
               {filteredSuppliers.map((supplier) => (
-                <tr key={supplier.id}>
+                <tr key={supplier._id}>
                   <td>{supplier.name}</td>
                   <td>{supplier.contact}</td>
                   <td>{supplier.email}</td>
@@ -576,7 +671,7 @@ Items: ${o.items}
                     </button>
                     <button
                       className="btn btn-destructive btn-small"
-                      onClick={() => handleDelete("supplier", supplier.id)}
+                      onClick={() => handleDelete("supplier", supplier._id)}
                     >
                       Delete
                     </button>
@@ -617,8 +712,8 @@ Items: ${o.items}
             </thead>
             <tbody>
               {filteredOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>#{order.id}</td>
+                <tr key={order._id}>
+                  <td>#{order._id}</td>
                   <td>{order.supplierName}</td>
                   <td>{order.orderDate}</td>
                   <td>{order.deliveryDate}</td>
@@ -634,7 +729,7 @@ Items: ${o.items}
                     >
                       Edit
                     </button>
-                    <button className="btn btn-destructive btn-small" onClick={() => handleDelete("order", order.id)}>
+                    <button className="btn btn-destructive btn-small" onClick={() => handleDelete("order", order._id)}>
                       Delete
                     </button>
                   </td>
@@ -699,7 +794,7 @@ Items: ${o.items}
                   >
                     <option value="all">All Suppliers</option>
                     {suppliers.map((s) => (
-                      <option key={s.id} value={s.id}>
+                      <option key={s._id} value={s._id}>
                         {s.name}
                       </option>
                     ))}
@@ -822,7 +917,7 @@ Items: ${o.items}
                       className="form-select"
                       value={formData.supplierId || ""}
                       onChange={(e) => {
-                        const supplier = suppliers.find((s) => s.id === Number.parseInt(e.target.value))
+                        const supplier = suppliers.find((s) => s._id === e.target.value)
                         setFormData({
                           ...formData,
                           supplierId: e.target.value,
@@ -835,7 +930,7 @@ Items: ${o.items}
                       {suppliers
                         .filter((s) => s.status === "active")
                         .map((supplier) => (
-                          <option key={supplier.id} value={supplier.id}>
+                          <option key={supplier._id} value={supplier._id}>
                             {supplier.name}
                           </option>
                         ))}
