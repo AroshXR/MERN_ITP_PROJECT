@@ -11,7 +11,60 @@ const jobRouter = require("./routes/JobRoutes");
 // Import utilities
 const createToken = require('./utils/jwt');
 
-// Import models
+
+//middleware
+app.use(express.json());
+app.use(cors()); //to parse JSON
+app.use("/users", userRouter);
+app.use("/applicants", applicantRouter);
+app.use("/cloth-customizer", clothCustomizerRouter);
+app.use("/upload", uploadRouter);
+app.use("/supplier", supplierRouter);
+
+// Serve uploaded images statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Test endpoint to verify server is running
+app.get("/test", (req, res) => {
+    res.json({ status: "ok", message: "Backend server is running", timestamp: new Date().toISOString() });
+});
+
+// Test endpoint to verify cart operations
+app.get("/test-cart", async (req, res) => {
+    try {
+        const ClothCustomizer = mongoose.model("ClothCustomizer");
+        const count = await ClothCustomizer.countDocuments();
+        const sampleItem = await ClothCustomizer.findOne();
+        
+        res.json({ 
+            status: "ok", 
+            message: "Cart test endpoint", 
+            totalItems: count,
+            sampleItem: sampleItem ? {
+                id: sampleItem._id,
+                clothingType: sampleItem.clothingType,
+                quantity: sampleItem.quantity,
+                totalPrice: sampleItem.totalPrice
+            } : null,
+            timestamp: new Date().toISOString() 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: "error", 
+            message: "Error testing cart", 
+            error: error.message 
+        });
+    }
+});
+
+mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
+.then(() => console.log("Connected to mongodb"))
+.then(() => {
+    app.listen(5001);
+})
+.catch((err) => console.log(err));
+
+//call user model
 require("./models/User");
 require("./models/ClothCustomizerModel");
 require("./models/ApplicantModel");

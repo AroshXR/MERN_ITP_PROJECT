@@ -4,9 +4,12 @@ const SupplierOrder = require('../models/SupplierOrderModel');
 // Get all suppliers
 exports.getAllSuppliers = async (req, res) => {
   try {
+    console.log('Fetching all suppliers');
     const suppliers = await Supplier.find().sort({ createdAt: -1 });
+    console.log('Found suppliers:', suppliers.length);
     res.status(200).json(suppliers);
   } catch (error) {
+    console.error('Error fetching suppliers:', error);
     res.status(500).json({ message: 'Error fetching suppliers', error: error.message });
   }
 };
@@ -27,10 +30,20 @@ exports.getSupplier = async (req, res) => {
 // Create new supplier
 exports.createSupplier = async (req, res) => {
   try {
+    console.log('Creating supplier with data:', req.body);
+    
+    // Handle empty registration number
+    if (req.body.companyDetails && !req.body.companyDetails.registrationNumber) {
+      delete req.body.companyDetails.registrationNumber;
+    }
+    
     const supplier = new Supplier(req.body);
+    console.log('Supplier model created:', supplier);
     const savedSupplier = await supplier.save();
+    console.log('Supplier saved successfully:', savedSupplier);
     res.status(201).json(savedSupplier);
   } catch (error) {
+    console.error('Error creating supplier:', error);
     res.status(400).json({ message: 'Error creating supplier', error: error.message });
   }
 };

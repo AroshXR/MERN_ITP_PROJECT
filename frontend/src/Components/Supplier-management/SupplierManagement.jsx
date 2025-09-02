@@ -24,6 +24,7 @@ export default function SupplierManagement() {
   const [reportContent, setReportContent] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState("")
 
   // API base URL
   const API_BASE_URL = "http://localhost:5001/supplier"
@@ -32,8 +33,12 @@ export default function SupplierManagement() {
   const fetchSuppliers = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/suppliers`)
-      if (!response.ok) throw new Error('Failed to fetch suppliers')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to fetch suppliers')
+      }
       const data = await response.json()
+      console.log('Fetched suppliers:', data)
       setSuppliers(data)
     } catch (error) {
       console.error('Error fetching suppliers:', error)
@@ -55,6 +60,7 @@ export default function SupplierManagement() {
 
   const createSupplier = async (supplierData) => {
     try {
+      console.log('Sending supplier data:', supplierData)
       const response = await fetch(`${API_BASE_URL}/suppliers`, {
         method: 'POST',
         headers: {
@@ -62,9 +68,16 @@ export default function SupplierManagement() {
         },
         body: JSON.stringify(supplierData),
       })
-      if (!response.ok) throw new Error('Failed to create supplier')
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Error response:', errorData)
+        throw new Error(errorData.message || errorData.error || 'Failed to create supplier')
+      }
       const data = await response.json()
-      setSuppliers([...suppliers, data])
+      console.log('Supplier created successfully:', data)
       return data
     } catch (error) {
       console.error('Error creating supplier:', error)
@@ -161,9 +174,17 @@ export default function SupplierManagement() {
     const loadData = async () => {
       setLoading(true)
       try {
+        // Test backend connection first
+        const testResponse = await fetch('http://localhost:5001/test')
+        if (!testResponse.ok) {
+          throw new Error('Backend server is not responding')
+        }
+        console.log('Backend connection test successful')
+        
         await Promise.all([fetchSuppliers(), fetchOrders()])
       } catch (error) {
-        setError('Failed to load data')
+        console.error('Error loading data:', error)
+        setError('Failed to load data: ' + error.message)
       } finally {
         setLoading(false)
       }
@@ -183,7 +204,9 @@ export default function SupplierManagement() {
     (supplier) =>
       supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (supplier.companyDetails?.registrationNumber && 
+       supplier.companyDetails.registrationNumber.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
   const filteredOrders = orders.filter(
@@ -197,12 +220,14 @@ export default function SupplierManagement() {
   const openModal = (type, item = null) => {
     setModalType(type)
     setEditingItem(item)
+    setError(null) // Clear any existing errors
+    setSuccessMessage("") // Clear any existing success messages
     if (item) {
       setFormData(item)
     } else {
       setFormData(
         type === "supplier"
-          ? { name: "", contact: "", email: "", phone: "", status: "active" }
+          ? { name: "", contact: "", email: "", phone: "", status: "active", companyDetails: { registrationNumber: "" } }
           : {
               supplierId: "",
               supplierName: "",
@@ -227,12 +252,31 @@ export default function SupplierManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    // Validate form data
+    if (modalType === "supplier") {
+      if (!formData.name || !formData.contact || !formData.email || !formData.phone) {
+        alert('Please fill in all required fields for supplier')
+        return
+      }
+    } else if (modalType === "order") {
+      if (!formData.supplierId || !formData.orderDate || !formData.deliveryDate || !formData.total || !formData.items) {
+        alert('Please fill in all required fields for order')
+        return
+      }
+    }
+
     try {
+      console.log('Form submission started for:', modalType)
+      console.log('Form data:', formData)
+      
       if (modalType === "supplier") {
         if (editingItem) {
+          console.log('Updating existing supplier:', editingItem._id)
           await updateSupplier(editingItem._id, formData)
         } else {
-          await createSupplier(formData)
+          console.log('Creating new supplier')
+          const newSupplier = await createSupplier(formData)
+          console.log('Supplier created successfully:', newSupplier)
         }
       } else if (modalType === "order") {
         if (editingItem) {
@@ -249,7 +293,20 @@ export default function SupplierManagement() {
         }
       }
 
+      // Reset form data and close modal
+      setFormData({})
       closeModal()
+      
+      // Show success message
+      setSuccessMessage(`${modalType === "supplier" ? "Supplier" : "Order"} ${editingItem ? "updated" : "created"} successfully!`)
+      setTimeout(() => setSuccessMessage(""), 3000)
+      
+      // Refresh the data to ensure we have the latest state
+      if (modalType === "supplier") {
+        await fetchSuppliers()
+      } else if (modalType === "order") {
+        await fetchOrders()
+      }
     } catch (error) {
       console.error('Error submitting form:', error)
       alert('Error saving data. Please try again.')
@@ -509,6 +566,8 @@ Items: ${o.items}
     URL.revokeObjectURL(url)
   }
 
+
+
   if (loading) {
     return (
       <div className="supplier-container">
@@ -539,6 +598,48 @@ Items: ${o.items}
       <div className="dashboard-header">
         <h1>Supplier Management System</h1>
         <p>Manage your clothing store suppliers and orders efficiently</p>
+        {successMessage && (
+          <div style={{ 
+            backgroundColor: '#d4edda', 
+            color: '#155724', 
+            padding: '10px', 
+            borderRadius: '5px', 
+            marginTop: '10px',
+            border: '1px solid #c3e6cb'
+          }}>
+            {successMessage}
+          </div>
+        )}
+        {error && (
+          <div style={{ 
+            backgroundColor: '#f8d7da', 
+            color: '#721c24', 
+            padding: '10px', 
+            borderRadius: '5px', 
+            marginTop: '10px',
+            border: '1px solid #f5c6cb'
+          }}>
+            Error: {error}
+            <button 
+              onClick={() => {
+                setError(null)
+                window.location.reload()
+              }} 
+              style={{
+                marginLeft: '10px',
+                padding: '5px 10px',
+                backgroundColor: '#721c24',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
       </div>
 
       <div className="nav-tabs">
@@ -645,6 +746,7 @@ Items: ${o.items}
                 <th>Contact</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Reg. Number</th>
                 <th>Status</th>
                 <th>Total Orders</th>
                 <th>Actions</th>
@@ -657,6 +759,7 @@ Items: ${o.items}
                   <td>{supplier.contact}</td>
                   <td>{supplier.email}</td>
                   <td>{supplier.phone}</td>
+                  <td>{supplier.companyDetails?.registrationNumber || "N/A"}</td>
                   <td>
                     <span className={`status-badge status-${supplier.status}`}>{supplier.status}</span>
                   </td>
@@ -895,6 +998,22 @@ Items: ${o.items}
                       value={formData.phone || ""}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Registration Number</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.companyDetails?.registrationNumber || ""}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        companyDetails: { 
+                          ...formData.companyDetails, 
+                          registrationNumber: e.target.value 
+                        } 
+                      })}
+                      placeholder="Enter registration number (optional)"
                     />
                   </div>
                   <div className="form-group">
