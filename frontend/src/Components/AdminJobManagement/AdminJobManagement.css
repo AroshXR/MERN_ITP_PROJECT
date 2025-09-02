@@ -529,3 +529,35 @@
 .job-form-modal::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* Loading and Error Message Styling */
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px 0;
+}
+
+.loading-message p {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.error-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px 0;
+}
+
+.error-message p {
+  color: #c53030;
+  font-size: 1.1rem;
+  margin: 0;
+}

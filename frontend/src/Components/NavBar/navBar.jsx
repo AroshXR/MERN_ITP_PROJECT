@@ -60,7 +60,7 @@ function NavBar() {
             <i className='bx bx-cog'></i> Manage Jobs
           </button>
         </Link>
-        <Link to="#" onClick={() => setMenuOpen(false)}>
+        <Link to="/contact" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-phone'></i> Contact Us
           </button>

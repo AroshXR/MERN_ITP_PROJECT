@@ -63,7 +63,7 @@ const jobSchema = new Schema({
   postedBy: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: false
   },
   postedAt: {
     type: Date,
@@ -74,7 +74,7 @@ const jobSchema = new Schema({
   },
   applications: [{
     type: Schema.Types.ObjectId,
-    ref: "Applicant"
+    ref: "ApplicantModel"
   }]
 }, { 
   timestamps: true,

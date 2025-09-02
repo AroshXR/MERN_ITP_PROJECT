@@ -98,7 +98,7 @@ const createJob = async (req, res, next) => {
       type,
       experience,
       description,
-      postedBy: req.user?.id || "admin" // This should come from auth middleware
+      postedBy: req.user?.id || null // This should come from auth middleware
     };
     
     if (requirements && Array.isArray(requirements)) {

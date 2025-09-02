@@ -242,6 +242,74 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
+/* No Jobs Message Styling */
+.no-jobs-message {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px 0;
+}
+
+.no-jobs-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.no-jobs-message h3 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.no-jobs-message p {
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.no-jobs-message p:last-child {
+  font-size: 0.9rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Loading and Error Message Styling */
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px 0;
+}
+
+.loading-message p {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.error-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin: 20px 0;
+}
+
+.error-message p {
+  color: #c53030;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .career-header {
