@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const path = require("path");
 
 // Import routes
 const userRouter = require("./routes/UserRoutes");
@@ -11,67 +12,7 @@ const jobRouter = require("./routes/JobRoutes");
 // Import utilities
 const createToken = require('./utils/jwt');
 
-
-//middleware
-app.use(express.json());
-app.use(cors()); //to parse JSON
-app.use("/users", userRouter);
-app.use("/applicants", applicantRouter);
-app.use("/cloth-customizer", clothCustomizerRouter);
-app.use("/upload", uploadRouter);
-app.use("/supplier", supplierRouter);
-
-// Serve uploaded images statically
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// Test endpoint to verify server is running
-app.get("/test", (req, res) => {
-    res.json({ status: "ok", message: "Backend server is running", timestamp: new Date().toISOString() });
-});
-
-// Test endpoint to verify cart operations
-app.get("/test-cart", async (req, res) => {
-    try {
-        const ClothCustomizer = mongoose.model("ClothCustomizer");
-        const count = await ClothCustomizer.countDocuments();
-        const sampleItem = await ClothCustomizer.findOne();
-        
-        res.json({ 
-            status: "ok", 
-            message: "Cart test endpoint", 
-            totalItems: count,
-            sampleItem: sampleItem ? {
-                id: sampleItem._id,
-                clothingType: sampleItem.clothingType,
-                quantity: sampleItem.quantity,
-                totalPrice: sampleItem.totalPrice
-            } : null,
-            timestamp: new Date().toISOString() 
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            status: "error", 
-            message: "Error testing cart", 
-            error: error.message 
-        });
-    }
-});
-
-mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
-.then(() => console.log("Connected to mongodb"))
-.then(() => {
-    app.listen(5001);
-})
-.catch((err) => console.log(err));
-
-//call user model
-require("./models/User");
-require("./models/ClothCustomizerModel");
-require("./models/ApplicantModel");
-require("./models/SupplierModel");
-require("./models/SupplierOrderModel");
-const User = mongoose.model("User");
-
+// Create Express app
 const app = express();
 
 // Environment variables
@@ -82,40 +23,21 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://chearoavitharipasi
 app.use(express.json());
 app.use(cors());
 
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Routes
 app.use("/users", userRouter);
 app.use("/applicant", applicantRouter);
 app.use("/jobs", jobRouter);
 
-// Database connection
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+// Test endpoint to verify server is running
+app.get("/test", (req, res) => {
+    res.json({ 
+        status: "ok", 
+        message: "Backend server is running", 
+        timestamp: new Date().toISOString() 
     });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-    process.exit(1);
-  });
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error("Global error handler:", err);
-  res.status(500).json({
-    status: "error",
-    message: "Internal server error",
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
-
-// 404 handler for undefined routes
-app.use((req, res) => {
-  res.status(404).json({
-    status: "error",
-    message: "Route not found"
-  });
 });
 
 // User registration endpoint
@@ -132,6 +54,7 @@ app.post("/register", async (req, res) => {
     }
     
     // Check if user already exists
+    const User = mongoose.model("User");
     const existingUser = await User.findOne({
       $or: [{ username }, { email }]
     });
@@ -186,6 +109,7 @@ app.post("/login", async (req, res) => {
     }
     
     // Find user by username and type
+    const User = mongoose.model("User");
     const user = await User.findOne({ username, type });
     if (!user) {
       return res.status(401).json({
@@ -226,6 +150,43 @@ app.post("/login", async (req, res) => {
       message: "Internal server error"
     });
   }
+});
+
+// Database connection
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log("Connected to MongoDB");
+    
+    // Load models after connection
+    require("./models/User");
+    require("./models/ApplicantModel");
+    require("./models/JobModel");
+    
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Global error handler:", err);
+  res.status(500).json({
+    status: "error",
+    message: "Internal server error",
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    status: "error",
+    message: "Route not found"
+  });
 });
 
 module.exports = app;
