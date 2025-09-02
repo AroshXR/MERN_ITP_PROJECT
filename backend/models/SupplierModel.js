@@ -27,6 +27,14 @@ const supplierSchema = new mongoose.Schema({
     enum: ['active', 'inactive'],
     default: 'active'
   },
+  companyDetails: {
+    registrationNumber: {
+      type: String,
+      unique: true,
+      sparse: true, // This allows multiple null values
+      trim: true
+    }
+  },
   totalOrders: {
     type: Number,
     default: 0

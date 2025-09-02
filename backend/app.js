@@ -61,6 +61,36 @@ app.get("/test-cart", async (req, res) => {
     }
 });
 
+// Test endpoint to verify supplier operations
+app.get("/test-supplier", async (req, res) => {
+    try {
+        const Supplier = mongoose.model("Supplier");
+        const count = await Supplier.countDocuments();
+        const sampleSupplier = await Supplier.findOne();
+        
+        res.json({ 
+            status: "ok", 
+            message: "Supplier test endpoint", 
+            totalSuppliers: count,
+            sampleSupplier: sampleSupplier ? {
+                id: sampleSupplier._id,
+                name: sampleSupplier.name,
+                contact: sampleSupplier.contact,
+                email: sampleSupplier.email,
+                phone: sampleSupplier.phone,
+                status: sampleSupplier.status
+            } : null,
+            timestamp: new Date().toISOString() 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: "error", 
+            message: "Error testing supplier", 
+            error: error.message 
+        });
+    }
+});
+
 mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/")
 .then(() => console.log("Connected to mongodb"))
 .then(() => {
