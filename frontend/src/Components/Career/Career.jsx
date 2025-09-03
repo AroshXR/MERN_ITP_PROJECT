@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Career.css';
 import ApplicantForm from './ApplicantForm';
+import NavBar from '../NavBar/navBar';
 
 const Career = () => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
@@ -30,7 +31,7 @@ const Career = () => {
     } catch (err) {
       console.error('Error fetching jobs from API:', err);
       setError('Failed to fetch jobs from server. Please try again.');
-      
+
       // Fallback to localStorage if API fails
       const storedJobs = localStorage.getItem('adminJobs');
       if (storedJobs) {
@@ -71,7 +72,7 @@ const Career = () => {
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      
+
       // Fallback to localStorage if API fails
       try {
         const applicationData = {
@@ -80,13 +81,13 @@ const Career = () => {
           appliedAt: new Date().toISOString(),
           status: 'pending'
         };
-        
+
         // Store in localStorage as fallback
         const existingApplications = localStorage.getItem('jobApplications') || '[]';
         const applications = JSON.parse(existingApplications);
         applications.push(applicationData);
         localStorage.setItem('jobApplications', JSON.stringify(applications));
-        
+
         alert('Application saved locally (API unavailable). Please check your backend connection.');
         handleCloseForm();
       } catch (fallbackError) {
@@ -97,109 +98,112 @@ const Career = () => {
   };
 
   return (
-    <div className="career-page">
-      <div className="career-header">
-        <h1>Join Our Team</h1>
-        <p>Be part of our mission to create amazing fashion experiences</p>
-      </div>
+    <div className='main'>
+      <NavBar />
+      <div className="career-page">
+        <div className="career-header">
+          <h1>Join Our Team</h1>
+          <p>Be part of our mission to create amazing fashion experiences</p>
+        </div>
 
-      <div className="career-content">
-        <div className="career-intro">
-          <h2>Why Work With Us?</h2>
-          <div className="benefits-grid">
-            <div className="benefit-card">
-              <i className="bx bx-heart"></i>
-              <h3>Passion for Fashion</h3>
-              <p>Work in an environment where creativity and innovation are celebrated</p>
+        <div className="career-content">
+          <div className="career-intro">
+            <h2>Why Work With Us?</h2>
+            <div className="benefits-grid">
+              <div className="benefit-card">
+                <i className="bx bx-heart"></i>
+                <h3>Passion for Fashion</h3>
+                <p>Work in an environment where creativity and innovation are celebrated</p>
+              </div>
+              <div className="benefit-card">
+                <i className="bx bx-trending-up"></i>
+                <h3>Growth Opportunities</h3>
+                <p>Continuous learning and career development programs</p>
+              </div>
+              <div className="benefit-card">
+                <i className="bx bx-group"></i>
+                <h3>Great Team</h3>
+                <p>Collaborate with talented professionals in a supportive environment</p>
+              </div>
+              <div className="benefit-card">
+                <i className="bx bx-gift"></i>
+                <h3>Benefits & Perks</h3>
+                <p>Competitive salary, health insurance, and flexible work arrangements</p>
+              </div>
             </div>
-            <div className="benefit-card">
-              <i className="bx bx-trending-up"></i>
-              <h3>Growth Opportunities</h3>
-              <p>Continuous learning and career development programs</p>
-            </div>
-            <div className="benefit-card">
-              <i className="bx bx-group"></i>
-              <h3>Great Team</h3>
-              <p>Collaborate with talented professionals in a supportive environment</p>
-            </div>
-            <div className="benefit-card">
-              <i className="bx bx-gift"></i>
-              <h3>Benefits & Perks</h3>
-              <p>Competitive salary, health insurance, and flexible work arrangements</p>
-            </div>
+          </div>
+
+          <div className="job-openings">
+            <h2>Current Openings</h2>
+            {loading ? (
+              <div className="loading-message">
+                <p>Loading job openings...</p>
+              </div>
+            ) : error ? (
+              <div className="error-message">
+                <p>{error}</p>
+              </div>
+            ) : jobOpenings.length === 0 ? (
+              <div className="no-jobs-message">
+                <div className="no-jobs-icon">📋</div>
+                <h3>No Job Openings Available</h3>
+                <p>Currently, there are no active job openings. Please check back later or contact us to learn about future opportunities.</p>
+                <p>Administrators can post new job openings through the Manage Jobs section.</p>
+              </div>
+            ) : (
+              <div className="jobs-grid">
+                {jobOpenings.map((job) => (
+                  <div key={job.id} className="job-card">
+                    <div className="job-header">
+                      <h3>{job.title}</h3>
+                      <span className="job-type">{job.type}</span>
+                    </div>
+                    <div className="job-details">
+                      <p><i className="bx bx-building"></i> {job.department}</p>
+                      <p><i className="bx bx-map"></i> {job.location}</p>
+                      <p><i className="bx bx-time"></i> {job.experience}</p>
+                    </div>
+                    <p className="job-description">{job.description}</p>
+                    <div className="job-requirements">
+                      <h4>Key Requirements:</h4>
+                      <ul>
+                        {job.requirements.slice(0, 3).map((req, index) => (
+                          <li key={index}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      className="apply-btn"
+                      onClick={() => handleApplyNow(job)}
+                    >
+                      Apply Now
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="career-cta">
+            <h2>Don't See the Right Fit?</h2>
+            <p>We're always looking for talented individuals to join our team. Send us your resume and we'll keep you in mind for future opportunities.</p>
+            <button
+              className="general-apply-btn"
+              onClick={() => handleApplyNow({ title: "General Application", department: "Various" })}
+            >
+              Submit General Application
+            </button>
           </div>
         </div>
 
-        <div className="job-openings">
-          <h2>Current Openings</h2>
-          {loading ? (
-            <div className="loading-message">
-              <p>Loading job openings...</p>
-            </div>
-          ) : error ? (
-            <div className="error-message">
-              <p>{error}</p>
-            </div>
-          ) : jobOpenings.length === 0 ? (
-            <div className="no-jobs-message">
-              <div className="no-jobs-icon">📋</div>
-              <h3>No Job Openings Available</h3>
-              <p>Currently, there are no active job openings. Please check back later or contact us to learn about future opportunities.</p>
-              <p>Administrators can post new job openings through the Manage Jobs section.</p>
-            </div>
-          ) : (
-            <div className="jobs-grid">
-              {jobOpenings.map((job) => (
-                <div key={job.id} className="job-card">
-                  <div className="job-header">
-                    <h3>{job.title}</h3>
-                    <span className="job-type">{job.type}</span>
-                  </div>
-                  <div className="job-details">
-                    <p><i className="bx bx-building"></i> {job.department}</p>
-                    <p><i className="bx bx-map"></i> {job.location}</p>
-                    <p><i className="bx bx-time"></i> {job.experience}</p>
-                  </div>
-                  <p className="job-description">{job.description}</p>
-                  <div className="job-requirements">
-                    <h4>Key Requirements:</h4>
-                    <ul>
-                      {job.requirements.slice(0, 3).map((req, index) => (
-                        <li key={index}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <button 
-                    className="apply-btn"
-                    onClick={() => handleApplyNow(job)}
-                  >
-                    Apply Now
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="career-cta">
-          <h2>Don't See the Right Fit?</h2>
-          <p>We're always looking for talented individuals to join our team. Send us your resume and we'll keep you in mind for future opportunities.</p>
-          <button 
-            className="general-apply-btn"
-            onClick={() => handleApplyNow({ title: "General Application", department: "Various" })}
-          >
-            Submit General Application
-          </button>
-        </div>
+        {showApplicationForm && (
+          <ApplicantForm
+            job={selectedJob}
+            onSubmit={handleApplicationSubmit}
+            onClose={handleCloseForm}
+          />
+        )}
       </div>
-
-      {showApplicationForm && (
-        <ApplicantForm
-          job={selectedJob}
-          onSubmit={handleApplicationSubmit}
-          onClose={handleCloseForm}
-        />
-      )}
     </div>
   );
 };

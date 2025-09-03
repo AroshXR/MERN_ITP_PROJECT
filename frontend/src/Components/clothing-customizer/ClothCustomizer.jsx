@@ -28,9 +28,7 @@ function ClothCustomizer() {
   const [selectedColor, setSelectedColor] = useState("#ffffff");
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [clothingType, setClothingType] = useState("tshirt");
-  const [placedDesigns, setPlacedDesigns] = useState([]);
   const [designSize, setDesignSize] = useState(80);
-  const [selectedClothSize, setSelectedClothSize] = useState(null);
   const [designPosition, setDesignPosition] = useState({ x: 0, y: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [showCartButton, setShowCartButton] = useState(false);
@@ -111,7 +109,6 @@ function ClothCustomizer() {
 
         // Load placed designs
         if (itemData.placedDesigns && itemData.placedDesigns.length > 0) {
-          setPlacedDesigns(itemData.placedDesigns);
           setFrontDesigns(itemData.placedDesigns);
         }
 
@@ -128,7 +125,7 @@ function ClothCustomizer() {
   const clearForm = () => {
     setSelectedColor("#ffffff");
     setSelectedDesign(null);
-    setPlacedDesigns([]);
+
     setFrontDesigns([]);
     setDesignSize(80);
     setSelectedSize(null);
@@ -236,29 +233,9 @@ function ClothCustomizer() {
     setSelectedColor(color);
   };
 
-  const handleSizeChange = (size) => {
-    setDesignSize(size);
 
 
-    if (activeDesignId) {
-      setFrontDesigns(prev =>
-        prev.map(design =>
-          design.id === activeDesignId
-            ? { ...design, size }
-            : design
-        )
-      );
-    }
-  };
 
-  const handlePositionChange = (axis, value) => {
-    const newPosition = { ...designPosition, [axis]: value };
-    setDesignPosition(newPosition);
-
-    if (activeDesignId) {
-      updateDesignProperty(activeDesignId, 'position', newPosition);
-    }
-  };
 
 
   const updateDesignProperty = (designId, property, value) => {
@@ -268,7 +245,7 @@ function ClothCustomizer() {
       );
 
     setFrontDesigns(prev => updateDesign(prev));
-    setPlacedDesigns(prev => updateDesign(prev));
+
   };
 
   const getSizeExtraPrice = () => {

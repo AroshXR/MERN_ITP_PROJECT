@@ -94,7 +94,7 @@ function LoginPage() {
       console.log('Login response:', response); // Debug log
       
       if (response.status === "ok") {
-        const { token, user: userData } = response;
+        const { token, user: userData } = response.data;
         console.log('Login successful, user data:', userData);
         console.log('Token received:', token ? 'exists' : 'none');
         
