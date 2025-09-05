@@ -4,6 +4,8 @@ const userRouter = require("./routes/UserRoutes")
 const applicantRouter = require("./routes/ApplicantRoutes")
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes")
 const uploadRouter = require("./routes/UploadRoutes")
+const inventoryRouter = require("./routes/InventoryRoutes")
+const reviewRouter = require("./routes/ReviewRoutes")
 const path = require("path");
 
 const app = express();
@@ -22,6 +24,8 @@ app.use("/users", userRouter);
 app.use("/applicants", applicantRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
+app.use("/inventory", inventoryRouter);
+app.use("/reviews", reviewRouter);
 
 // Serve uploaded images statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -70,6 +74,8 @@ mongoose.connect("mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfb
 require("./models/User");
 require("./models/ClothCustomizerModel");
 require("./models/ApplicantModel");
+require("./models/InventoryItem");
+require("./models/Review");
 const User = mongoose.model("User");
 
 // Global error handler for ObjectId casting errors and other validation issues

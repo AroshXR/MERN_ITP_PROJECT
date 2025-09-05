@@ -7,7 +7,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../AuthGuard/AuthGuard';
+import { useAuth } from '../../AuthGuard/authGuard';
 //
 import print1 from './customizer_preset_designs/print 1.jpg'
 import print2 from './customizer_preset_designs/print 2.jpg'

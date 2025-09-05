@@ -6,7 +6,7 @@ import Footer from '../Footer/Footer'; // Importing the Footer component
 import axios from 'axios';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; // Importing useNavigate for navigation
-import { useAuth } from '../../AuthGuard/AuthGuard'; // Importing the useAuth hook
+import { useAuth } from '../../AuthGuard/authGuard'; // Importing the useAuth hook
 
 function LoginPage() {
 
@@ -102,8 +102,14 @@ function LoginPage() {
         login(token, userData);
 
         setError('');
-        // Redirect to the original destination or userHome
-        history(from, { replace: true });
+        
+        // Redirect based on user type
+        if (userData.type === 'Admin') {
+          navigate('/adminHome');
+        } else {
+          // Redirect to the original destination or userHome
+          history(from, { replace: true });
+        }
       } else {  
         setError(response.message || 'Login failed');
       }

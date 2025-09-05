@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import './navBar.css';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../AuthGuard/authGuard';
 
 function NavBar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
   const isHomePage = location.pathname === '/';
   const isLoginPage = location.pathname === '/login';
   const isRegisterPage = location.pathname === '/register';
@@ -40,16 +42,28 @@ function NavBar() {
       </div>
 
       <div className={`nav-buttons ${menuOpen ? 'active' : ''}`}>
+        <Link to="/outlet" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-store'></i> Outlet
+          </button>
+        </Link>
         <Link to="/customizer" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-info-circle'></i> Customizer
           </button>
         </Link>
-        <Link to="#" onClick={() => setMenuOpen(false)}>
+        <Link to="/contact" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-phone'></i> Contact Us
           </button>
         </Link>
+        {isAuthenticated() && currentUser?.type === 'Admin' && (
+          <Link to="/adminHome" onClick={() => setMenuOpen(false)}>
+            <button className="nav-btn admin-btn">
+              <i className='bx bx-cog'></i> Admin Panel
+            </button>
+          </Link>
+        )}
         {!isHomePage && !isLoginPage && !isRegisterPage && !isCustomizerPage &&(
           <button onClick={() => { handleLogout(); setMenuOpen(false); }}>
             <i className='bx bx-log-out'></i> Logout

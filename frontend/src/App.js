@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './AuthGuard/AuthGuard';
+import { AuthProvider } from './AuthGuard/authGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
 // import AddUser from './Components/AddUser/AddUser';
@@ -14,6 +14,10 @@ import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
+import Outlet from './Components/Outlet/Outlet';
+import ItemInfo from './Components/ItemInfo/ItemInfo';
+import InventoryManagement from './Components/InventoryManagement/InventoryManagement';
+import AdminHome from './Components/Home/AdminHome/AdminHome';
 
 
 function App() {
@@ -32,6 +36,18 @@ function App() {
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
+        <Route path='/outlet' element={<Outlet />}/>
+        <Route path='/outlet/:id' element={<ItemInfo />}/>
+        <Route path='/adminHome' element={
+          <ProtectedRoute requiredUserType="Admin">
+            <AdminHome />
+          </ProtectedRoute>
+        }/>
+        <Route path='/inventoryManagement' element={
+          <ProtectedRoute requiredUserType="Admin">
+            <InventoryManagement />
+          </ProtectedRoute>
+        }/>
 
       </Routes>
     </AuthProvider>
