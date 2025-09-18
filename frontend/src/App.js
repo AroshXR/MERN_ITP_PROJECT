@@ -18,6 +18,8 @@ import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 import Outfits from './pages/Outfits';
+import MyBookings from './pages/MyBookings';
+import OutfitDetails from './pages/OutfitDetails';
 
 function App() {
   return (
@@ -38,8 +40,9 @@ function App() {
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
-        
-        
+        <Route path="/Outfits" element={<Outfits />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/outfit/:id" element={<OutfitDetails />} />
 
       </Routes>
     </AuthProvider>
