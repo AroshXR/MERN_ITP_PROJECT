@@ -17,6 +17,7 @@ import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
+import Outfits from './pages/Outfits';
 
 function App() {
   return (
@@ -37,6 +38,8 @@ function App() {
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
+        
+        
 
       </Routes>
     </AuthProvider>
