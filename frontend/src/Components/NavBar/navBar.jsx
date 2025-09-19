@@ -55,6 +55,11 @@ function NavBar() {
             <i className='bx bx-user-check'></i> My Applications
           </button>
         </Link>
+        <Link to="/admin" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-shield'></i> Admin
+          </button>
+        </Link>
         <Link to="/admin-jobs" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-cog'></i> Manage Jobs

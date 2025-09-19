@@ -10,6 +10,9 @@ import ClothCustomizer from './Components/clothing-customizer/ClothCustomizer';
 import Career from './Components/Career/Career';
 import ApplicantDashboard from './Components/ApplicantDashboard/ApplicantDashboard';
 import AdminJobManagement from './Components/AdminJobManagement/AdminJobManagement';
+import AdminApplicantManagement from './Components/AdminApplicantManagement/AdminApplicantManagement';
+import AdminApplicantDetail from './Components/AdminApplicantManagement/AdminApplicantDetail';
+import AdminPanel from './Components/AdminPanel/AdminPanel';
 import ContactUs from './Components/Home/ContactUs';
 import OrderManagement from './Components/OrderManagement/OrderManagement';
 import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
@@ -32,6 +35,9 @@ function App() {
         <Route path="/career" element={<Career />} />
         <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
         <Route path="/admin-jobs" element={<AdminJobManagement />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin-applicants" element={<AdminApplicantManagement />} />
+        <Route path="/admin-applicants/:id" element={<AdminApplicantDetail />} />
         <Route path="/orderManagement" element={<OrderManagement />}/>
         <Route path='/paymentManagement' element={<PaymentManagement />}/>
         <Route path='/userHome' element={<UserHome />}/>

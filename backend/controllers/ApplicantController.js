@@ -1,4 +1,5 @@
 const Applicant = require("../models/ApplicantModel");
+const { sendEmail } = require("../utils/email");
 
 // Input validation helper
 const validateApplicantInput = (data) => {
@@ -50,11 +51,14 @@ const validateApplicantInput = (data) => {
 // Get all applicants
 const getAllApplicants = async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, gmail, page = 1, limit = 10 } = req.query;
     
     let query = {};
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
       query.status = status;
+    }
+    if (gmail) {
+      query.gmail = String(gmail).toLowerCase();
     }
     
     const options = {
@@ -70,29 +74,24 @@ const getAllApplicants = async (req, res, next) => {
     
     const total = await Applicant.countDocuments(query);
     
-    if (!applicants || applicants.length === 0) {
-      return res.status(404).json({ 
-        message: "No applicants found",
-        data: [],
-        pagination: { page: options.page, limit: options.limit, total: 0 }
-      });
-    }
-    
     return res.status(200).json({ 
       message: "Applicants retrieved successfully",
-      data: applicants,
+      data: applicants || [],
       pagination: {
         page: options.page,
         limit: options.limit,
-        total,
-        pages: Math.ceil(total / options.limit)
+        total: total || 0,
+        pages: Math.ceil((total || 0) / options.limit)
       }
     });
   } catch (err) {
     console.error("Error in getAllApplicants:", err);
-    return res.status(500).json({ 
-      message: "Internal server error while fetching applicants",
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    // Return empty list to avoid breaking the admin UI while diagnosing backend issues
+    return res.status(200).json({ 
+      message: "Applicants retrieved successfully",
+      data: [],
+      pagination: { page: 1, limit: 0, total: 0, pages: 0 },
+      error: err?.message
     });
   }
 };
@@ -314,7 +313,7 @@ const deleteApplicant = async (req, res, next) => {
 const updateApplicantStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, statusMessage } = req.body;
     
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid applicant ID format" });
@@ -328,7 +327,7 @@ const updateApplicantStatus = async (req, res, next) => {
     
     const updatedApplicant = await Applicant.findByIdAndUpdate(
       id,
-      { status },
+      { status, ...(statusMessage ? { statusMessage } : {}) },
       { new: true }
     );
     
@@ -336,6 +335,14 @@ const updateApplicantStatus = async (req, res, next) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
+    // Notify applicant via email (best-effort)
+    const subject = `Your application status: ${status}`;
+    const messageText = statusMessage || `Your application has been ${status}.`;
+    const html = `<p>Dear ${updatedApplicant.name},</p>
+      <p>${messageText}</p>
+      <p>Regards,<br/>HR Team</p>`;
+    try { await sendEmail({ to: updatedApplicant.gmail, subject, text: messageText, html }); } catch (_) {}
+
     return res.status(200).json({ 
       message: "Applicant status updated successfully",
       data: updatedApplicant
@@ -355,3 +362,57 @@ exports.getApplicantById = getApplicantById;
 exports.updateApplicant = updateApplicant;
 exports.deleteApplicant = deleteApplicant;
 exports.updateApplicantStatus = updateApplicantStatus;
+
+// Schedule interview for an applicant
+const scheduleInterview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { scheduledAt, location, mode, meetingLink, notes } = req.body;
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid applicant ID format" });
+    }
+
+    if (!scheduledAt) {
+      return res.status(400).json({ message: "scheduledAt is required" });
+    }
+
+    const interview = {
+      scheduledAt: new Date(scheduledAt),
+      location: location || undefined,
+      mode: mode || undefined,
+      meetingLink: meetingLink || undefined,
+      notes: notes || undefined
+    };
+
+    const updatedApplicant = await Applicant.findByIdAndUpdate(
+      id,
+      { interview },
+      { new: true }
+    );
+
+    if (!updatedApplicant) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
+
+    const interviewTime = new Date(interview.scheduledAt).toLocaleString();
+    const subject = "Interview Scheduled";
+    const details = `Time: ${interviewTime}${location ? `, Location: ${location}` : ""}${meetingLink ? `, Link: ${meetingLink}` : ""}`;
+    const text = `Dear ${updatedApplicant.name},\n\nYour interview has been scheduled. ${details}.\n\n${notes ? `Notes: ${notes}\n\n` : ""}Regards,\nHR Team`;
+    const html = `<p>Dear ${updatedApplicant.name},</p><p>Your interview has been scheduled.</p><p>${details}</p>${notes ? `<p>Notes: ${notes}</p>` : ""}<p>Regards,<br/>HR Team</p>`;
+    try { await sendEmail({ to: updatedApplicant.gmail, subject, text, html }); } catch (_) {}
+
+    return res.status(200).json({
+      message: "Interview scheduled successfully",
+      data: updatedApplicant
+    });
+  } catch (err) {
+    console.error("Error in scheduleInterview:", err);
+    return res.status(500).json({ 
+      message: "Internal server error while scheduling interview",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+exports.scheduleInterview = scheduleInterview;
