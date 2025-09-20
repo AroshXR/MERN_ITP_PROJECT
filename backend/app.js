@@ -1,3 +1,6 @@
+require("dotenv").config();
+
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -21,6 +24,9 @@ const app = express();
 // Environment variables
 const PORT = process.env.PORT || 5001;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/";
+//implemented .env code ready t use
+//const PORT = process.env.PORT || 5001;
+//const MONGODB_URI = process.env.MONGODB_URI;
 
 // Middleware
 app.use(express.json());
