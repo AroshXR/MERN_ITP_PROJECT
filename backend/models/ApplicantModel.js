@@ -85,6 +85,18 @@ const applicantSchema = new Schema({
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending"
+  },
+  statusMessage: {
+    type: String,
+    trim: true,
+    maxlength: [500, "Status message cannot exceed 500 characters"]
+  },
+  interview: {
+    scheduledAt: { type: Date },
+    location: { type: String, trim: true, maxlength: 200 },
+    mode: { type: String, enum: ["in-person", "online"], required: false },
+    meetingLink: { type: String, trim: true },
+    notes: { type: String, trim: true, maxlength: 1000 }
   }
 }, { 
   timestamps: true,

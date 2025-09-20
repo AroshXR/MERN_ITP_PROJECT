@@ -2,6 +2,7 @@ require("dotenv").config();
 
 
 const express = require("express");
+require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -176,6 +177,7 @@ mongoose.connect(MONGODB_URI)
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
+    require("./models/OrderModel");
     
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

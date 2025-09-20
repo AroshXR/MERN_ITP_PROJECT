@@ -1,0 +1,6 @@
+.admin-panel { padding: 24px; }
+.admin-panel__tabs { display: flex; gap: 8px; border-bottom: 1px solid #eee; margin-bottom: 16px; }
+.tab-btn { padding: 8px 12px; border: 1px solid #ddd; background: #fafafa; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; }
+.tab-btn.active { background: #fff; border-bottom: 1px solid #fff; font-weight: 600; }
+.admin-panel__content { background: #fff; border: 1px solid #eee; border-radius: 0 6px 6px 6px; }
+

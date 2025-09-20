@@ -108,6 +108,7 @@ router.get("/:id", validateId, ApplicantController.getApplicantById);
 router.put("/:id", validateId, ApplicantController.updateApplicant);
 router.delete("/:id", validateId, ApplicantController.deleteApplicant);
 router.patch("/:id/status", validateId, ApplicantController.updateApplicantStatus);
+router.post("/:id/schedule-interview", validateId, ApplicantController.scheduleInterview);
 
 // Export router
 module.exports = router;
