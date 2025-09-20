@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './AuthGuard/AuthGuard';
+import { AuthProvider } from './AuthGuard/authGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
 // import AddUser from './Components/AddUser/AddUser';
@@ -20,10 +20,23 @@ import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
+import RentalHome from './pages/RentalHome';
+import OutfitDetails from './pages/OutfitDetails';
+import Outfits from './pages/Outfits';
+import MyBookings from './pages/MyBookings';
+import Layout from './pages/owner/Layout';
+import Dashboard from './pages/owner/Dashboard';
+import AddOutfit from './pages/owner/AddOutfit';
+import ManageOutfits from './pages/owner/ManageOutfits';
+import ManageBookings from './pages/owner/ManageBookings';
+
 
 function App() {
   return (
+    <>
+    
     <AuthProvider>
+      
       <Routes>
         {/* All Routes - No Authentication Required */}
         <Route path="/" element={<Home />} />
@@ -44,8 +57,26 @@ function App() {
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
 
+        <Route path='/rentalHome' element={<RentalHome />}/>
+        <Route path='/outfit-details/:id' element = {<OutfitDetails/>}/>
+        <Route path='/outfits' element = {<Outfits/>}/>
+        <Route path='/my-bookings' element = {<MyBookings/>}/>
+        <Route path='/owner' element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path='add-outfit' element={<AddOutfit />} />
+            <Route path='manage-outfits' element={<ManageOutfits />} />
+            <Route path='manage-bookings' element={<ManageBookings />} />
+        </Route>
+        
+
+
+        
+        
+
       </Routes>
     </AuthProvider>
+
+    </>
   );
 }
 
