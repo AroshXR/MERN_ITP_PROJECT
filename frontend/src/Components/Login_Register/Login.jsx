@@ -6,7 +6,7 @@ import Footer from '../Footer/Footer'; // Importing the Footer component
 import axios from 'axios';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; // Importing useNavigate for navigation
-import { useAuth } from '../../AuthGuard/authGuard'; // Importing the useAuth hook
+import { useAuth } from '../../AuthGuard/AuthGuard'; // Importing the useAuth hook
 
 function LoginPage() {
 
