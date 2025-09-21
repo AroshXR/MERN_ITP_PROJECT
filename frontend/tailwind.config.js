@@ -13,8 +13,6 @@ module.exports = {
   },
   corePlugins: {
     preflight: false,   // ⛔ disables global reset
-    //guygs
-    
   },
   plugins: [],
 }
