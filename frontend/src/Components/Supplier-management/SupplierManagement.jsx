@@ -1,5 +1,4 @@
 "use client"
-import Footer from "../Footer/Footer"
 import NavBar from "../NavBar/navBar"
 import "./SupplierManagement.css"
 import { useState, useEffect } from "react"
@@ -598,29 +597,30 @@ Items: ${o.items}
   return (
     <div className="main">
       <NavBar />
-      <div className="dashboard-header">
+      <div className="supplier-container">
+        <div className="dashboard-header">
           <h1>Supplier Management System</h1>
           <p>Manage your clothing store suppliers and orders efficiently</p>
           {successMessage && (
             <div style={{
-              backgroundColor: '#0b0b0bff',
-              color: '#121312ff',
+              backgroundColor: '#d4edda',
+              color: '#155724',
               padding: '10px',
               borderRadius: '5px',
               marginTop: '10px',
-              border: '1px solid #080908ff'
+              border: '1px solid #c3e6cb'
             }}>
               {successMessage}
             </div>
           )}
           {error && (
             <div style={{
-              backgroundColor: '#121212ff',
-              color: '#0a0a0aff',
+              backgroundColor: '#f8d7da',
+              color: '#721c24',
               padding: '10px',
               borderRadius: '5px',
               marginTop: '10px',
-              border: '1px solid #0c0c0cff'
+              border: '1px solid #f5c6cb'
             }}>
               Error: {error}
               <button
@@ -631,7 +631,7 @@ Items: ${o.items}
                 style={{
                   marginLeft: '10px',
                   padding: '5px 10px',
-                  backgroundColor: '#0e0d0dff',
+                  backgroundColor: '#721c24',
                   color: 'white',
                   border: 'none',
                   borderRadius: '3px',
@@ -644,8 +644,6 @@ Items: ${o.items}
           )}
 
         </div>
-      <div className="supplier-container">
-        
 
         <div className="nav-tabs">
           <button
@@ -739,7 +737,7 @@ Items: ${o.items}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="supbtn" onClick={() => openModal("supplier")}>
+              <button className="btn btn-primary" onClick={() => openModal("supplier")}>
                 Add Supplier
               </button>
             </div>
@@ -801,7 +799,7 @@ Items: ${o.items}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="supbtn" onClick={() => openModal("order")}>
+              <button className="btn btn-primary" onClick={() => openModal("order")}>
                 Add Order
               </button>
             </div>
@@ -926,7 +924,7 @@ Items: ${o.items}
               </div>
 
               <div className="report-actions">
-                <button className="supbtn" onClick={generateReport}>
+                <button className="btn btn-primary" onClick={generateReport}>
                   View Report
                 </button>
                 {viewingReport && (
@@ -1126,14 +1124,10 @@ Items: ${o.items}
                 </div>
               </form>
             </div>
-          
           </div>
-          
         )}
       </div>
-            <div >
-              <Footer></Footer>
-            </div>
+
     </div>
 
   )
