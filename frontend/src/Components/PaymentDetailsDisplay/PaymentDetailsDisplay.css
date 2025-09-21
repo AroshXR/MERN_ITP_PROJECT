@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #ffffff;
+  background-color:#65656545;
   color: #000000;
   min-height: 100vh;
 }
@@ -14,7 +14,8 @@
   padding: 20px;
   background: linear-gradient(135deg, #000000 0%, #333333 100%);
   color: white;
-  border-radius: 10px;
+  height: 200px;
+  
   border: 2px solid #000000;
 }
 

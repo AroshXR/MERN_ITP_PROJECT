@@ -598,8 +598,7 @@ Items: ${o.items}
   return (
     <div className="main">
       <NavBar />
-      <div className="supplier-container">
-        <div className="dashboard-header">
+      <div className="dashboard-header">
           <h1>Supplier Management System</h1>
           <p>Manage your clothing store suppliers and orders efficiently</p>
           {successMessage && (
@@ -645,6 +644,8 @@ Items: ${o.items}
           )}
 
         </div>
+      <div className="supplier-container">
+        
 
         <div className="nav-tabs">
           <button
@@ -738,7 +739,7 @@ Items: ${o.items}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="btn btn-primary" onClick={() => openModal("supplier")}>
+              <button className="supbtn" onClick={() => openModal("supplier")}>
                 Add Supplier
               </button>
             </div>
@@ -800,7 +801,7 @@ Items: ${o.items}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="btn btn-primary" onClick={() => openModal("order")}>
+              <button className="supbtn" onClick={() => openModal("order")}>
                 Add Order
               </button>
             </div>
@@ -925,7 +926,7 @@ Items: ${o.items}
               </div>
 
               <div className="report-actions">
-                <button className="btn btn-primary" onClick={generateReport}>
+                <button className="supbtn" onClick={generateReport}>
                   View Report
                 </button>
                 {viewingReport && (

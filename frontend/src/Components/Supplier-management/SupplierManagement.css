@@ -2,7 +2,7 @@
 
 /* Color Variables */
 :root {
-  --background: #ffffff;
+  --background: #65656545;
   --foreground: #0e0e0f;
   --card: #f9fafb;
   --card-foreground: #0c0c0c;
@@ -17,7 +17,7 @@
   --accent: #0a0a0a;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #0b0b0b;
   --border: #e5e7eb;
   --input: #ffffff;
   --ring: rgba(5, 6, 6, 0.5);
@@ -56,11 +56,13 @@ body {
 }
 
 .dashboard-header {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  
+ background: linear-gradient(135deg, #000000 0%, #333333 100%);
   padding: 20px;
   border-radius: var(--radius);
   margin-bottom: 30px;
+  border-radius: 0;
+  height: 200px;
   text-align: center;
 }
 
@@ -73,6 +75,8 @@ body {
 
 .dashboard-grid {
   display: flex;
+  justify-content: space-between;
+ 
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
@@ -83,6 +87,8 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
+  width: 300px;
+  margin-top: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -479,5 +485,19 @@ body {
   .report-content {
     font-size: 0.8rem;
     
+  }
+  .supbtn{
+   padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  background: var(--primary);
+  color: var(--primary-foreground);
   }
  

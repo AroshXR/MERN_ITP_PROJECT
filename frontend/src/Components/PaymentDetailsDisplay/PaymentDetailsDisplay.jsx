@@ -25,16 +25,16 @@ const PaymentDetailsDisplay = () => {
     try {
       setLoading(true)
       setError("")
-      
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: itemsPerPage.toString()
       })
-      
+
       if (status) params.append('status', status)
-      
+
       const response = await axios.get(`http://localhost:5001/payment?${params}`)
-      
+
       if (response.data.status === 'ok') {
         setPayments(response.data.data)
         setTotalPages(response.data.pagination.totalPages)
@@ -102,7 +102,7 @@ const PaymentDetailsDisplay = () => {
       const response = await axios.patch(`http://localhost:5001/payment/${paymentId}/status`, {
         status: newStatus
       })
-      
+
       if (response.data.status === 'ok') {
         // Refresh the payments list
         fetchPayments(currentPage, statusFilter, searchTerm)
@@ -125,7 +125,7 @@ const PaymentDetailsDisplay = () => {
 
     try {
       const response = await axios.delete(`http://localhost:5001/payment/${paymentId}`)
-      
+
       if (response.data.status === 'ok') {
         // Refresh the payments list
         fetchPayments(currentPage, statusFilter, searchTerm)
@@ -172,280 +172,281 @@ const PaymentDetailsDisplay = () => {
 
   return (
     <div>
-       <NavBar />
-    
-    <div className="payment-details-container">
-      
+      <NavBar />
       <div className="payment-header">
         <h1>Payment Details Management</h1>
         <p>View and manage all payment records from the database</p>
       </div>
 
-      {/* Statistics Cards */}
-      {statistics && (
-        <div className="statistics-cards">
-          <div className="stat-card">
-            <h3>Total Payments</h3>
-            <p className="stat-number">{statistics.totalPayments}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Total Revenue</h3>
-            <p className="stat-number">{formatCurrency(statistics.totalRevenue)}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Average Order</h3>
-            <p className="stat-number">{formatCurrency(statistics.averageOrderValue)}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Status Distribution</h3>
-            <div className="status-distribution">
-              {Object.entries(statistics.statusDistribution).map(([status, count]) => (
-                <span key={status} className={`status-badge ${getStatusBadgeClass(status)}`}>
-                  {status}: {count}
-                </span>
-              ))}
+      <div className="payment-details-container">
+
+
+
+        {/* Statistics Cards */}
+        {statistics && (
+          <div className="statistics-cards">
+            <div className="stat-card">
+              <h3>Total Payments</h3>
+              <p className="stat-number">{statistics.totalPayments}</p>
+            </div>
+            <div className="stat-card">
+              <h3>Total Revenue</h3>
+              <p className="stat-number">{formatCurrency(statistics.totalRevenue)}</p>
+            </div>
+            <div className="stat-card">
+              <h3>Average Order</h3>
+              <p className="stat-number">{formatCurrency(statistics.averageOrderValue)}</p>
+            </div>
+            <div className="stat-card">
+              <h3>Status Distribution</h3>
+              <div className="status-distribution">
+                {Object.entries(statistics.statusDistribution).map(([status, count]) => (
+                  <span key={status} className={`status-badge ${getStatusBadgeClass(status)}`}>
+                    {status}: {count}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Filters and Search */}
-      <div className="filters-section">
-        <div className="filters-row">
-          <div className="filter-group">
-            <label>Status Filter:</label>
-            <select 
-              value={statusFilter} 
-              onChange={(e) => handleFilterChange(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="failed">Failed</option>
-            </select>
+        {/* Filters and Search */}
+        <div className="filters-section">
+          <div className="filters-row">
+            <div className="filter-group">
+              <label>Status Filter:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => handleFilterChange(e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+
+            <form onSubmit={handleSearch} className="search-form">
+              <input
+                type="text"
+                placeholder="Search by email or name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button type="submit">Search</button>
+            </form>
           </div>
-          
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              placeholder="Search by email or name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button type="submit">Search</button>
-          </form>
         </div>
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+        {/* Error Message */}
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="loading-message">
-          Loading payment details...
-        </div>
-      )}
+        {/* Loading State */}
+        {loading && (
+          <div className="loading-message">
+            Loading payment details...
+          </div>
+        )}
 
-      {/* Payments Table */}
-      {!loading && !error && (
-        <div className="payments-table-container">
-          <table className="payments-table">
-            <thead>
-              <tr>
-                <th>Payment ID</th>
-                <th>Customer</th>
-                <th>Email</th>
-                <th>Total Amount</th>
-                <th>Payment Method</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((payment) => (
-                <tr key={payment._id}>
-                  <td className="payment-id">{payment._id.slice(-8)}</td>
-                  <td>{payment.deliveryDetails.firstName} {payment.deliveryDetails.lastName}</td>
-                  <td>{payment.deliveryDetails.email}</td>
-                  <td className="amount">{formatCurrency(payment.orderDetails.total)}</td>
-                  <td className="payment-method">
-                    <span className={`method-badge method-${payment.paymentDetails.method}`}>
-                      {payment.paymentDetails.method.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${getStatusBadgeClass(payment.status)}`}>
-                      {payment.status}
-                    </span>
-                  </td>
-                  <td>{formatDate(payment.createdAt)}</td>
-                  <td className="actions">
-                    <button 
-                      className="btn-view" 
-                      onClick={() => viewPaymentDetails(payment)}
-                    >
-                      View
-                    </button>
-                    <button 
-                      className="btn-delete" 
-                      onClick={() => deletePayment(payment._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+        {/* Payments Table */}
+        {!loading && !error && (
+          <div className="payments-table-container">
+            <table className="payments-table">
+              <thead>
+                <tr>
+                  <th>Payment ID</th>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Total Amount</th>
+                  <th>Payment Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment._id}>
+                    <td className="payment-id">{payment._id.slice(-8)}</td>
+                    <td>{payment.deliveryDetails.firstName} {payment.deliveryDetails.lastName}</td>
+                    <td>{payment.deliveryDetails.email}</td>
+                    <td className="amount">{formatCurrency(payment.orderDetails.total)}</td>
+                    <td className="payment-method">
+                      <span className={`method-badge method-${payment.paymentDetails.method}`}>
+                        {payment.paymentDetails.method.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${getStatusBadgeClass(payment.status)}`}>
+                        {payment.status}
+                      </span>
+                    </td>
+                    <td>{formatDate(payment.createdAt)}</td>
+                    <td className="actions">
+                      <button
+                        className="btn-view"
+                        onClick={() => viewPaymentDetails(payment)}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="btn-delete"
+                        onClick={() => deletePayment(payment._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          {payments.length === 0 && (
-            <div className="no-data">
-              No payment records found.
-            </div>
-          )}
-        </div>
-      )}
+            {payments.length === 0 && (
+              <div className="no-data">
+                No payment records found.
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Pagination */}
-      {!loading && !error && totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          
-          <span className="page-info">
-            Page {currentPage} of {totalPages} ({totalItems} total records)
-          </span>
-          
-          <button 
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
-      )}
+        {/* Pagination */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="pagination">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
 
-      {/* Payment Details Modal */}
-      {showModal && selectedPayment && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Payment Details</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="details-section">
-                <h3>Customer Information</h3>
-                <div className="details-grid">
-                  <div><strong>Name:</strong> {selectedPayment.deliveryDetails.firstName} {selectedPayment.deliveryDetails.lastName}</div>
-                  <div><strong>Email:</strong> {selectedPayment.deliveryDetails.email}</div>
-                  <div><strong>Phone:</strong> {selectedPayment.deliveryDetails.phone}</div>
-                  <div><strong>Address:</strong> {selectedPayment.deliveryDetails.address}</div>
-                  <div><strong>City:</strong> {selectedPayment.deliveryDetails.city}</div>
-                  <div><strong>State:</strong> {selectedPayment.deliveryDetails.state}</div>
-                  <div><strong>ZIP Code:</strong> {selectedPayment.deliveryDetails.zipCode}</div>
-                  <div><strong>Country:</strong> {selectedPayment.deliveryDetails.country}</div>
-                </div>
+            <span className="page-info">
+              Page {currentPage} of {totalPages} ({totalItems} total records)
+            </span>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {/* Payment Details Modal */}
+        {showModal && selectedPayment && (
+          <div className="modal-overlay" onClick={() => setShowModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Payment Details</h2>
+                <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
               </div>
 
-              <div className="details-section">
-                <h3>Order Information</h3>
-                <div className="details-grid">
-                  <div><strong>Subtotal:</strong> {formatCurrency(selectedPayment.orderDetails.subtotal)}</div>
-                  <div><strong>Tax:</strong> {formatCurrency(selectedPayment.orderDetails.tax)}</div>
-                  <div><strong>Shipping:</strong> {formatCurrency(selectedPayment.shippingDetails.cost)}</div>
-                  {selectedPayment.orderDetails.giftWrap && (
-                    <div><strong>Gift Wrap:</strong> {formatCurrency(selectedPayment.orderDetails.giftWrapFee)}</div>
-                  )}
-                  <div><strong>Total:</strong> {formatCurrency(selectedPayment.orderDetails.total)}</div>
-                  <div><strong>Status:</strong> 
-                    <span className={`status-badge ${getStatusBadgeClass(selectedPayment.status)}`}>
-                      {selectedPayment.status}
-                    </span>
+              <div className="modal-body">
+                <div className="details-section">
+                  <h3>Customer Information</h3>
+                  <div className="details-grid">
+                    <div><strong>Name:</strong> {selectedPayment.deliveryDetails.firstName} {selectedPayment.deliveryDetails.lastName}</div>
+                    <div><strong>Email:</strong> {selectedPayment.deliveryDetails.email}</div>
+                    <div><strong>Phone:</strong> {selectedPayment.deliveryDetails.phone}</div>
+                    <div><strong>Address:</strong> {selectedPayment.deliveryDetails.address}</div>
+                    <div><strong>City:</strong> {selectedPayment.deliveryDetails.city}</div>
+                    <div><strong>State:</strong> {selectedPayment.deliveryDetails.state}</div>
+                    <div><strong>ZIP Code:</strong> {selectedPayment.deliveryDetails.zipCode}</div>
+                    <div><strong>Country:</strong> {selectedPayment.deliveryDetails.country}</div>
+                  </div>
+                </div>
+
+                <div className="details-section">
+                  <h3>Order Information</h3>
+                  <div className="details-grid">
+                    <div><strong>Subtotal:</strong> {formatCurrency(selectedPayment.orderDetails.subtotal)}</div>
+                    <div><strong>Tax:</strong> {formatCurrency(selectedPayment.orderDetails.tax)}</div>
+                    <div><strong>Shipping:</strong> {formatCurrency(selectedPayment.shippingDetails.cost)}</div>
+                    {selectedPayment.orderDetails.giftWrap && (
+                      <div><strong>Gift Wrap:</strong> {formatCurrency(selectedPayment.orderDetails.giftWrapFee)}</div>
+                    )}
+                    <div><strong>Total:</strong> {formatCurrency(selectedPayment.orderDetails.total)}</div>
+                    <div><strong>Status:</strong>
+                      <span className={`status-badge ${getStatusBadgeClass(selectedPayment.status)}`}>
+                        {selectedPayment.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="details-section">
+                  <h3>Payment Information</h3>
+                  <div className="details-grid">
+                    <div><strong>Method:</strong> {selectedPayment.paymentDetails.method.toUpperCase()}</div>
+                    {selectedPayment.paymentDetails.method === 'card' && selectedPayment.paymentDetails.cardDetails && (
+                      <>
+                        <div><strong>Card Number:</strong> {selectedPayment.paymentDetails.cardDetails.cardNumber}</div>
+                        <div><strong>Expiry:</strong> {selectedPayment.paymentDetails.cardDetails.expiryDate}</div>
+                        <div><strong>Name on Card:</strong> {selectedPayment.paymentDetails.cardDetails.cardName}</div>
+                        <div><strong>Save Card:</strong> {selectedPayment.paymentDetails.cardDetails.saveCard ? 'Yes' : 'No'}</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="details-section">
+                  <h3>Shipping Information</h3>
+                  <div className="details-grid">
+                    <div><strong>Method:</strong> {selectedPayment.shippingDetails.method}</div>
+                    <div><strong>Cost:</strong> {formatCurrency(selectedPayment.shippingDetails.cost)}</div>
+                  </div>
+                </div>
+
+                {selectedPayment.giftMessage && (
+                  <div className="details-section">
+                    <h3>Gift Message</h3>
+                    <p>{selectedPayment.giftMessage}</p>
+                  </div>
+                )}
+
+                <div className="details-section">
+                  <h3>Timestamps</h3>
+                  <div className="details-grid">
+                    <div><strong>Created:</strong> {formatDate(selectedPayment.createdAt)}</div>
+                    <div><strong>Updated:</strong> {formatDate(selectedPayment.updatedAt)}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="details-section">
-                <h3>Payment Information</h3>
-                <div className="details-grid">
-                  <div><strong>Method:</strong> {selectedPayment.paymentDetails.method.toUpperCase()}</div>
-                  {selectedPayment.paymentDetails.method === 'card' && selectedPayment.paymentDetails.cardDetails && (
-                    <>
-                      <div><strong>Card Number:</strong> {selectedPayment.paymentDetails.cardDetails.cardNumber}</div>
-                      <div><strong>Expiry:</strong> {selectedPayment.paymentDetails.cardDetails.expiryDate}</div>
-                      <div><strong>Name on Card:</strong> {selectedPayment.paymentDetails.cardDetails.cardName}</div>
-                      <div><strong>Save Card:</strong> {selectedPayment.paymentDetails.cardDetails.saveCard ? 'Yes' : 'No'}</div>
-                    </>
-                  )}
+              <div className="modal-footer">
+                <div className="status-update">
+                  <label>Update Status:</label>
+                  <select
+                    value={selectedPayment.status}
+                    onChange={(e) => updatePaymentStatus(selectedPayment._id, e.target.value)}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="failed">Failed</option>
+                  </select>
                 </div>
+                <button className="btn-close" onClick={() => setShowModal(false)}>
+                  Close
+                </button>
               </div>
-
-              <div className="details-section">
-                <h3>Shipping Information</h3>
-                <div className="details-grid">
-                  <div><strong>Method:</strong> {selectedPayment.shippingDetails.method}</div>
-                  <div><strong>Cost:</strong> {formatCurrency(selectedPayment.shippingDetails.cost)}</div>
-                </div>
-              </div>
-
-              {selectedPayment.giftMessage && (
-                <div className="details-section">
-                  <h3>Gift Message</h3>
-                  <p>{selectedPayment.giftMessage}</p>
-                </div>
-              )}
-
-              <div className="details-section">
-                <h3>Timestamps</h3>
-                <div className="details-grid">
-                  <div><strong>Created:</strong> {formatDate(selectedPayment.createdAt)}</div>
-                  <div><strong>Updated:</strong> {formatDate(selectedPayment.updatedAt)}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <div className="status-update">
-                <label>Update Status:</label>
-                <select 
-                  value={selectedPayment.status}
-                  onChange={(e) => updatePaymentStatus(selectedPayment._id, e.target.value)}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="failed">Failed</option>
-                </select>
-              </div>
-              <button className="btn-close" onClick={() => setShowModal(false)}>
-                Close
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-    </div>
-          <div>
+      </div>
+      <div>
         <Footer></Footer>
       </div>
     </div>
-    
+
   )
 }
 
