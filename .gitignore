@@ -10,6 +10,3 @@ build/
 # Cache folders
 .cache/
 frontend/.cache/
-
-
-.env

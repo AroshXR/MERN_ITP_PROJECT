@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import axios from "axios"
 import "./PaymentManagement.css"
 
 const CheckoutPage = () => {
@@ -10,6 +11,32 @@ const CheckoutPage = () => {
   const [giftWrap, setGiftWrap] = useState(false)
   const [createAccount, setCreateAccount] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState("")
+
+  // Form data state
+  const [formData, setFormData] = useState({
+    // Delivery Details
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "Sri Lanka",
+    
+    // Card Details (only when payment method is card)
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    cardName: "",
+    saveCard: false,
+    
+    // Gift message
+    giftMessage: ""
+  })
 
   const subtotal = 139.97
   const shipping = shippingMethod === "express" ? 15.99 : shippingMethod === "overnight" ? 29.99 : 5.99
@@ -22,6 +49,152 @@ const CheckoutPage = () => {
     { number: 2, title: "Payment", icon: "💳" },
     { number: 3, title: "Review", icon: "🛡️" },
   ]
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+  }
+
+  // Validate form data
+  const validateForm = () => {
+    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zipCode']
+    
+    for (const field of requiredFields) {
+      if (!formData[field].trim()) {
+        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`)
+        return false
+      }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      alert('Please enter a valid email address')
+      return false
+    }
+
+    // Validate phone number
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+      alert('Please enter a valid phone number')
+      return false
+    }
+
+    // If payment method is card, validate card details
+    if (paymentMethod === 'card') {
+      const cardRequiredFields = ['cardNumber', 'expiryDate', 'cvv', 'cardName']
+      for (const field of cardRequiredFields) {
+        if (!formData[field].trim()) {
+          alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`)
+          return false
+        }
+      }
+
+      // Validate card number (basic validation)
+      const cardNumber = formData.cardNumber.replace(/\s/g, '')
+      if (cardNumber.length < 13 || cardNumber.length > 19) {
+        alert('Please enter a valid card number')
+        return false
+      }
+
+      // Validate expiry date
+      const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/
+      if (!expiryRegex.test(formData.expiryDate)) {
+        alert('Please enter expiry date in MM/YY format')
+        return false
+      }
+
+      // Validate CVV
+      const cvvRegex = /^\d{3,4}$/
+      if (!cvvRegex.test(formData.cvv)) {
+        alert('Please enter a valid CVV (3-4 digits)')
+        return false
+      }
+    }
+
+    return true
+  }
+
+  // Submit payment details to backend
+  const handleSubmitPayment = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    if (!agreeTerms) {
+      alert('Please agree to the Terms & Conditions and Privacy Policy')
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitMessage("")
+
+    try {
+      // Prepare payment data
+      const paymentData = {
+        deliveryDetails: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country
+        },
+        shippingDetails: {
+          method: shippingMethod,
+          cost: shipping
+        },
+        paymentDetails: {
+          method: paymentMethod,
+          cardDetails: paymentMethod === 'card' ? {
+            cardNumber: formData.cardNumber,
+            expiryDate: formData.expiryDate,
+            cvv: formData.cvv,
+            cardName: formData.cardName,
+            saveCard: formData.saveCard
+          } : {}
+        },
+        orderDetails: {
+          subtotal: subtotal,
+          tax: tax,
+          giftWrap: giftWrap,
+          giftWrapFee: giftWrapFee,
+          total: total
+        },
+        giftMessage: formData.giftMessage,
+        userId: null // You can add user authentication later
+      }
+
+      console.log('Submitting payment data:', paymentData)
+
+      // Send to backend
+      const response = await axios.post('http://localhost:5001/payment', paymentData)
+      
+      if (response.data.status === 'ok') {
+        setSubmitMessage(`Payment details saved successfully! Payment ID: ${response.data.data.paymentId}`)
+        // Reset form or redirect to success page
+        setTimeout(() => {
+          // You can redirect to a success page or reset the form
+          window.location.reload()
+        }, 3000)
+      } else {
+        setSubmitMessage('Error saving payment details: ' + response.data.message)
+      }
+
+    } catch (error) {
+      console.error('Error submitting payment:', error)
+      setSubmitMessage('Error saving payment details: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="checkout-container">
@@ -58,63 +231,131 @@ const CheckoutPage = () => {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="firstName">First Name</label>
-                      <input id="firstName" type="text" placeholder="John" />
+                      <input 
+                        id="firstName" 
+                        name="firstName"
+                        type="text" 
+                        placeholder="John" 
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        required
+                      />
                     </div>
                     <div className="form-group">
                       <label htmlFor="lastName">Last Name</label>
-                      <input id="lastName" type="text" placeholder="Doe" />
+                      <input 
+                        id="lastName" 
+                        name="lastName"
+                        type="text" 
+                        placeholder="Doe" 
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        required
+                      />
                     </div>
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="email">📧 Email Address</label>
-                    <input id="email" type="email" placeholder="john@example.com" />
+                    <input 
+                      id="email" 
+                      name="email"
+                      type="email" 
+                      placeholder="john@example.com" 
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="phone">📞 Phone Number</label>
-                    <input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
+                    <input 
+                      id="phone" 
+                      name="phone"
+                      type="tel" 
+                      placeholder="+94 77 123 4567" 
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="address">📍 Street Address</label>
-                    <input id="address" type="text" placeholder="123 Main Street" />
+                    <input 
+                      id="address" 
+                      name="address"
+                      type="text" 
+                      placeholder="123 Main Street" 
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
 
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="city">City</label>
-                      <input id="city" type="text" placeholder="Kandy" />
+                      <input 
+                        id="city" 
+                        name="city"
+                        type="text" 
+                        placeholder="Kandy" 
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        required
+                      />
                     </div>
                     <div className="form-group">
                       <label htmlFor="state">Province</label>
-                      <select id="state">
+                      <select 
+                        id="state" 
+                        name="state"
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        required
+                      >
                         <option value="">Select Province</option>
-                        <option value="ny">Central</option>
-                        <option value="ca">Western</option>
-                        <option value="tx">Northern</option>
-                        <option value="ny">Eastern</option>
-                        <option value="ca">NorthWestern</option>
-                        <option value="tx">Uva</option>
-                        <option value="ny">Sabaragamuwa</option>
-                        <option value="ca">NorthCentral</option>
-                        <option value="tx">Southern</option>
+                        <option value="Central">Central</option>
+                        <option value="Western">Western</option>
+                        <option value="Northern">Northern</option>
+                        <option value="Eastern">Eastern</option>
+                        <option value="NorthWestern">NorthWestern</option>
+                        <option value="Uva">Uva</option>
+                        <option value="Sabaragamuwa">Sabaragamuwa</option>
+                        <option value="NorthCentral">NorthCentral</option>
+                        <option value="Southern">Southern</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="zip">ZIP Code</label>
-                      <input id="zip" type="text" placeholder="10001" />
+                      <label htmlFor="zipCode">ZIP Code</label>
+                      <input 
+                        id="zipCode" 
+                        name="zipCode"
+                        type="text" 
+                        placeholder="20000" 
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        required
+                      />
                     </div>
                     <div className="form-group">
                       <label htmlFor="country">Country</label>
-                      <select id="country" defaultValue="us">
-                        <option value="us">Sri Lanka </option>
-                        <option value="us">United States</option>
-                        <option value="ca">Canada</option>
-                        <option value="uk">United Kingdom</option>
+                      <select 
+                        id="country" 
+                        name="country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="Sri Lanka">Sri Lanka</option>
+                        <option value="United States">United States</option>
+                        <option value="Canada">Canada</option>
+                        <option value="United Kingdom">United Kingdom</option>
                       </select>
                     </div>
                   </div>
@@ -232,24 +473,62 @@ const CheckoutPage = () => {
                     <div className="card-details">
                       <div className="form-group">
                         <label htmlFor="cardNumber">Card Number</label>
-                        <input id="cardNumber" type="text" placeholder="1234 5678 9012 3456" />
+                        <input 
+                          id="cardNumber" 
+                          name="cardNumber"
+                          type="text" 
+                          placeholder="1234 5678 9012 3456" 
+                          value={formData.cardNumber}
+                          onChange={handleInputChange}
+                          required
+                        />
                       </div>
                       <div className="form-row">
                         <div className="form-group">
-                          <label htmlFor="expiry">Expiry Date</label>
-                          <input id="expiry" type="text" placeholder="MM/YY" />
+                          <label htmlFor="expiryDate">Expiry Date</label>
+                          <input 
+                            id="expiryDate" 
+                            name="expiryDate"
+                            type="text" 
+                            placeholder="MM/YY" 
+                            value={formData.expiryDate}
+                            onChange={handleInputChange}
+                            required
+                          />
                         </div>
                         <div className="form-group">
                           <label htmlFor="cvv">CVV</label>
-                          <input id="cvv" type="text" placeholder="123" />
+                          <input 
+                            id="cvv" 
+                            name="cvv"
+                            type="text" 
+                            placeholder="123" 
+                            value={formData.cvv}
+                            onChange={handleInputChange}
+                            required
+                          />
                         </div>
                       </div>
                       <div className="form-group">
                         <label htmlFor="cardName">Name on Card</label>
-                        <input id="cardName" type="text" placeholder="John Doe" />
+                        <input 
+                          id="cardName" 
+                          name="cardName"
+                          type="text" 
+                          placeholder="John Doe" 
+                          value={formData.cardName}
+                          onChange={handleInputChange}
+                          required
+                        />
                       </div>
                       <div className="checkbox-group">
-                        <input type="checkbox" id="saveCard" />
+                        <input 
+                          type="checkbox" 
+                          id="saveCard" 
+                          name="saveCard"
+                          checked={formData.saveCard}
+                          onChange={handleInputChange}
+                        />
                         <label htmlFor="saveCard">Save card for future purchases</label>
                       </div>
                     </div>
@@ -333,12 +612,16 @@ const CheckoutPage = () => {
                 Previous
               </button>
               {currentStep < 3 ? (
-                <button className="btn btn-primary" onClick={() => setCurrentStep(currentStep + 1)}>
+                <button className="supbtn" onClick={() => setCurrentStep(currentStep + 1)}>
                   Continue
                 </button>
               ) : (
-                <button className="btn btn-primary" disabled={!agreeTerms}>
-                  Place Order
+                <button 
+                  className="btn btn-primary" 
+                  disabled={!agreeTerms || isSubmitting}
+                  onClick={handleSubmitPayment}
+                >
+                  {isSubmitting ? "Processing..." : "Place Order"}
                 </button>
               )}
             </div>
@@ -359,7 +642,14 @@ const CheckoutPage = () => {
                 {giftWrap && (
                   <div className="form-group">
                     <label htmlFor="giftMessage">Gift Message (Optional)</label>
-                    <textarea id="giftMessage" placeholder="Write your gift message here..." rows="3"></textarea>
+                    <textarea 
+                      id="giftMessage" 
+                      name="giftMessage"
+                      placeholder="Write your gift message here..." 
+                      rows="3"
+                      value={formData.giftMessage}
+                      onChange={handleInputChange}
+                    ></textarea>
                   </div>
                 )}
 
@@ -409,6 +699,25 @@ const CheckoutPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Submit Message */}
+      {submitMessage && (
+        <div className="submit-message" style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '15px 20px',
+          borderRadius: '8px',
+          backgroundColor: submitMessage.includes('successfully') ? '#d4edda' : '#f8d7da',
+          color: submitMessage.includes('successfully') ? '#155724' : '#721c24',
+          border: `1px solid ${submitMessage.includes('successfully') ? '#c3e6cb' : '#f5c6cb'}`,
+          zIndex: 1000,
+          maxWidth: '400px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        }}>
+          {submitMessage}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,3 @@
-require("dotenv").config();
-
-
 const express = require("express");
 require("dotenv").config();
 const mongoose = require("mongoose");
@@ -15,6 +12,7 @@ const jobRouter = require("./routes/JobRoutes");
 const supplierRouter = require("./routes/SupplierRoutes");
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
+const paymentRouter = require("./routes/PaymentRoutes");
 
 // Import utilities
 const createToken = require('./utils/jwt');
@@ -25,9 +23,6 @@ const app = express();
 // Environment variables
 const PORT = process.env.PORT || 5001;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/";
-//implemented .env code ready t use
-//const PORT = process.env.PORT || 5001;
-//const MONGODB_URI = process.env.MONGODB_URI;
 
 // Middleware
 app.use(express.json());
@@ -43,6 +38,7 @@ app.use("/jobs", jobRouter);
 app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
+app.use("/payment", paymentRouter);
 
 // Test endpoint to verify server is running
 app.get("/test", (req, res) => {
@@ -177,7 +173,10 @@ mongoose.connect(MONGODB_URI)
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
+
+    require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
+
     
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
