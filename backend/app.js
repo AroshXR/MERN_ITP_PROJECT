@@ -173,11 +173,10 @@ mongoose.connect(MONGODB_URI)
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
-<<<<<<< HEAD
+
     require("./models/PaymentDetailsModel");
-=======
     require("./models/OrderModel");
->>>>>>> a846196cb5856b28beb94055f09295f8e61d08ff
+
     
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
