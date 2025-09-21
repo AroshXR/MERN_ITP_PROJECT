@@ -3,6 +3,8 @@ import './ApplicantDashboard.css';
 import EditApplicationForm from './EditApplicationForm';
 import NavBar from '../NavBar/navBar';
 
+const API_BASE_URL = 'http://localhost:5001';
+
 const ApplicantDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,8 +14,7 @@ const ApplicantDashboard = () => {
   const [searchEmail, setSearchEmail] = useState('');
 
   useEffect(() => {
-    // For demo purposes, we'll use localStorage to store applications
-    // In a real app, you'd fetch from the API using the user's email
+    // Load any locally stored applications first as a baseline
     const storedApplications = localStorage.getItem('jobApplications');
     if (storedApplications) {
       setApplications(JSON.parse(storedApplications));
@@ -21,21 +22,37 @@ const ApplicantDashboard = () => {
     setLoading(false);
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchEmail.trim()) {
       alert('Please enter an email address to search');
       return;
     }
-
-    // In a real app, you'd make an API call here
-    // For now, we'll search in localStorage
-    const storedApplications = localStorage.getItem('jobApplications');
-    if (storedApplications) {
-      const allApplications = JSON.parse(storedApplications);
-      const userApplications = allApplications.filter(app =>
-        app.gmail.toLowerCase() === searchEmail.toLowerCase()
-      );
-      setApplications(userApplications);
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${API_BASE_URL}/applicant?gmail=${encodeURIComponent(searchEmail)}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch applications');
+      }
+      const data = await res.json();
+      const list = Array.isArray(data?.data) ? data.data : [];
+      setApplications(list);
+    } catch (e) {
+      // Fallback to local search
+      const storedApplications = localStorage.getItem('jobApplications');
+      if (storedApplications) {
+        const allApplications = JSON.parse(storedApplications);
+        const userApplications = allApplications.filter(app =>
+          app.gmail && app.gmail.toLowerCase() === searchEmail.toLowerCase()
+        );
+        setApplications(userApplications);
+        setError('Showing locally saved applications (server unavailable)');
+      } else {
+        setApplications([]);
+        setError('No applications found and server unavailable');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,7 +148,7 @@ const ApplicantDashboard = () => {
           <div className="applications-list">
             <h2>Your Applications ({applications.length})</h2>
             {applications.map((application) => (
-              <div key={application.id} className="application-card">
+              <div key={application._id || application.id} className="application-card">
                 <div className="application-header">
                   <h3>{application.position}</h3>
                   <span className={`status status-${application.status}`}>
@@ -166,7 +183,7 @@ const ApplicantDashboard = () => {
                     <i className="bx bx-edit"></i> Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(application.id)}
+                    onClick={() => handleDelete(application._id || application.id)}
                     className="delete-btn"
                   >
                     <i className="bx bx-trash"></i> Delete

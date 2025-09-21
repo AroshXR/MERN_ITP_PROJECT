@@ -73,7 +73,15 @@ const Career = () => {
     } catch (error) {
       console.error('Error submitting application:', error);
 
-      // Fallback to localStorage if API fails
+      // If backend responded, show its error and do NOT fallback
+      if (error.response) {
+        const msg = error.response.data?.message || 'Submission failed.';
+        const errs = error.response.data?.errors;
+        alert(errs && Array.isArray(errs) ? `${msg}\n- ${errs.join('\n- ')}` : msg);
+        return;
+      }
+
+      // Network error: fallback to localStorage
       try {
         const applicationData = {
           id: Date.now().toString(),
@@ -82,7 +90,6 @@ const Career = () => {
           status: 'pending'
         };
 
-        // Store in localStorage as fallback
         const existingApplications = localStorage.getItem('jobApplications') || '[]';
         const applications = JSON.parse(existingApplications);
         applications.push(applicationData);
