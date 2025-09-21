@@ -6,11 +6,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Define your custom border color here
-        borderColor: '#e0e0e0',  // Replace with your desired color value
+        borderColor: '#e0e0e0',
         primary: '#071829ff',
       },
     },
+  },
+  corePlugins: {
+    preflight: false,   // ⛔ disables global reset
   },
   plugins: [],
 }
