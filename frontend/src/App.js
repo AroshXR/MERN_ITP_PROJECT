@@ -13,6 +13,7 @@ import AdminJobManagement from './Components/AdminJobManagement/AdminJobManageme
 import ContactUs from './Components/Home/ContactUs';
 import OrderManagement from './Components/OrderManagement/OrderManagement';
 import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
+import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDetailsDisplay';
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
@@ -34,6 +35,7 @@ function App() {
         <Route path="/admin-jobs" element={<AdminJobManagement />} />
         <Route path="/orderManagement" element={<OrderManagement />}/>
         <Route path='/paymentManagement' element={<PaymentManagement />}/>
+        <Route path='/paymentDetails' element={<PaymentDetailsDisplay />}/>
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>

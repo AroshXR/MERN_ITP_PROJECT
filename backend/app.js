@@ -11,6 +11,7 @@ const jobRouter = require("./routes/JobRoutes");
 const supplierRouter = require("./routes/SupplierRoutes");
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
+const paymentRouter = require("./routes/PaymentRoutes");
 
 // Import utilities
 const createToken = require('./utils/jwt');
@@ -36,6 +37,7 @@ app.use("/jobs", jobRouter);
 app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
+app.use("/payment", paymentRouter);
 
 // Test endpoint to verify server is running
 app.get("/test", (req, res) => {
@@ -170,6 +172,7 @@ mongoose.connect(MONGODB_URI)
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
+    require("./models/PaymentDetailsModel");
     
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

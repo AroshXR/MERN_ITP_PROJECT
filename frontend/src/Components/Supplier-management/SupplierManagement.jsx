@@ -1,4 +1,5 @@
 "use client"
+import Footer from "../Footer/Footer"
 import NavBar from "../NavBar/navBar"
 import "./SupplierManagement.css"
 import { useState, useEffect } from "react"
@@ -603,24 +604,24 @@ Items: ${o.items}
           <p>Manage your clothing store suppliers and orders efficiently</p>
           {successMessage && (
             <div style={{
-              backgroundColor: '#d4edda',
-              color: '#155724',
+              backgroundColor: '#0b0b0bff',
+              color: '#121312ff',
               padding: '10px',
               borderRadius: '5px',
               marginTop: '10px',
-              border: '1px solid #c3e6cb'
+              border: '1px solid #080908ff'
             }}>
               {successMessage}
             </div>
           )}
           {error && (
             <div style={{
-              backgroundColor: '#f8d7da',
-              color: '#721c24',
+              backgroundColor: '#121212ff',
+              color: '#0a0a0aff',
               padding: '10px',
               borderRadius: '5px',
               marginTop: '10px',
-              border: '1px solid #f5c6cb'
+              border: '1px solid #0c0c0cff'
             }}>
               Error: {error}
               <button
@@ -631,7 +632,7 @@ Items: ${o.items}
                 style={{
                   marginLeft: '10px',
                   padding: '5px 10px',
-                  backgroundColor: '#721c24',
+                  backgroundColor: '#0e0d0dff',
                   color: 'white',
                   border: 'none',
                   borderRadius: '3px',
@@ -1124,10 +1125,14 @@ Items: ${o.items}
                 </div>
               </form>
             </div>
+          
           </div>
+          
         )}
       </div>
-
+            <div >
+              <Footer></Footer>
+            </div>
     </div>
 
   )
