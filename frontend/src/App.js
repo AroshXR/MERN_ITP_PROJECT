@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './AuthGuard/AuthGuard';
+import { AuthProvider } from './AuthGuard/authGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
 // import AddUser from './Components/AddUser/AddUser';

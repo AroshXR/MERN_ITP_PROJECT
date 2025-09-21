@@ -6,7 +6,7 @@ import { Minus, Plus, Trash2, ShoppingBag, Loader2, Edit3 } from "lucide-react";
 import "./OrderManagement.css";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../../AuthGuard/AuthGuard';
+import { useAuth } from '../../AuthGuard/authGuard';
 
 export default function OrderManagement() {
     const history = useNavigate();
