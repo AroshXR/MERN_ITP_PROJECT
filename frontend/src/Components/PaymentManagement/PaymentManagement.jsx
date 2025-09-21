@@ -617,7 +617,7 @@ const CheckoutPage = () => {
                 </button>
               ) : (
                 <button 
-                  className="btn btn-primary" 
+                  className="supbtn" 
                   disabled={!agreeTerms || isSubmitting}
                   onClick={handleSubmitPayment}
                 >
