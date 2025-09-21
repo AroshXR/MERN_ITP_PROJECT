@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './authGuard';
+import { useAuth } from './AuthGuard';
 
 const ProtectedRoute = ({ children, requiredUserType = null }) => {
     const { isAuthenticated, currentUser, loading } = useAuth();
