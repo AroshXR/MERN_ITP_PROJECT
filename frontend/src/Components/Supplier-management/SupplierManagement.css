@@ -2,7 +2,7 @@
 
 /* Color Variables */
 :root {
-  --background: #65656545;
+  --background: #ffffff;
   --foreground: #0e0e0f;
   --card: #f9fafb;
   --card-foreground: #0c0c0c;
@@ -17,12 +17,12 @@
   --accent: #0a0a0a;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
-  --destructive-foreground: #0b0b0b;
+  --destructive-foreground: #ffffff;
   --border: #e5e7eb;
   --input: #ffffff;
-  --ring: rgba(5, 6, 6, 0.5);
-  --chart-1: #0c0c0c;
-  --chart-2: #0c0c0c;
+  --ring: rgba(8, 145, 178, 0.5);
+  --chart-1: #0891b2;
+  --chart-2: #06b6d4;
   --chart-3: #f97316;
   --chart-4: #ea580c;
   --chart-5: #a16207;
@@ -31,10 +31,10 @@
   --sidebar-foreground: #4b5563;
   --sidebar-primary: #ffffff;
   --sidebar-primary-foreground: #4b5563;
-  --sidebar-accent: #070707;
+  --sidebar-accent: #06b6d4;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: rgba(12, 12, 12, 0.5);
+  --sidebar-ring: rgba(8, 145, 178, 0.5);
 }
 
 body {
@@ -49,20 +49,18 @@ body {
 
 /* Supplier Management Styles */
 .supplier-container {
-  max-width: flex;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   font-family: "Open Sans", sans-serif;
 }
 
 .dashboard-header {
-  
- background: linear-gradient(135deg, #000000 0%, #333333 100%);
+  background: var(--primary);
+  color: var(--primary-foreground);
   padding: 20px;
   border-radius: var(--radius);
   margin-bottom: 30px;
-  border-radius: 0;
-  height: 200px;
   text-align: center;
 }
 
@@ -75,8 +73,6 @@ body {
 
 .dashboard-grid {
   display: flex;
-  justify-content: space-between;
- 
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
@@ -87,8 +83,6 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
-  width: 300px;
-  margin-top: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -125,7 +119,6 @@ body {
   padding: 5px;
   margin-bottom: 30px;
   overflow-x: auto;
- 
 }
 
 .nav-tab {
@@ -486,18 +479,3 @@ body {
     font-size: 0.8rem;
     
   }
-  .supbtn{
-   padding: 12px 20px;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  }
- 
