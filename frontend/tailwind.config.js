@@ -13,6 +13,7 @@ module.exports = {
   },
   corePlugins: {
     preflight: false,   // ⛔ disables global reset
+    //hugmk
   },
   plugins: [],
 }
