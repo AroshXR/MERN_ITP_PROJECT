@@ -9,48 +9,25 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('applicants');
 
   return (
-    <div>
-      <NavBar />
-      <div className="admin-panel">
-        <div className="admin-panel__tabs">
-          <button
-            className={`tab-btn ${activeTab === 'applicants' ? 'active' : ''}`}
-            onClick={() => setActiveTab('applicants')}
-          >
-            Applicants
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'jobs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('jobs')}
-          >
-            Job Management
-          </button>
-        </div>
+    <div className="admin-panel">
+      <div className="admin-panel__tabs">
+        <button
+          className={`tab-btn ${activeTab === 'applicants' ? 'active' : ''}`}
+          onClick={() => setActiveTab('applicants')}
+        >
+          Applicants
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'jobs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('jobs')}
+        >
+          Job Management
+        </button>
+      </div>
 
-        <div className="admin-panel__content">
-          {activeTab === 'applicants' && <AdminApplicantManagement />}
-          {activeTab === 'jobs' && <AdminJobManagement />}
-        </div>
-      </div><div className="admin-panel">
-        <div className="admin-panel__tabs">
-          <button
-            className={`tab-btn ${activeTab === 'applicants' ? 'active' : ''}`}
-            onClick={() => setActiveTab('applicants')}
-          >
-            Applicants
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'jobs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('jobs')}
-          >
-            Job Management
-          </button>
-        </div>
-
-        <div className="admin-panel__content">
-          {activeTab === 'applicants' && <AdminApplicantManagement />}
-          {activeTab === 'jobs' && <AdminJobManagement />}
-        </div>
+      <div className="admin-panel__content">
+        {activeTab === 'applicants' && <AdminApplicantManagement />}
+        {activeTab === 'jobs' && <AdminJobManagement />}
       </div>
     </div>
 
