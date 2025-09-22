@@ -335,13 +335,44 @@ const updateApplicantStatus = async (req, res, next) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
-    // Notify applicant via email (best-effort)
-    const subject = `Your application status: ${status}`;
-    const messageText = statusMessage || `Your application has been ${status}.`;
-    const html = `<p>Dear ${updatedApplicant.name},</p>
-      <p>${messageText}</p>
-      <p>Regards,<br/>HR Team</p>`;
-    try { await sendEmail({ to: updatedApplicant.gmail, subject, text: messageText, html }); } catch (_) {}
+    // Notify applicant via email
+    const subject = `Application Status Update - ${status.toUpperCase()}`;
+    const messageText = statusMessage || `Your application for the position of ${updatedApplicant.position} has been ${status}.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+          Application Status Update
+        </h2>
+        <p>Dear ${updatedApplicant.name},</p>
+        <p>We hope this email finds you well. We would like to inform you about the status of your application.</p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #007bff; margin: 20px 0;">
+          <h3 style="color: #007bff; margin-top: 0;">Status: ${status.toUpperCase()}</h3>
+          <p style="margin-bottom: 0;">${messageText}</p>
+        </div>
+        ${status === 'approved' ? `
+          <p>Congratulations! We are excited about the possibility of you joining our team. Our HR team will be in touch with you soon regarding the next steps.</p>
+        ` : status === 'rejected' ? `
+          <p>We appreciate your interest in our company and the time you took to apply. While we have decided not to move forward with your application at this time, we encourage you to apply for other positions that may be a better fit for your skills and experience.</p>
+        ` : ''}
+        <p>Thank you for your interest in our company.</p>
+        <p>Best regards,<br/>HR Team</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #666;">
+          This is an automated message. Please do not reply to this email.
+        </p>
+      </div>
+    `;
+    
+    const emailResult = await sendEmail({ 
+      to: updatedApplicant.gmail, 
+      subject, 
+      text: messageText, 
+      html 
+    });
+    
+    if (!emailResult.success) {
+      console.warn(`⚠️  Failed to send status update email to ${updatedApplicant.gmail}:`, emailResult.error);
+    }
 
     return res.status(200).json({ 
       message: "Applicant status updated successfully",
@@ -396,11 +427,57 @@ const scheduleInterview = async (req, res, next) => {
     }
 
     const interviewTime = new Date(interview.scheduledAt).toLocaleString();
-    const subject = "Interview Scheduled";
+    const subject = `Interview Scheduled - ${updatedApplicant.position}`;
     const details = `Time: ${interviewTime}${location ? `, Location: ${location}` : ""}${meetingLink ? `, Link: ${meetingLink}` : ""}`;
     const text = `Dear ${updatedApplicant.name},\n\nYour interview has been scheduled. ${details}.\n\n${notes ? `Notes: ${notes}\n\n` : ""}Regards,\nHR Team`;
-    const html = `<p>Dear ${updatedApplicant.name},</p><p>Your interview has been scheduled.</p><p>${details}</p>${notes ? `<p>Notes: ${notes}</p>` : ""}<p>Regards,<br/>HR Team</p>`;
-    try { await sendEmail({ to: updatedApplicant.gmail, subject, text, html }); } catch (_) {}
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
+          Interview Scheduled
+        </h2>
+        <p>Dear ${updatedApplicant.name},</p>
+        <p>Great news! We are pleased to inform you that your interview has been scheduled for the position of <strong>${updatedApplicant.position}</strong>.</p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #28a745; margin: 20px 0;">
+          <h3 style="color: #28a745; margin-top: 0;">Interview Details</h3>
+          <p><strong>Date & Time:</strong> ${interviewTime}</p>
+          ${location ? `<p><strong>Location:</strong> ${location}</p>` : ''}
+          ${meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${meetingLink}" style="color: #007bff;">${meetingLink}</a></p>` : ''}
+          ${mode ? `<p><strong>Mode:</strong> ${mode}</p>` : ''}
+        </div>
+        ${notes ? `
+          <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0;">
+            <h4 style="color: #856404; margin-top: 0;">Additional Notes</h4>
+            <p style="margin-bottom: 0;">${notes}</p>
+          </div>
+        ` : ''}
+        <div style="background-color: #d1ecf1; padding: 15px; border-left: 4px solid #17a2b8; margin: 20px 0;">
+          <h4 style="color: #0c5460; margin-top: 0;">Important Reminders</h4>
+          <ul style="margin-bottom: 0;">
+            <li>Please arrive 10 minutes early for your interview</li>
+            <li>Bring a copy of your resume and any relevant documents</li>
+            <li>If you need to reschedule, please contact us at least 24 hours in advance</li>
+            ${meetingLink ? '<li>For online interviews, ensure you have a stable internet connection</li>' : ''}
+          </ul>
+        </div>
+        <p>We look forward to meeting with you and learning more about your qualifications.</p>
+        <p>Best regards,<br/>HR Team</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #666;">
+          This is an automated message. Please do not reply to this email.
+        </p>
+      </div>
+    `;
+    
+    const emailResult = await sendEmail({ 
+      to: updatedApplicant.gmail, 
+      subject, 
+      text, 
+      html 
+    });
+    
+    if (!emailResult.success) {
+      console.warn(`⚠️  Failed to send interview scheduling email to ${updatedApplicant.gmail}:`, emailResult.error);
+    }
 
     return res.status(200).json({
       message: "Interview scheduled successfully",
@@ -416,3 +493,133 @@ const scheduleInterview = async (req, res, next) => {
 };
 
 exports.scheduleInterview = scheduleInterview;
+
+// Get applicant report data
+const getApplicantReport = async (req, res, next) => {
+  try {
+    const { status = 'all' } = req.query;
+    const allowedStatuses = ['pending', 'approved', 'rejected', 'all'];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status filter. Use pending, approved, rejected, or all"
+      });
+    }
+
+    const query = status === 'all' ? {} : { status };
+
+    const applicants = await Applicant.find(query)
+      .select('name gmail position department status appliedAt resume')
+      .sort({ appliedAt: -1 })
+      .lean();
+
+    const reportData = applicants.map(applicant => ({
+      id: applicant._id,
+      name: applicant.name,
+      email: applicant.gmail,
+      position: applicant.position,
+      department: applicant.department,
+      status: applicant.status,
+      appliedAt: applicant.appliedAt,
+      resume: applicant.resume
+    }));
+
+    return res.status(200).json({
+      message: "Applicant report generated successfully",
+      data: reportData,
+      filters: { status }
+    });
+  } catch (err) {
+    console.error("Error in getApplicantReport:", err);
+    return res.status(500).json({
+      message: "Internal server error while generating applicant report",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+// Get recruitment analytics
+const getRecruitmentAnalytics = async (req, res, next) => {
+  try {
+    // Get all applicants with their data
+    const applicants = await Applicant.find({}).lean();
+    
+    // Calculate metrics
+    const totalApplicants = applicants.length;
+    const statusCounts = applicants.reduce((acc, app) => {
+      acc[app.status] = (acc[app.status] || 0) + 1;
+      return acc;
+    }, {});
+    
+    // Group by position
+    const applicantsByPosition = applicants.reduce((acc, app) => {
+      if (!acc[app.position]) {
+        acc[app.position] = { total: 0, pending: 0, approved: 0, rejected: 0 };
+      }
+      acc[app.position].total++;
+      acc[app.position][app.status]++;
+      return acc;
+    }, {});
+    
+    // Interview schedules
+    const interviewSchedules = applicants
+      .filter(app => app.interview?.scheduledAt)
+      .map(app => ({
+        id: app._id,
+        name: app.name,
+        position: app.position,
+        scheduledAt: app.interview.scheduledAt,
+        mode: app.interview.mode,
+        location: app.interview.location,
+        meetingLink: app.interview.meetingLink
+      }))
+      .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+    
+    // Pending applications
+    const pendingApplications = applicants
+      .filter(app => app.status === 'pending')
+      .map(app => ({
+        id: app._id,
+        name: app.name,
+        email: app.gmail,
+        position: app.position,
+        appliedAt: app.appliedAt,
+        resume: app.resume
+      }));
+    
+    // Shortlisted vs rejected ratio
+    const shortlistedCount = statusCounts.approved || 0;
+    const rejectedCount = statusCounts.rejected || 0;
+    const shortlistedRatio = totalApplicants > 0 ? (shortlistedCount / totalApplicants * 100).toFixed(1) : 0;
+    const rejectedRatio = totalApplicants > 0 ? (rejectedCount / totalApplicants * 100).toFixed(1) : 0;
+    
+    const analytics = {
+      summary: {
+        totalApplicants,
+        pending: statusCounts.pending || 0,
+        approved: statusCounts.approved || 0,
+        rejected: statusCounts.rejected || 0,
+        shortlistedRatio: `${shortlistedRatio}%`,
+        rejectedRatio: `${rejectedRatio}%`
+      },
+      applicantsByPosition,
+      interviewSchedules,
+      pendingApplications
+    };
+    
+    return res.status(200).json({
+      message: "Recruitment analytics retrieved successfully",
+      data: analytics
+    });
+  } catch (err) {
+    console.error("Error in getRecruitmentAnalytics:", err);
+    return res.status(500).json({
+      message: "Internal server error while fetching analytics",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+exports.getApplicantReport = getApplicantReport;
+exports.getRecruitmentAnalytics = getRecruitmentAnalytics;
+
+

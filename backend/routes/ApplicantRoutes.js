@@ -103,6 +103,8 @@ const validateId = (req, res, next) => {
 
 // Routes for Applicants
 router.get("/", ApplicantController.getAllApplicants);
+router.get("/analytics", ApplicantController.getRecruitmentAnalytics);
+router.get("/reports", ApplicantController.getApplicantReport);
 router.post("/", upload.single('resume'), validateApplicantInput, ApplicantController.addApplicant);
 router.get("/:id", validateId, ApplicantController.getApplicantById);
 router.put("/:id", validateId, ApplicantController.updateApplicant);
@@ -112,3 +114,9 @@ router.post("/:id/schedule-interview", validateId, ApplicantController.scheduleI
 
 // Export router
 module.exports = router;
+
+
+
+
+
+

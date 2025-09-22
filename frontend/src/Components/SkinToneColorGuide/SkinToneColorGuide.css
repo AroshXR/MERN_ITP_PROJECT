@@ -1,0 +1,240 @@
+.color-guide-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f9f9fb 0%, #ffffff 60%, #f5f5ff 100%);
+  color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.color-guide-hero {
+  padding: 120px 8% 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 40px;
+  align-items: center;
+}
+
+.color-guide-hero__content h1 {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  color: #0f172a;
+}
+
+.color-guide-hero__content p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  max-width: 560px;
+  color: #475569;
+}
+
+.color-guide-hero__art {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.color-guide-hero__art span {
+  flex: 1;
+  height: 220px;
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15);
+  animation: floatUp 4.5s ease-in-out infinite;
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+.color-guide-section {
+  padding: 0 8%;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.color-guide-section h2 {
+  font-size: 2rem;
+  color: #111827;
+}
+
+.section-intro {
+  max-width: 720px;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.tone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 28px;
+}
+
+.tone-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tone-card header h3 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+  color: #0f172a;
+}
+
+.tone-card header p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.tone-card__palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+  gap: 8px;
+}
+
+.tone-card__palette div {
+  height: 54px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+.tone-card__lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.tone-card__lists h4 {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.tone-card__lists ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  color: #4b5563;
+}
+
+.undertone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.undertone-card {
+  background: linear-gradient(135deg, #eef2ff, #fff7ed);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 15px 35px rgba(148, 163, 184, 0.25);
+  display: grid;
+  gap: 12px;
+}
+
+.undertone-card h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.undertone-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.universal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 18px;
+}
+
+.universal-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 12px;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  color: #1f2937;
+}
+
+.universal-card__swatch {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+}
+
+.color-guide-cta {
+  margin: 40px auto 80px;
+  padding: 48px 6%;
+  background: linear-gradient(135deg, #111827, #3b82f6);
+  border-radius: 24px;
+  color: #f8fafc;
+  text-align: center;
+  max-width: 960px;
+  box-shadow: 0 30px 50px rgba(30, 64, 175, 0.35);
+  display: grid;
+  gap: 16px;
+}
+
+.color-guide-cta h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.color-guide-cta p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-self: center;
+  margin-top: 8px;
+  padding: 12px 28px;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+.cta-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.2);
+}
+
+@media (max-width: 768px) {
+  .color-guide-hero {
+    padding: 100px 6% 60px;
+  }
+
+  .color-guide-hero__content h1 {
+    font-size: 2.4rem;
+  }
+
+  .color-guide-section {
+    padding: 0 6%;
+  }
+
+  .color-guide-cta {
+    margin: 24px 6% 60px;
+  }
+}
