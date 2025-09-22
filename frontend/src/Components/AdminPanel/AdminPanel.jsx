@@ -3,6 +3,7 @@ import AdminApplicantManagement from '../AdminApplicantManagement/AdminApplicant
 import AdminJobManagement from '../AdminJobManagement/AdminJobManagement';
 import Reports from './Reports';
 import './AdminPanel.css';
+import NavBar from '../NavBar/navBar';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('applicants');
