@@ -111,12 +111,11 @@ const ApplicantDashboard = () => {
   return (
     <div className='main'>
       <NavBar />
+      <div className="dashboard-header">
+        <h1>My Applications Dashboard</h1>
+        <p>View and manage your job applications</p>
+      </div>
       <div className="applicant-dashboard">
-
-        <div className="dashboard-header">
-          <h1>My Applications Dashboard</h1>
-          <p>View and manage your job applications</p>
-        </div>
 
         <div className="search-section">
           <div className="search-box">

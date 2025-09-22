@@ -245,18 +245,20 @@ const AdminJobManagement = () => {
 
   return (
     <div>
+      <NavBar />
+      <div className="admin-header">
+        <h1>Job Management Dashboard</h1>
+        <p>Post and manage job openings</p>
+        <button
+          className="add-job-btn"
+          onClick={() => setShowJobForm(true)}
+        >
+          <i className="bx bx-plus"></i> Post New Job
+        </button>
+      </div>
       <div className='main'>
         <div className="admin-job-management">
-          <div className="admin-header">
-            <h1>Job Management Dashboard</h1>
-            <p>Post and manage job openings</p>
-            <button
-              className="add-job-btn"
-              onClick={() => setShowJobForm(true)}
-            >
-              <i className="bx bx-plus"></i> Post New Job
-            </button>
-          </div>
+
 
           <div className="jobs-list">
             <h2>Current Jobs ({jobs.length})</h2>
