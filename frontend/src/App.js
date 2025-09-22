@@ -23,6 +23,16 @@ import Unauthorized from './Components/Unauthorized/Unauthorized';
 import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 
+import RentalHome from './pages/RentalHome';
+import OutfitDetails from './pages/OutfitDetails';
+import Outfits from './pages/Outfits';
+import MyBookings from './pages/MyBookings';
+import Layout from './pages/owner/Layout';
+import Dashboard from './pages/owner/Dashboard';
+import AddOutfit from './pages/owner/AddOutfit';
+import ManageOutfits from './pages/owner/ManageOutfits';
+import ManageBookings from './pages/owner/ManageBookings';
+
 function App() {
   return (
     <AuthProvider>
@@ -143,6 +153,22 @@ function App() {
             </ProtectedRoute>
           )}
         />
+
+
+        <Route path='/rentalHome' element={<RentalHome />}/>
+        <Route path='/outfit-details/:id' element = {<OutfitDetails/>}/>
+        <Route path='/outfits' element = {<Outfits/>}/>
+        <Route path='/my-bookings' element = {<MyBookings/>}/>
+        <Route path='/owner' element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path='add-outfit' element={<AddOutfit />} />
+            <Route path='manage-outfits' element={<ManageOutfits />} />
+            <Route path='manage-bookings' element={<ManageBookings />} />
+        </Route>
+
+
+
+
       </Routes>
     </AuthProvider>
   );
