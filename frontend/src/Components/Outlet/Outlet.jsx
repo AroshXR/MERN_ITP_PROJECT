@@ -6,7 +6,8 @@ const Outlet = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("/api/clothing")
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5001";
+        fetch(`${API_BASE_URL}/clothing`)
             .then((res) => res.json())
             .then((data) => {
                 setClothingItems(data);

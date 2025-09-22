@@ -21,6 +21,7 @@ import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGuide';
+import OutletDetail from './Components/Outlet/OutletDetail';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
         <Route path='/color-guide' element={<SkinToneColorGuide />}/>
+        <Route path="/outlet/:id" element={<OutletDetail />} />
 
       </Routes>
     </AuthProvider>

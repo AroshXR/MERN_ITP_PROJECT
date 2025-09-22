@@ -60,6 +60,10 @@ PORT=5001
 NODE_ENV=development
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change_me_securely
+ADMIN_ADDRESS=Head Office
 ```
 
 ## Features

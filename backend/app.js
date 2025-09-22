@@ -13,6 +13,8 @@ const supplierRouter = require("./routes/SupplierRoutes");
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
+const analyticsRouter = require("./routes/AnalyticsRoutes");
+const clothingRouter = require("./routes/ClothingRoutes");
 
 // Import utilities
 const createToken = require('./utils/jwt');
@@ -39,6 +41,8 @@ app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
+app.use("/clothing", clothingRouter);
+app.use("/analytics", analyticsRouter);
 
 // Test endpoint to verify server is running
 app.get("/test", (req, res) => {
@@ -128,9 +132,9 @@ app.post("/login", async (req, res) => {
       });
     }
     
-    // Find user by username and type
+    // Find user by username
     const User = mongoose.model("User");
-    const user = await User.findOne({ username, type });
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(401).json({
         status: "error",
@@ -138,6 +142,14 @@ app.post("/login", async (req, res) => {
       });
     }
     
+    // Validate type case-insensitively
+    if ((user.type || '').toLowerCase() !== (type || '').toLowerCase()) {
+      return res.status(401).json({
+        status: "error",
+        message: "Invalid credentials"
+      });
+    }
+
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -184,11 +196,15 @@ mongoose.connect(MONGODB_URI)
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
+    require("./models/ClothingItemModel");
 
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
 
-    
+    // Seed default admin (idempotent)
+    const { seedAdmin } = require('./utils/seedAdmin');
+    seedAdmin().catch(err => console.error('Admin seed error:', err));
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
