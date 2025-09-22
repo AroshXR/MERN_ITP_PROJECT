@@ -20,6 +20,7 @@ import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDet
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
+import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGuide';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
@@ -54,6 +55,7 @@ function App() {
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>
+        <Route path='/color-guide' element={<SkinToneColorGuide />}/>
 
          <Route path='/rentalHome' element={<RentalHome />}/>
         <Route path='/outfit-details/:id' element = {<OutfitDetails/>}/>
@@ -72,3 +74,8 @@ function App() {
 }
 
 export default App;
+
+
+
+
+

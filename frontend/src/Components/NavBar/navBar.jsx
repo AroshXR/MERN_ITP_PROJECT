@@ -9,14 +9,14 @@ function NavBar() {
   const isHomePage = location.pathname === '/';
   const isLoginPage = location.pathname === '/login';
   const isRegisterPage = location.pathname === '/register';
-  const isCustomizerPage = location.pathname === '/customizer'
+  const isCustomizerPage = location.pathname === '/customizer';
 
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const link = document.createElement("link");
-    link.href = "https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css";
-    link.rel = "stylesheet";
+    const link = document.createElement('link');
+    link.href = 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css';
+    link.rel = 'stylesheet';
     document.head.appendChild(link);
   }, []);
 
@@ -50,6 +50,11 @@ function NavBar() {
             <i className='bx bx-briefcase'></i> Career
           </button>
         </Link>
+        <Link to="/color-guide" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-palette'></i> Color Guide
+          </button>
+        </Link>
         <Link to="/applicant-dashboard" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-user-check'></i> My Applications
@@ -75,7 +80,7 @@ function NavBar() {
             <i className='bx bx-phone'></i> Contact Us
           </button>
         </Link>
-        {!isHomePage && !isLoginPage && !isRegisterPage && !isCustomizerPage &&(
+        {!isHomePage && !isLoginPage && !isRegisterPage && !isCustomizerPage && (
           <button onClick={() => { handleLogout(); setMenuOpen(false); }}>
             <i className='bx bx-log-out'></i> Logout
           </button>
