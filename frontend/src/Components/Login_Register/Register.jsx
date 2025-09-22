@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import './LoginPage.css';
 import regImage from '../images/register-img.jpg';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import NavBar from '../NavBar/navBar'; // Importing the NavBar component
-import Footer from '../Footer/Footer'; // Importing the Footer component
+import NavBar from '../NavBar/navBar';
+import Footer from '../Footer/Footer';
 
 function RegisterPage() {
     const history = useNavigate();
+    const [registerMode, setRegisterMode] = useState('user');
+    const [lastUserRole, setLastUserRole] = useState('Customer');
 
     const [user, setUser] = useState({
         username: '',
@@ -15,11 +17,38 @@ function RegisterPage() {
         email: '',
         password: '',
         confirmPassword: '',
-        type: ""
+        type: 'Customer'
     });
 
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleModeChange = (mode) => {
+        if (mode === registerMode) {
+            return;
+        }
+
+        if (mode === 'admin') {
+            if (user.type !== 'Admin') {
+                setLastUserRole(user.type || 'Customer');
+            }
+            setUser((prev) => ({
+                ...prev,
+                type: 'Admin'
+            }));
+        } else {
+            const restoredType = lastUserRole || 'Customer';
+            setUser((prev) => ({
+                ...prev,
+                type: restoredType === 'Admin' ? 'Customer' : restoredType
+            }));
+        }
+
+        setRegisterMode(mode);
+        if (error) {
+            setError('');
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -27,7 +56,9 @@ function RegisterPage() {
             ...prev,
             [name]: value
         }));
-        // Clear error when user starts typing
+        if (name === 'type') {
+            setLastUserRole(value);
+        }
         if (error) setError('');
     };
 
@@ -35,12 +66,12 @@ function RegisterPage() {
 
     const sendRequest = async () => {
         try {
-            const response = await axios.post("http://localhost:5001/register", {
+            const response = await axios.post('http://localhost:5001/register', {
                 username: user.username,
                 address: user.address,
                 email: user.email,
                 password: user.password,
-                type: user.type || "Customer"
+                type: user.type || 'Customer'
             });
             return response.data;
         } catch (error) {
@@ -59,16 +90,16 @@ function RegisterPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        console.log('Registration attempt:', { 
-            username: user.username, 
-            email: user.email, 
-            address: user.address, 
+
+        console.log('Registration attempt:', {
+            username: user.username,
+            email: user.email,
+            address: user.address,
             type: user.type,
             passwordLength: user.password.length,
-            passwordsMatch 
+            passwordsMatch
         });
-        
+
         if (!passwordsMatch) {
             setError('Passwords do not match');
             return;
@@ -86,8 +117,8 @@ function RegisterPage() {
             console.log('Sending registration request...');
             const result = await sendRequest();
             console.log('Registration response:', result);
-            
-            if (result.status === "ok") {
+
+            if (result.status === 'ok') {
                 alert('Registration successful! Please login with your new account.');
                 history('/login');
             } else {
@@ -114,16 +145,45 @@ function RegisterPage() {
 
                 <div className="login-container">
                     <h2>Register</h2>
+
+                    <div className="register-mode-toggle">
+                        <button
+                            type="button"
+                            className={registerMode === 'user' ? 'mode-button active' : 'mode-button'}
+                            onClick={() => handleModeChange('user')}
+                        >
+                            User / Applicant / Tailor
+                        </button>
+                        <button
+                            type="button"
+                            className={registerMode === 'admin' ? 'mode-button active' : 'mode-button'}
+                            onClick={() => handleModeChange('admin')}
+                        >
+                            Admin
+                        </button>
+                    </div>
+
                     {error && (
                         <div className="error-message-container">
                             <small className="error-message">{error}</small>
                         </div>
                     )}
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="userType">User Type:</label>
-                            <input type="text" id="userType" name="type" value={"Customer"} readOnly />
-                        </div>
+                        {registerMode === 'user' ? (
+                            <div className="form-group">
+                                <label htmlFor="userType">Registering as:</label>
+                                <select id="userType" name="type" value={user.type} onChange={handleChange}>
+                                    <option value="Customer">Customer</option>
+                                    <option value="Applicant">Applicant</option>
+                                    <option value="Tailor">Tailor</option>
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="admin-register-note">
+                                <strong>Admin registration</strong>
+                                <p>Register an administrator account to manage users, notifications, and identity verification.</p>
+                            </div>
+                        )}
                         <div className="form-group">
                             <label htmlFor="username">Username:</label>
                             <input type="text" id="username" name="username" value={user.username} onChange={handleChange} required />

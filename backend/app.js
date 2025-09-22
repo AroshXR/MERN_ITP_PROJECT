@@ -1,9 +1,11 @@
-const express = require("express");
+﻿const express = require("express");
 require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const path = require("path");
+
+const User = require("./models/User");
 
 // Import routes
 const userRouter = require("./routes/UserRoutes");
@@ -74,7 +76,6 @@ app.post("/register", async (req, res) => {
     }
     
     // Check if user already exists
-    const User = mongoose.model("User");
     const existingUser = await User.findOne({
       $or: [{ username }, { email }]
     });
@@ -129,7 +130,6 @@ app.post("/login", async (req, res) => {
     }
     
     // Find user by username and type
-    const User = mongoose.model("User");
     const user = await User.findOne({ username, type });
     if (!user) {
       return res.status(401).json({
