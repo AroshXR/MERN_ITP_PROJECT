@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './AuthGuard/AuthGuard';
+import { AuthProvider } from './AuthGuard/authGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
 // import AddUser from './Components/AddUser/AddUser';
@@ -13,9 +13,10 @@ import AdminJobManagement from './Components/AdminJobManagement/AdminJobManageme
 import AdminApplicantManagement from './Components/AdminApplicantManagement/AdminApplicantManagement';
 import AdminApplicantDetail from './Components/AdminApplicantManagement/AdminApplicantDetail';
 import AdminPanel from './Components/AdminPanel/AdminPanel';
-import ContactUs from './Components/Home/ContactUs';
+import ContactUs from './Components/ContactUsPage/ContactUsPage';
 import OrderManagement from './Components/OrderManagement/OrderManagement';
 import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
+import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDetailsDisplay';
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
@@ -41,6 +42,7 @@ function App() {
         <Route path="/admin-applicants/:id" element={<AdminApplicantDetail />} />
         <Route path="/orderManagement" element={<OrderManagement />}/>
         <Route path='/paymentManagement' element={<PaymentManagement />}/>
+        <Route path='/paymentDetails' element={<PaymentDetailsDisplay />}/>
         <Route path='/userHome' element={<UserHome />}/>
         <Route path='/supplierManagement' element={<SupplierManagement />}/>
         <Route path='/tailorHome' element={<TailorHome />}/>

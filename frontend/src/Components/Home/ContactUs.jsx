@@ -21,7 +21,7 @@ function ContactUs() {
 
             <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-group">
-                    <label>Name</label>
+                    <label className='contact-form-label'>Name</label>
                     <input
                         type="text"
                         name="name"
@@ -33,7 +33,7 @@ function ContactUs() {
                 </div>
 
                 <div className="form-group">
-                    <label>Email</label>
+                    <label className='contact-form-label'>Email</label>
                     <input
                         type="email"
                         name="email"
@@ -45,7 +45,7 @@ function ContactUs() {
                 </div>
 
                 <div className="form-group">
-                    <label>Message</label>
+                    <label className='contact-form-label'>Message</label>
                     <textarea
                         name="message"
                         placeholder="Your Message"
@@ -56,7 +56,7 @@ function ContactUs() {
                     ></textarea>
                 </div>
 
-                <button type="submit">Send Message</button>
+                <button className='contact-form-button' type="submit">Send Message</button>
             </form>
         </div>
     );
