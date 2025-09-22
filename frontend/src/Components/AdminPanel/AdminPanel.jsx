@@ -37,6 +37,7 @@ export default function AdminPanel() {
         {activeTab === 'reports' && <Reports />}
       </div>
     </div>
+
   );
 }
 

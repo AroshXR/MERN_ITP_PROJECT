@@ -107,11 +107,12 @@ const Career = () => {
   return (
     <div className='main'>
       <NavBar />
+      <div className="career-header">
+        <h1>Join Our Team</h1>
+        <p>Be part of our mission to create amazing fashion experiences</p>
+      </div>
       <div className="career-page">
-        <div className="career-header">
-          <h1>Join Our Team</h1>
-          <p>Be part of our mission to create amazing fashion experiences</p>
-        </div>
+
 
         <div className="career-content">
           <div className="career-intro">
