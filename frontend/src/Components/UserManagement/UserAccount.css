@@ -1,0 +1,245 @@
+﻿.user-account-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f7f7f9;
+}
+
+.user-account-content {
+    flex: 1;
+    width: min(1100px, 90%);
+    margin: 2rem auto 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.user-account-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-account-header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.panel.error {
+    border: 1px solid #fca5a5;
+}
+
+.panel h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.panel-description {
+    margin: 0;
+    color: #475569;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.form-grid label,
+.form-vertical label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.form-grid input,
+.form-vertical textarea,
+.form-vertical input,
+.form-grid textarea {
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #cbd5f5;
+    background: #f8fafc;
+    font-size: 0.95rem;
+}
+
+.form-grid input:focus,
+.form-vertical textarea:focus,
+.form-vertical input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.form-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.form-actions button {
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #2563eb, #60a5fa);
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-actions button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+.form-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.form-actions .danger {
+    background: linear-gradient(135deg, #dc2626, #f97316);
+}
+
+.form-feedback {
+    margin: 0;
+    font-weight: 600;
+}
+
+.form-feedback.success {
+    color: #059669;
+}
+
+.form-feedback.error {
+    color: #dc2626;
+}
+
+.status-tag {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-unverified {
+    background: rgba(148, 163, 184, 0.15);
+    color: #475569;
+}
+
+.status-pending {
+    background: rgba(250, 204, 21, 0.2);
+    color: #b45309;
+}
+
+.status-verified {
+    background: rgba(34, 197, 94, 0.18);
+    color: #166534;
+}
+
+.status-rejected {
+    background: rgba(239, 68, 68, 0.18);
+    color: #b91c1c;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.notification {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notification.read {
+    opacity: 0.7;
+}
+
+.notification:hover {
+    border-color: #cbd5f5;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.notification-actions button {
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    border: none;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notification-actions button.danger {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.notification-actions button:hover {
+    filter: brightness(1.05);
+}
+
+.empty-state {
+    color: #64748b;
+}
+
+@media (max-width: 720px) {
+    .user-account-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notification {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notification-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

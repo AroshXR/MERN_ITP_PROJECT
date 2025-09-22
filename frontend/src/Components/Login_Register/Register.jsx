@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import './LoginPage.css';
 import regImage from '../images/register-img.jpg';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import NavBar from '../NavBar/navBar'; // Importing the NavBar component
-import Footer from '../Footer/Footer'; // Importing the Footer component
+import NavBar from '../NavBar/navBar';
+import Footer from '../Footer/Footer';
 
 function RegisterPage() {
     const history = useNavigate();
@@ -15,7 +15,7 @@ function RegisterPage() {
         email: '',
         password: '',
         confirmPassword: '',
-        type: ""
+        type: 'Customer'
     });
 
     const [error, setError] = useState('');
@@ -27,7 +27,6 @@ function RegisterPage() {
             ...prev,
             [name]: value
         }));
-        // Clear error when user starts typing
         if (error) setError('');
     };
 
@@ -35,12 +34,12 @@ function RegisterPage() {
 
     const sendRequest = async () => {
         try {
-            const response = await axios.post("http://localhost:5001/register", {
+            const response = await axios.post('http://localhost:5001/register', {
                 username: user.username,
                 address: user.address,
                 email: user.email,
                 password: user.password,
-                type: user.type || "Customer"
+                type: user.type || 'Customer'
             });
             return response.data;
         } catch (error) {
@@ -59,16 +58,16 @@ function RegisterPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        console.log('Registration attempt:', { 
-            username: user.username, 
-            email: user.email, 
-            address: user.address, 
+
+        console.log('Registration attempt:', {
+            username: user.username,
+            email: user.email,
+            address: user.address,
             type: user.type,
             passwordLength: user.password.length,
-            passwordsMatch 
+            passwordsMatch
         });
-        
+
         if (!passwordsMatch) {
             setError('Passwords do not match');
             return;
@@ -86,8 +85,8 @@ function RegisterPage() {
             console.log('Sending registration request...');
             const result = await sendRequest();
             console.log('Registration response:', result);
-            
-            if (result.status === "ok") {
+
+            if (result.status === 'ok') {
                 alert('Registration successful! Please login with your new account.');
                 history('/login');
             } else {
@@ -121,8 +120,12 @@ function RegisterPage() {
                     )}
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label htmlFor="userType">User Type:</label>
-                            <input type="text" id="userType" name="type" value={"Customer"} readOnly />
+                            <label htmlFor="userType">Registering as:</label>
+                            <select id="userType" name="type" value={user.type} onChange={handleChange}>
+                                <option value="Customer">Customer</option>
+                                <option value="Applicant">Applicant</option>
+                                <option value="Tailor">Tailor</option>
+                            </select>
                         </div>
                         <div className="form-group">
                             <label htmlFor="username">Username:</label>

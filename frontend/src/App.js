@@ -1,9 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './AuthGuard/authGuard';
+﻿import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './AuthGuard/AuthGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
-// import AddUser from './Components/AddUser/AddUser';
-// import ViewDetails from './Components/ViewDetails/ViewDetails';
 import LoginPage from './Components/Login_Register/Login';
 import RegisterPage from './Components/Login_Register/Register';
 import ClothCustomizer from './Components/clothing-customizer/ClothCustomizer';
@@ -22,40 +20,132 @@ import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGuide';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
+import UserAccount from './Components/UserManagement/UserAccount';
+import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* All Routes - No Authentication Required */}
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/contact" element={<ContactUs />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/customizer" element={<ClothCustomizer />} />
         <Route path="/career" element={<Career />} />
-        <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
-        <Route path="/admin-jobs" element={<AdminJobManagement />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/admin-applicants" element={<AdminApplicantManagement />} />
-        <Route path="/admin-applicants/:id" element={<AdminApplicantDetail />} />
-        <Route path="/orderManagement" element={<OrderManagement />}/>
-        <Route path='/paymentManagement' element={<PaymentManagement />}/>
-        <Route path='/paymentDetails' element={<PaymentDetailsDisplay />}/>
-        <Route path='/userHome' element={<UserHome />}/>
-        <Route path='/supplierManagement' element={<SupplierManagement />}/>
-        <Route path='/tailorHome' element={<TailorHome />}/>
-        <Route path='/color-guide' element={<SkinToneColorGuide />}/>
+        <Route path="/customizer" element={<ClothCustomizer />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
+        {/* Applicant and informational routes */}
+        <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
+        <Route path="/color-guide" element={<SkinToneColorGuide />} />
+
+        {/* Authenticated customer & applicant routes */}
+        <Route
+          path="/userHome"
+          element={(
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <UserHome />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/orderManagement"
+          element={(
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <OrderManagement />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/paymentManagement"
+          element={(
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <PaymentManagement />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/paymentDetails"
+          element={(
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <PaymentDetailsDisplay />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/user/account"
+          element={(
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant", "Tailor"]}>
+              <UserAccount />
+            </ProtectedRoute>
+          )}
+        />
+
+        {/* Tailor experience */}
+        <Route
+          path="/tailorHome"
+          element={(
+            <ProtectedRoute allowedUserTypes="Tailor">
+              <TailorHome />
+            </ProtectedRoute>
+          )}
+        />
+
+        {/* Supplier management - restricted to admin by default */}
+        <Route
+          path="/supplierManagement"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <SupplierManagement />
+            </ProtectedRoute>
+          )}
+        />
+
+        {/* Admin routes */}
+        <Route
+          path="/admin"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminPanel />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin-jobs"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminJobManagement />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin-applicants"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminApplicantManagement />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin-applicants/:id"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminApplicantDetail />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin/users"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminUserManagement />
+            </ProtectedRoute>
+          )}
+        />
       </Routes>
     </AuthProvider>
   );
 }
 
 export default App;
-
-
-
-
-

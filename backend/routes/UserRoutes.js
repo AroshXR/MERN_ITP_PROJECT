@@ -1,41 +1,23 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 
-//insert model
-const User = require("../models/User");
-
-//insert user controller
+// Insert user controller
 const userController = require("../controllers/UserController");
 
-// Import authentication middleware (temporarily disabled)
-// const { protect } = require("../middleware/auth");
-
-// Token verification endpoint (temporarily disabled)
-// router.get("/verify-token", protect, async (req, res) => {
-//     try {
-//         console.log('Token verification request received');
-//         console.log('User from token:', req.user);
-//         
-//         // If we reach here, the token is valid and user is attached to req.user
-//         res.status(200).json({
-//             status: "ok",
-//             user: req.user
-//         });
-//     } catch (error) {
-//         console.error('Token verification error:', error);
-//         res.status(401).json({
-//             status: "error",
-//             message: "Token verification failed"
-//         });
-//     }
-// });
-
 // Specific routes must come before parameter routes to avoid conflicts
-router.get("/" , userController.getAllUsers);
-router.post("/" , userController.addUsers);
-router.get("/:id" , userController.getById);
+router.get("/", userController.getAllUsers);
+router.post("/", userController.addUsers);
+
+router.post("/:id/identity/submit", userController.submitIdentityVerification);
+router.patch("/:id/identity-status", userController.updateIdentityStatus);
+
+router.get("/:id/notifications", userController.getUserNotifications);
+router.post("/:id/notifications", userController.createNotification);
+router.patch("/:id/notifications/:notificationId", userController.updateNotification);
+router.delete("/:id/notifications/:notificationId", userController.deleteNotification);
+
+router.get("/:id", userController.getById);
 router.put("/:id", userController.updateUser);
 router.delete("/:id", userController.deleteUser);
 
-//export
 module.exports = router;

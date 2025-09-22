@@ -1,131 +1,126 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+﻿import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
+const TOKEN_STORAGE_KEY = 'token';
+const USER_STORAGE_KEY = 'authUser';
 
-export const useAuth = () => {
-    return useContext(AuthContext);
+const normalizeUser = (user) => {
+    if (!user) {
+        return null;
+    }
+
+    return {
+        ...user,
+        id: user.id || user._id || user?.userId
+    };
 };
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [token, setToken] = useState(null);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            const storedToken = localStorage.getItem('token');
-            console.log('Checking stored token:', storedToken ? 'exists' : 'none');
-            
-            if (storedToken) {
-                try {
-                    // Set the token in axios headers first
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-                    console.log('Token verification temporarily disabled for testing');
-                    
-                    // Temporarily disabled token verification for testing
-                    // const response = await axios.get('http://localhost:5001/users/verify-token'); 
-                    // console.log('Token verification response:', response.data);
-                    
-                    // For testing purposes, assume token is valid if it exists
-                    if (storedToken) {
-                        // Create a mock user object for testing
-                        const mockUser = {
-                            _id: '000000000000000000000000',
-                            username: 'testuser',
-                            email: 'test@example.com',
-                            type: 'user'
-                        };
-                        setCurrentUser(mockUser);
-                        setToken(storedToken);
-                        console.log('Mock user authenticated for testing:', mockUser.username);
-                    } else {
-                        console.log('No token found, clearing auth state');
-                        localStorage.removeItem('token');
-                        setToken(null);
-                        setCurrentUser(null);
-                        delete axios.defaults.headers.common['Authorization'];
-                    }
-                } catch (error) {
-                    console.error('Token validation failed:', error);
-                    console.log('Clearing invalid token');
-                    localStorage.removeItem('token');
-                    setToken(null);
-                    setCurrentUser(null);
-                    delete axios.defaults.headers.common['Authorization'];
-                }
-            } else {
-                console.log('No stored token found');
-                setToken(null);
-                setCurrentUser(null);
+    const clearAuthState = () => {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(USER_STORAGE_KEY);
+        delete axios.defaults.headers.common['Authorization'];
+        setToken(null);
+        setCurrentUser(null);
+    };
+
+    const persistSession = (sessionToken, userData) => {
+        const normalizedUser = normalizeUser(userData);
+        localStorage.setItem(TOKEN_STORAGE_KEY, sessionToken);
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${sessionToken}`;
+        setToken(sessionToken);
+        setCurrentUser(normalizedUser);
+    };
+
+    const refreshAuth = async (userId, sessionToken = token) => {
+        const effectiveUserId = userId || currentUser?.id;
+        const effectiveToken = sessionToken || token;
+        const storedUserRaw = localStorage.getItem(USER_STORAGE_KEY);
+
+        if (!effectiveUserId || !effectiveToken || !storedUserRaw) {
+            clearAuthState();
+            return false;
+        }
+
+        try {
+            const response = await axios.get(`http://localhost:5001/users/${effectiveUserId}`);
+            if (response.data?.status === 'ok' && response.data.user) {
+                const updatedUser = normalizeUser(response.data.user);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+                setCurrentUser(updatedUser);
             }
-            setLoading(false);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${effectiveToken}`;
+            setToken(effectiveToken);
+            return true;
+        } catch (error) {
+            console.error('Failed to refresh auth state:', error);
+            clearAuthState();
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        const initialiseAuth = async () => {
+            const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+            const storedUserRaw = localStorage.getItem(USER_STORAGE_KEY);
+
+            if (!storedToken || !storedUserRaw) {
+                clearAuthState();
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const parsedUser = normalizeUser(JSON.parse(storedUserRaw));
+                setToken(storedToken);
+                setCurrentUser(parsedUser);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+
+                await refreshAuth(parsedUser.id, storedToken);
+            } catch (error) {
+                console.error('Failed to restore session:', error);
+                clearAuthState();
+            } finally {
+                setLoading(false);
+            }
         };
 
-        checkAuth();
+        initialiseAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const login = (token, userData) => {
-        console.log('Logging in user:', userData.username);
-        localStorage.setItem('token', token);
-        setToken(token);
-        setCurrentUser(userData);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const login = (sessionToken, userData) => {
+        if (!sessionToken || !userData) {
+            throw new Error('Token and user data are required to establish a session');
+        }
+        persistSession(sessionToken, userData);
     };
 
     const logout = () => {
-        console.log('Logging out user');
-        localStorage.removeItem('token');
-        setToken(null);
-        setCurrentUser(null);
-        delete axios.defaults.headers.common['Authorization'];
+        clearAuthState();
     };
 
-    const isAuthenticated = () => {
-        const hasToken = !!token && !!localStorage.getItem('token');
-        const hasUser = !!currentUser;
-        console.log('Auth check:', { hasToken, hasUser, token: !!token, user: !!currentUser });
-        return hasToken && hasUser;
+    const isAuthenticated = () => Boolean(token && currentUser);
+
+    const getToken = () => token || localStorage.getItem(TOKEN_STORAGE_KEY);
+
+    const updateStoredUser = (updates) => {
+        setCurrentUser((prev) => {
+            const merged = normalizeUser({ ...prev, ...updates });
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(merged));
+            return merged;
+        });
     };
 
-    const getToken = () => {
-        return token || localStorage.getItem('token');
-    };
-
-    const refreshAuth = async () => {
-        const storedToken = localStorage.getItem('token');
-        if (storedToken && !currentUser) {
-            try {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-                
-                // Temporarily disabled token verification for testing
-                // const response = await axios.get('http://localhost:5001/users/verify-token');
-                // if (response.data.status === "ok" && response.data.user) {
-                //     setCurrentUser(response.data.user);
-                //     setToken(storedToken);
-                //     return true;
-                // }
-                
-                // For testing purposes, create mock user
-                const mockUser = {
-                    _id: '000000000000000000000000',
-                    username: 'testuser',
-                    email: 'test@example.com',
-                    type: 'user'
-                };
-                setCurrentUser(mockUser);
-                setToken(storedToken);
-                console.log('Mock user refreshed for testing:', mockUser.username);
-                return true;
-            } catch (error) {
-                console.error('Failed to refresh auth:', error);
-                logout();
-            }
-        }
-        return false;
-    };
-
-    const value = {
+    const value = useMemo(() => ({
         currentUser,
         token,
         login,
@@ -133,8 +128,9 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated,
         getToken,
-        refreshAuth
-    };
+        refreshAuth,
+        updateStoredUser
+    }), [currentUser, token, loading]);
 
     return (
         <AuthContext.Provider value={value}>
