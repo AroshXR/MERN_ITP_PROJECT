@@ -8,6 +8,8 @@ import Footer from '../Footer/Footer';
 
 function RegisterPage() {
     const history = useNavigate();
+    const [registerMode, setRegisterMode] = useState('user');
+    const [lastUserRole, setLastUserRole] = useState('Customer');
 
     const [user, setUser] = useState({
         username: '',
@@ -21,12 +23,42 @@ function RegisterPage() {
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const handleModeChange = (mode) => {
+        if (mode === registerMode) {
+            return;
+        }
+
+        if (mode === 'admin') {
+            if (user.type !== 'Admin') {
+                setLastUserRole(user.type || 'Customer');
+            }
+            setUser((prev) => ({
+                ...prev,
+                type: 'Admin'
+            }));
+        } else {
+            const restoredType = lastUserRole || 'Customer';
+            setUser((prev) => ({
+                ...prev,
+                type: restoredType === 'Admin' ? 'Customer' : restoredType
+            }));
+        }
+
+        setRegisterMode(mode);
+        if (error) {
+            setError('');
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUser((prev) => ({
             ...prev,
             [name]: value
         }));
+        if (name === 'type') {
+            setLastUserRole(value);
+        }
         if (error) setError('');
     };
 
@@ -113,20 +145,45 @@ function RegisterPage() {
 
                 <div className="login-container">
                     <h2>Register</h2>
+
+                    <div className="register-mode-toggle">
+                        <button
+                            type="button"
+                            className={registerMode === 'user' ? 'mode-button active' : 'mode-button'}
+                            onClick={() => handleModeChange('user')}
+                        >
+                            User / Applicant / Tailor
+                        </button>
+                        <button
+                            type="button"
+                            className={registerMode === 'admin' ? 'mode-button active' : 'mode-button'}
+                            onClick={() => handleModeChange('admin')}
+                        >
+                            Admin
+                        </button>
+                    </div>
+
                     {error && (
                         <div className="error-message-container">
                             <small className="error-message">{error}</small>
                         </div>
                     )}
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="userType">Registering as:</label>
-                            <select id="userType" name="type" value={user.type} onChange={handleChange}>
-                                <option value="Customer">Customer</option>
-                                <option value="Applicant">Applicant</option>
-                                <option value="Tailor">Tailor</option>
-                            </select>
-                        </div>
+                        {registerMode === 'user' ? (
+                            <div className="form-group">
+                                <label htmlFor="userType">Registering as:</label>
+                                <select id="userType" name="type" value={user.type} onChange={handleChange}>
+                                    <option value="Customer">Customer</option>
+                                    <option value="Applicant">Applicant</option>
+                                    <option value="Tailor">Tailor</option>
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="admin-register-note">
+                                <strong>Admin registration</strong>
+                                <p>Register an administrator account to manage users, notifications, and identity verification.</p>
+                            </div>
+                        )}
                         <div className="form-group">
                             <label htmlFor="username">Username:</label>
                             <input type="text" id="username" name="username" value={user.username} onChange={handleChange} required />
