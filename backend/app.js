@@ -47,6 +47,17 @@ app.get("/test", (req, res) => {
     });
 });
 
+// Test email configuration endpoint
+app.get("/test-email", async (req, res) => {
+    const { testEmailConfiguration } = require('./utils/email');
+    const result = await testEmailConfiguration();
+    res.json({
+        status: result.success ? "ok" : "error",
+        message: result.message,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // User registration endpoint
 app.post("/register", async (req, res) => {
   try {

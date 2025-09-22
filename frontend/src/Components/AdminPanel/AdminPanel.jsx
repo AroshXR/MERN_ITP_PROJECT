@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminApplicantManagement from '../AdminApplicantManagement/AdminApplicantManagement';
 import AdminJobManagement from '../AdminJobManagement/AdminJobManagement';
+import Reports from './Reports';
 import './AdminPanel.css';
 
 export default function AdminPanel() {
@@ -21,11 +22,18 @@ export default function AdminPanel() {
         >
           Job Management
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reports')}
+        >
+          Reports
+        </button>
       </div>
 
       <div className="admin-panel__content">
         {activeTab === 'applicants' && <AdminApplicantManagement />}
         {activeTab === 'jobs' && <AdminJobManagement />}
+        {activeTab === 'reports' && <Reports />}
       </div>
     </div>
   );
