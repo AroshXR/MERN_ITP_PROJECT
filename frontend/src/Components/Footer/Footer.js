@@ -17,7 +17,7 @@ function Footer() {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3 className="footer-logo">Klassy Shirts</h3>
+            <h3 className="footer-logo">Klassy T Shirts</h3>
             <p className="footer-tagline">Custom clothing for every style</p>
           </div>
           
@@ -35,25 +35,15 @@ function Footer() {
               </Link>
             </div>
           </div>
-
-          <div className="footer-nav">
-            <h4 className="footer-section-title">Quick Links</h4>
-            <div className="footer-nav-links">
-              <Link to="/about">About</Link>
-              <Link to="/products">Products</Link>
-              <Link to="/contact">Contact</Link>
-              <Link to="/help">Help</Link>
-            </div>
-          </div>
         </div>
         
         <div className="footer-bottom">
           <p className="footer-text">
-            © {new Date().getFullYear()} Klassy Shirts. All rights reserved.
+            © {new Date().getFullYear()} Klassy T Shirts. All rights reserved.
           </p>
           <div className="footer-legal">
             <Link to="/privacy">Privacy Policy</Link>
-            <Link to="/terms">Terms of Service</Link>
+            <Link to="/terms">Terms and Conditions</Link>
           </div>
         </div>
       </div>

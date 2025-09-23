@@ -5,6 +5,7 @@ import './Home.css'; // Import CSS
 import { Link, Outlet } from 'react-router-dom';
 import Footer from '../Footer/Footer'; // Import Footer component
 import ContactUs from './ContactUs';
+import AboutUs from './AboutUs';
 
 function Home() {
   return (
@@ -16,13 +17,14 @@ function Home() {
         <div className="blob blob3"></div>
       </div>
       <div className="home-content">
-        <h1>Welcome to Klassy Shirts</h1>
-        <p>Customize your style with our unique shirt designs.</p>
+        <h1>Welcome to Klassy T Shirts</h1>
+        <p>Customize your style with our unique t shirt designs.</p>
         <Link to="/login">
           <button className="cta-button">Get Started</button>
         </Link>
+        <span style={{ marginBottom: '100px' }}></span>
+        <AboutUs />
         <Outlet />
-        <ContactUs />
       </div>
       <Footer />
     </div>

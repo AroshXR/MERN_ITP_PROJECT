@@ -23,6 +23,8 @@ import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGui
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
+import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
+import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
 
 import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
@@ -46,6 +48,8 @@ function App() {
         <Route path="/career" element={<Career />} />
         <Route path="/customizer" element={<ClothCustomizer />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
 
         {/* Applicant and informational routes */}
         <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />

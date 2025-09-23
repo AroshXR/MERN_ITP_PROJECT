@@ -10,7 +10,7 @@ import { useAuth } from '../../AuthGuard/AuthGuard';
 
 export default function OrderManagement() {
     const history = useNavigate();
-    const { isAuthenticated, getToken, logout } = useAuth();
+    const { isAuthenticated, getToken, logout, token } = useAuth();
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -22,40 +22,46 @@ export default function OrderManagement() {
         setTimeout(() => setNotification(null), 3000);
     };
 
-    // Fetch cloth customizer data from backend
+    // Fetch cloth customizer data when the user is authenticated
     useEffect(() => {
-        // Temporarily disabled authentication check
-        // if (isAuthenticated()) {
+        if (!token || !isAuthenticated()) {
+            setCartItems([]);
+            setLoading(false);
+            setError('Please log in to view your cart.');
+            return;
+        }
+
+        setError(null);
         fetchClothCustomizers();
-        // } else {
-        //     setError('Please log in to view your cart');
-        //     setLoading(false);
-        // }
-    }, []);
+    }, [token]);
 
     const fetchClothCustomizers = async (retryCount = 0) => {
+        const authToken = getToken();
+
+        if (!authToken) {
+            setError('Authentication token not found. Please log in again.');
+            setCartItems([]);
+            setLoading(false);
+            logout();
+            history('/login');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
         try {
-            setLoading(true);
-            setError(null);
-            
-            // Temporarily disabled token check
-            // const token = getToken();
-            // if (!token) {
-            //     setError('Authentication token not found. Please log in again.');
-            //     setLoading(false);
-            //     return;
-            // }
-
-            console.log('Fetching cart data without authentication');
-
-            const response = await axios.get('http://localhost:5001/cloth-customizer');
+            const response = await axios.get('http://localhost:5001/cloth-customizer', {
+                headers: {
+                    Authorization: `Bearer ${authToken}`
+                }
+            });
 
             if (response.data.status === "ok") {
-                // Transform the data to match cart item structure
                 const transformedItems = response.data.data.map((item, index) => ({
                     id: item._id || `item-${index}`,
                     name: `Custom ${item.clothingType || 'Clothing'}`,
-                    price: item.totalPrice && item.quantity ? (item.totalPrice / item.quantity) : (item.totalPrice || 0), // Price per item
+                    price: item.totalPrice && item.quantity ? (item.totalPrice / item.quantity) : (item.totalPrice || 0),
                     quantity: item.quantity || 1,
                     size: item.size || 'Standard',
                     color: item.color || 'Default',
@@ -69,15 +75,23 @@ export default function OrderManagement() {
 
                 setCartItems(transformedItems);
             } else {
+                setCartItems([]);
                 setError('Failed to fetch cart items');
             }
         } catch (error) {
             console.error('Error fetching cloth customizers:', error);
-            
+
+            if (error.response?.status === 401) {
+                logout();
+                setCartItems([]);
+                setError('Your session has expired. Please log in again.');
+                history('/login');
+                return;
+            }
+
             if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
                 setError('Cannot connect to server. Please check your connection and try again.');
             } else if (retryCount < 3) {
-                // Retry up to 3 times for other errors
                 console.log(`Retrying... Attempt ${retryCount + 1}`);
                 setTimeout(() => fetchClothCustomizers(retryCount + 1), 1000 * (retryCount + 1));
                 return;
@@ -98,9 +112,14 @@ export default function OrderManagement() {
         }
 
         try {
-            console.log('Updating quantity for item:', id, 'to:', newQuantity);
-            
-            // Find the item to update
+            const authToken = getToken();
+            if (!authToken) {
+                alert('Authentication token not found. Please log in again.');
+                logout();
+                history('/login');
+                return;
+            }
+
             const itemToUpdate = cartItems.find(item => item.id === id);
             if (!itemToUpdate) {
                 console.error('Item not found for update:', id);
@@ -108,25 +127,19 @@ export default function OrderManagement() {
                 return;
             }
 
-            // Calculate new total price
             const newTotalPrice = (itemToUpdate.price * newQuantity);
-            console.log('New total price:', newTotalPrice);
-
-            // Update in backend (authentication disabled)
-            // const token = getToken();
-            // if (!token) {
-            //     alert('Authentication token not found. Please log in again.');
-            //     return;
-            // }
 
             const response = await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
                 quantity: newQuantity,
                 totalPrice: newTotalPrice
+            }, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`
+                }
             });
-            
+
             console.log('Backend update response:', response.data);
 
-            // Update local state
             setCartItems((items) => items.map((item) =>
                 item.id === id ? { ...item, quantity: newQuantity, totalPrice: newTotalPrice } : item
             ));
@@ -134,7 +147,14 @@ export default function OrderManagement() {
         } catch (error) {
             console.error('Error updating quantity:', error);
             console.error('Error details:', error.response?.data || error.message);
-            
+
+            if (error.response?.status === 401) {
+                logout();
+                alert('Your session has expired. Please log in again.');
+                history('/login');
+                return;
+            }
+
             if (error.response?.status === 404) {
                 alert('Item not found. It may have been removed. Please refresh the page.');
             } else if (error.response?.status === 500) {
@@ -152,30 +172,38 @@ export default function OrderManagement() {
             return;
         }
 
+        const isConfirmed = window.confirm('Are you sure you want to remove this item from your cart?');
+        if (!isConfirmed) return;
+
         try {
-            console.log('Removing item:', id);
-            
-            // Show confirmation dialog
-            const isConfirmed = window.confirm('Are you sure you want to remove this item from your cart?');
-            if (!isConfirmed) return;
+            const authToken = getToken();
+            if (!authToken) {
+                alert('Authentication token not found. Please log in again.');
+                logout();
+                history('/login');
+                return;
+            }
 
-            // Remove from backend (authentication disabled)
-            // const token = getToken();
-            // if (!token) {
-            //     alert('Authentication token not found. Please log in again.');
-            //     return;
-            // }
-
-            const response = await axios.delete(`http://localhost:5001/cloth-customizer/${id}`);
+            const response = await axios.delete(`http://localhost:5001/cloth-customizer/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`
+                }
+            });
             console.log('Backend delete response:', response.data);
 
-            // Remove from local state
             setCartItems((items) => items.filter((item) => item.id !== id));
             showNotification('Item removed from cart successfully!');
         } catch (error) {
             console.error('Error removing item:', error);
             console.error('Error details:', error.response?.data || error.message);
-            
+
+            if (error.response?.status === 401) {
+                logout();
+                alert('Your session has expired. Please log in again.');
+                history('/login');
+                return;
+            }
+
             if (error.response?.status === 404) {
                 alert('Item not found. It may have been removed already. Please refresh the page.');
             } else if (error.response?.status === 500) {
@@ -188,26 +216,36 @@ export default function OrderManagement() {
 
     const editItem = async (id) => {
         try {
-            // Get the item data (authentication disabled)
-            // const token = getToken();
-            // if (!token) {
-            //     alert('Authentication token not found. Please log in again.');
-            //     return;
-            // }
+            const authToken = getToken();
+            if (!authToken) {
+                alert('Authentication token not found. Please log in again.');
+                logout();
+                history('/login');
+                return;
+            }
 
-            const response = await axios.get(`http://localhost:5001/cloth-customizer/${id}`);
+            const response = await axios.get(`http://localhost:5001/cloth-customizer/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`
+                }
+            });
 
             if (response.data.status === "ok") {
-                // Store the item data in localStorage for the customizer to retrieve
                 localStorage.setItem('editItemData', JSON.stringify(response.data.data));
-
-                // Navigate to the customizer
                 history('/customizer?edit=true');
             } else {
                 alert('Failed to retrieve item data for editing.');
             }
         } catch (error) {
             console.error('Error retrieving item for editing:', error);
+
+            if (error.response?.status === 401) {
+                logout();
+                alert('Your session has expired. Please log in again.');
+                history('/login');
+                return;
+            }
+
             alert('Failed to retrieve item for editing. Please try again.');
         }
     };
