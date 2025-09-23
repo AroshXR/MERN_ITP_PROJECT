@@ -64,6 +64,7 @@ const supplierRouter = require("./routes/SupplierRoutes");
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
+const inventoryRouter = require("./routes/InventoryRoutes");
 
 // Import utilities
 const createToken = require('./utils/jwt');
@@ -97,6 +98,7 @@ app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
+app.use("/inventory", inventoryRouter);
 
 // Test endpoint to verify server is running
 app.get("/test", (req, res) => {
@@ -259,6 +261,7 @@ const connectToMongoDB = async () => {
     require("./models/ClothCustomizerModel");
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
+    require("./models/MaterialInventoryModel");
     
     console.log("📦 All models loaded successfully");
 
