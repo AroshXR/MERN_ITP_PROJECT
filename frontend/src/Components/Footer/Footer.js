@@ -35,16 +35,6 @@ function Footer() {
               </Link>
             </div>
           </div>
-
-          <div className="footer-nav">
-            <h4 className="footer-section-title">Quick Links</h4>
-            <div className="footer-nav-links">
-              <Link to="/about">About</Link>
-              <Link to="/products">Products</Link>
-              <Link to="/contact">Contact</Link>
-              <Link to="/help">Help</Link>
-            </div>
-          </div>
         </div>
         
         <div className="footer-bottom">
@@ -53,7 +43,7 @@ function Footer() {
           </p>
           <div className="footer-legal">
             <Link to="/privacy">Privacy Policy</Link>
-            <Link to="/terms">Terms of Service</Link>
+            <Link to="/terms">Terms and Conditions</Link>
           </div>
         </div>
       </div>

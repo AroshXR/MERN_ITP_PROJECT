@@ -5,6 +5,7 @@ import './Home.css'; // Import CSS
 import { Link, Outlet } from 'react-router-dom';
 import Footer from '../Footer/Footer'; // Import Footer component
 import ContactUs from './ContactUs';
+import AboutUs from './AboutUs';
 
 function Home() {
   return (
@@ -21,8 +22,9 @@ function Home() {
         <Link to="/login">
           <button className="cta-button">Get Started</button>
         </Link>
+        <span style={{ marginBottom: '100px' }}></span>
+        <AboutUs />
         <Outlet />
-        <ContactUs />
       </div>
       <Footer />
     </div>

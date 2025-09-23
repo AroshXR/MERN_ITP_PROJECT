@@ -32,7 +32,7 @@ function NavBar() {
 
   return (
     <nav className="navbar">
-      <h2 className="logo" onClick={handleLogoClick}>Klassy Shirts</h2>
+      <h2 className="logo" onClick={handleLogoClick}>Klassy T Shirts</h2>
 
       {/* Hamburger Menu Icon */}
       <div className="menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
