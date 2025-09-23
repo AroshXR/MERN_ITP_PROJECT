@@ -1,8 +1,9 @@
-﻿const express = require("express");
+const express = require("express");
 require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const dns = require("dns");
 const path = require("path");
 
 const User = require("./models/User");
@@ -24,7 +25,14 @@ const app = express();
 
 // Environment variables
 const PORT = process.env.PORT || 5001;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/";
+const MONGODB_URI = process.env.MONGODB_URI; // set in .env
+const MONGODB_DBNAME = process.env.MONGODB_DBNAME; // optional explicit DB name
+const MONGODB_TLS_INSECURE = process.env.MONGODB_TLS_INSECURE === 'true'; // allow insecure TLS for IP-based hosts (dev only)
+
+if (!MONGODB_URI) {
+  console.error("Missing MONGODB_URI. Please create backend/.env and set MONGODB_URI.");
+  process.exit(1);
+}
 
 // Middleware
 app.use(express.json());
@@ -173,10 +181,47 @@ app.post("/login", async (req, res) => {
 });
 
 // Database connection
-mongoose.connect(MONGODB_URI)
+console.log("Starting backend server...", {
+  node: process.version,
+  platform: process.platform,
+  arch: process.arch,
+});
+
+// Helpful: log only the cluster host portion, not credentials
+try {
+  const uriForLog = new URL(MONGODB_URI);
+  console.log("Connecting to MongoDB cluster:", uriForLog.host, MONGODB_DBNAME ? `(dbName=${MONGODB_DBNAME})` : "");
+} catch (_) {
+  console.log("Connecting to MongoDB (URI parsed)");
+}
+
+// Force Node to use public DNS resolvers to avoid local SRV resolution issues on macOS
+try {
+  if (typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+  console.log("DNS servers in use:", dns.getServers());
+} catch (e) {
+  console.warn("Could not override DNS servers:", e?.message);
+}
+
+mongoose
+  .connect(MONGODB_URI, {
+    // Use default TLS settings for Atlas SRV
+    // Force IPv4 to avoid some macOS/ISP IPv6 DNS routing issues  
+    family: 4,
+    // Give more time for SRV resolution/connection in slower networks
+    serverSelectionTimeoutMS: 30000,
+    connectTimeoutMS: 30000,
+    // Keep recommended write behavior
+    retryWrites: true,
+    // Allow overriding the db name via env (optional)
+    dbName: MONGODB_DBNAME,
+  })
   .then(() => {
     console.log("Connected to MongoDB");
-    
+
     // Load models after connection
     require("./models/User");
     require("./models/ApplicantModel");
@@ -188,13 +233,17 @@ mongoose.connect(MONGODB_URI)
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
 
-    
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("MongoDB connection error:", err);
+    // Improved diagnostics
+    console.error("MongoDB connection error:");
+    console.error(" name:", err?.name);
+    console.error(" code:", err?.code);
+    console.error(" reason:", err?.reason?.message || err?.message);
+    console.error(" stack:\n", err?.stack);
     process.exit(1);
   });
 
