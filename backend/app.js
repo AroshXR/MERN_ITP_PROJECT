@@ -65,8 +65,17 @@ const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
 
+
+     //pasindu
+     //import oenerRouter from "./routes/ownerRoutes.js"
+     const ownerRouter = require("./routes/ownerRoutes");
+     const bookingRouter = require("./routes/bookingRoutes");
+
+
 // Import utilities
 const createToken = require('./utils/jwt');
+
+//const { default: ownerRouter } = require("./routes/ownerRoutes");
 
 // Create Express app
 const app = express();
@@ -97,6 +106,12 @@ app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
+
+    //pasindu                                                         sdsdsdssdsdsdsdsd
+    app.use("/api/owner", ownerRouter);
+    app.use("/api/booking", bookingRouter);
+
+
 
 // Test endpoint to verify server is running
 app.get("/test", (req, res) => {
@@ -259,6 +274,8 @@ const connectToMongoDB = async () => {
     require("./models/ClothCustomizerModel");
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
+
+        //pasindu
     
     console.log("📦 All models loaded successfully");
 
