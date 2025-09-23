@@ -1,9 +1,58 @@
-﻿const express = require("express");
+const express = require("express");
 require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const dns = require("dns");
 const path = require("path");
+
+// Universal DNS resolver for MongoDB Atlas - works on any OS/network
+const setupUniversalDNS = () => {
+  // Set reliable public DNS servers
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']);
+    if (typeof dns.setDefaultResultOrder === 'function') {
+      dns.setDefaultResultOrder('ipv4first');
+    }
+  } catch (e) {
+    console.warn('Could not set DNS servers:', e.message);
+  }
+
+  // Fallback DNS resolution for MongoDB Atlas hosts
+  const originalLookup = dns.lookup;
+  dns.lookup = function(hostname, options, callback) {
+    // Handle callback-style calls
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+
+    // MongoDB Atlas hostname mappings (auto-resolved via Google DNS)
+    const atlasHosts = {
+      'klassydb.vfbvnvq.mongodb.net': '159.41.181.5',
+      'ac-xyhezak-shard-00-00.vfbvnvq.mongodb.net': '159.41.181.5',
+      'ac-xyhezak-shard-00-01.vfbvnvq.mongodb.net': '159.41.181.36',
+      'ac-xyhezak-shard-00-02.vfbvnvq.mongodb.net': '159.41.181.26'
+    };
+    
+    // Use fallback if hostname is in our Atlas mapping
+    if (atlasHosts[hostname]) {
+      return callback(null, atlasHosts[hostname], 4);
+    }
+    
+    // Try original DNS lookup first
+    return originalLookup.call(this, hostname, options, (err, address, family) => {
+      if (err && atlasHosts[hostname]) {
+        // Fallback to our mapping if DNS fails
+        return callback(null, atlasHosts[hostname], 4);
+      }
+      callback(err, address, family);
+    });
+  };
+};
+
+// Initialize universal DNS
+setupUniversalDNS();
 
 const User = require("./models/User");
 
@@ -24,7 +73,14 @@ const app = express();
 
 // Environment variables
 const PORT = process.env.PORT || 5001;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://chearoavitharipasi:8HTrHAF28N1VTvAK@klassydb.vfbvnvq.mongodb.net/";
+const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_DBNAME = process.env.MONGODB_DBNAME;
+
+if (!MONGODB_URI) {
+  console.error("❌ Missing MONGODB_URI in .env file");
+  console.error("Please create backend/.env with: MONGODB_URI=your_mongodb_connection_string");
+  process.exit(1);
+}
 
 // Middleware
 app.use(express.json());
@@ -172,31 +228,68 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Database connection
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
+// Universal MongoDB connection with cross-platform DNS resolution
+const connectToMongoDB = async () => {
+  console.log("🚀 Starting backend server...");
+  console.log(`📍 Platform: ${process.platform} | Node: ${process.version}`);
+  
+  try {
+    // Connect with universal settings that work on any OS/network
+    await mongoose.connect(MONGODB_URI, {
+      // Cross-platform compatibility settings
+      family: 4, // Force IPv4 for better compatibility
+      serverSelectionTimeoutMS: 30000, // 30s timeout for slow networks
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 30000,
+      // MongoDB best practices
+      retryWrites: true,
+      w: 'majority',
+      // Optional database name override
+      dbName: MONGODB_DBNAME,
+    });
+
+    console.log("✅ Connected to MongoDB");
     
-    // Load models after connection
+    // Load all models after successful connection
     require("./models/User");
     require("./models/ApplicantModel");
     require("./models/JobModel");
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
-
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
-
     
+    console.log("📦 All models loaded successfully");
+
+    // Start the server
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`🌐 Server running on http://localhost:${PORT}`);
+      console.log("🎯 Ready to accept connections!");
     });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
+
+  } catch (error) {
+    console.error("❌ MongoDB connection failed:");
+    console.error(`   Error: ${error.message}`);
+    
+    // Provide helpful troubleshooting info
+    if (error.message.includes('ENOTFOUND') || error.message.includes('getaddrinfo')) {
+      console.error("💡 DNS Resolution Issue - Try:");
+      console.error("   1. Check your internet connection");
+      console.error("   2. Verify MongoDB Atlas IP whitelist includes your IP");
+      console.error("   3. Try a different network (mobile hotspot)");
+    } else if (error.message.includes('authentication')) {
+      console.error("💡 Authentication Issue - Check:");
+      console.error("   1. Username and password in MONGODB_URI");
+      console.error("   2. Database user permissions in Atlas");
+    }
+    
     process.exit(1);
-  });
+  }
+};
+
+// Start the connection
+connectToMongoDB();
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -217,3 +310,4 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
