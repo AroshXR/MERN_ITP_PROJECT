@@ -17,7 +17,7 @@ function Footer() {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3 className="footer-logo">Klassy Shirts</h3>
+            <h3 className="footer-logo">Klassy T Shirts</h3>
             <p className="footer-tagline">Custom clothing for every style</p>
           </div>
           
