@@ -17,8 +17,8 @@ function Home() {
         <div className="blob blob3"></div>
       </div>
       <div className="home-content">
-        <h1>Welcome to Klassy Shirts</h1>
-        <p>Customize your style with our unique shirt designs.</p>
+        <h1>Welcome to Klassy T Shirts</h1>
+        <p>Customize your style with our unique t shirt designs.</p>
         <Link to="/login">
           <button className="cta-button">Get Started</button>
         </Link>
