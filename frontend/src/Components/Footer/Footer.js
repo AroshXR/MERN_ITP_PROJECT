@@ -39,7 +39,7 @@ function Footer() {
         
         <div className="footer-bottom">
           <p className="footer-text">
-            © {new Date().getFullYear()} Klassy Shirts. All rights reserved.
+            © {new Date().getFullYear()} Klassy T Shirts. All rights reserved.
           </p>
           <div className="footer-legal">
             <Link to="/privacy">Privacy Policy</Link>
