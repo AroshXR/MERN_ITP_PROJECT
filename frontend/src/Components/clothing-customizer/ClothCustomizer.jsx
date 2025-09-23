@@ -21,7 +21,7 @@ import { Link } from 'react-router-dom';
 function ClothCustomizer() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, getToken, currentUser, logout } = useAuth();
+  const { isAuthenticated, getToken, currentUser, logout, token } = useAuth();
   const isEditMode = new URLSearchParams(location.search).get('edit') === 'true';
   const [editingItemId, setEditingItemId] = useState(null);
 
@@ -36,29 +36,33 @@ function ClothCustomizer() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  // Function to fetch cart items count (authentication disabled for testing)
+  // Fetch cart items count for the authenticated user
   const fetchCartCount = async () => {
-    console.log('Fetching cart count - Authentication disabled for testing');
-    
-    // Temporarily disabled authentication check
-    // if (isAuthenticated()) {
+    if (!isAuthenticated() || !token) {
+      setCartItemsCount(0);
+      return;
+    }
+
     try {
-      console.log('Proceeding with cart fetch without authentication');
-      
-      const response = await axios.get('http://localhost:5001/cloth-customizer');
-      console.log('Cart fetch response:', response.data);
-      
+      const response = await axios.get('http://localhost:5001/cloth-customizer', {
+        headers: {
+          Authorization: 'Bearer ' + token
+        },
+      });
+
       if (response.data.status === "ok") {
         setCartItemsCount(response.data.data.length);
+      } else {
+        setCartItemsCount(0);
       }
     } catch (error) {
       console.error('Error fetching cart count:', error);
+      if (error.response?.status === 401) {
+        logout();
+        setShowLoginPrompt(true);
+      }
       setCartItemsCount(0);
     }
-    // } else {
-    //   console.log('User not authenticated, setting cart count to 0');
-    //   setCartItemsCount(0);
-    // }
   };
 
   // Load edit data if in edit mode
@@ -72,8 +76,10 @@ function ClothCustomizer() {
 
   // Fetch cart count when authentication state changes
   useEffect(() => {
-    fetchCartCount();
-  }, [isAuthenticated]);
+    if (!isEditMode) {
+      fetchCartCount();
+    }
+  }, [token, isEditMode]);
 
   // Function to close login prompt
   const closeLoginPrompt = () => {
@@ -167,7 +173,24 @@ function ClothCustomizer() {
     "#64b5f6",
     "#fff176",
     "#ba68c8",
-    "#4dd0e1"
+    "#4dd0e1",
+    "#ff8a65",
+    "#aed581",
+    "#7986cb",
+    "#4db6ac",
+    "#ffb74d",
+    "#90caf9",
+    "#f06292",
+    "#a1887f",
+    "#ff7043",
+    "#263238",
+    "#37474f",
+    "#424242",
+    "#4a148c",
+    "#880e4f",
+    "#b71c1c",
+    "#0d47a1"
+
   ];
 
 
@@ -269,14 +292,16 @@ function ClothCustomizer() {
   const totalPrice = basePrice + designPrice + sizeExtraPrice;
 
   const saveClothCustomizer = async () => {
-    console.log('Save function called - Authentication disabled for testing');
-    
-    // Temporarily disabled authentication check
-    // if (!isAuthenticated()) {
-    //   console.log('User not authenticated, showing login prompt');
-    //   setShowLoginPrompt(true);
-    //   return;
-    // }
+    if (!isAuthenticated()) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    const activeToken = getToken();
+    if (!activeToken) {
+      setShowLoginPrompt(true);
+      return;
+    }
 
     try {
       // Validate required fields
@@ -324,19 +349,18 @@ function ClothCustomizer() {
         totalPrice: totalPrice * quantity
       };
 
-      console.log('Sending data to backend:', clothCustomizerData);
-      console.log('Authentication disabled - proceeding without token');
+      const authHeaders = {
+        Authorization: 'Bearer ' + activeToken,
+      };
 
       let response;
 
       if (isEditMode && editingItemId) {
-        // Update existing item
         console.log('Updating existing item:', editingItemId);
-        response = await axios.put(`http://localhost:5001/cloth-customizer/${editingItemId}`, clothCustomizerData);
+        response = await axios.put('http://localhost:5001/cloth-customizer/' + editingItemId, clothCustomizerData, { headers: authHeaders });
       } else {
-        // Create new item
         console.log('Creating new item');
-        response = await axios.post('http://localhost:5001/cloth-customizer', clothCustomizerData);
+        response = await axios.post('http://localhost:5001/cloth-customizer', clothCustomizerData, { headers: authHeaders });
       }
 
       console.log('Backend response:', response.data);
@@ -344,13 +368,11 @@ function ClothCustomizer() {
       if (response.data.status === "ok") {
         const action = isEditMode ? 'updated' : 'saved';
         setShowCartButton(true);
-        setCartItemsCount(prev => isEditMode ? prev : prev + 1);
+        await fetchCartCount();
         alert(`Cloth customizer data ${action} successfully!`);
 
-        // If editing, clear edit mode
         if (isEditMode) {
           setEditingItemId(null);
-          // Reset URL without page reload
           window.history.replaceState({}, '', '/customizer');
         }
       } else {
@@ -358,7 +380,12 @@ function ClothCustomizer() {
       }
     } catch (error) {
       console.error('Error saving cloth customizer:', error);
-      if (error.response?.data?.message) {
+      if (error.response?.status === 401) {
+        logout();
+        setShowLoginPrompt(true);
+        alert('Your session has expired. Please log in again.');
+        navigate('/login');
+      } else if (error.response?.data?.message) {
         alert(`Error: ${error.response.data.message}`);
       } else {
         alert(`Failed to ${isEditMode ? 'update' : 'save'} cloth customizer data. Please try again.`);
@@ -384,7 +411,7 @@ function ClothCustomizer() {
               {isAuthenticated() ? (
                 <div className="user-info">
                   <span>Welcome, {currentUser?.username || 'User'}!</span>
-                  <button 
+                  <button
                     className="logout-btn"
                     onClick={() => {
                       logout();
@@ -412,13 +439,13 @@ function ClothCustomizer() {
                 <div className="guest-info">
                   <span>Guest User - Login to save designs</span>
                   <div className="guest-actions">
-                    <button 
+                    <button
                       className="login-btn"
                       onClick={() => navigate('/login')}
                     >
                       Login
                     </button>
-                    <button 
+                    <button
                       className="register-btn"
                       onClick={() => navigate('/register')}
                     >
@@ -697,7 +724,7 @@ function ClothCustomizer() {
           🛒 {cartItemsCount > 0 && <span className="cart-count">{cartItemsCount}</span>}
         </Link>
       ) : (
-        <button 
+        <button
           className="floating-cart-btn guest-cart-btn"
           onClick={() => {
             alert('Please login to view your cart');
@@ -713,7 +740,7 @@ function ClothCustomizer() {
       {showLoginPrompt && (
         <div className="login-prompt-overlay" onClick={handleOverlayClick}>
           <div className="login-prompt-content">
-            <button 
+            <button
               className="login-prompt-close"
               onClick={closeLoginPrompt}
               aria-label="Close prompt"
@@ -723,13 +750,13 @@ function ClothCustomizer() {
             <h3>Login Required</h3>
             <p>Please log in to save your customizations and add items to cart.</p>
             <div className="login-prompt-buttons">
-              <button 
+              <button
                 className="login-prompt-btn primary"
                 onClick={() => navigate('/login')}
               >
                 Go to Login
               </button>
-              <button 
+              <button
                 className="login-prompt-btn secondary"
                 onClick={closeLoginPrompt}
               >

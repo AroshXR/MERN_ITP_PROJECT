@@ -1,0 +1,99 @@
+.policy-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #000000 0%, #2a2a2a 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 15px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.policy-content {
+  max-width: 900px;
+  width: 100%;
+  background: #fff;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e0e0e0;
+}
+
+.policy-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.policy-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #000;
+}
+
+.policy-header p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-top: 10px;
+}
+
+.policy-main {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.policy-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 10px;
+}
+
+.policy-section p,
+.policy-section li {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+.policy-section ul {
+  list-style: disc;
+  margin-left: 20px;
+  color: #333;
+}
+
+.policy-section strong {
+  color: #000;
+  font-weight: 600;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .policy-content {
+    padding: 20px;
+  }
+
+  .policy-header h1 {
+    font-size: 2rem;
+  }
+
+  .policy-section h2 {
+    font-size: 1.2rem;
+  }
+}
+
+.policy-back-button {
+  background: linear-gradient(135deg, #e6e5e5, #afadad);
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  margin-right: 80px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.policy-back-button:hover {
+  background: linear-gradient(135deg, #222222, #7a7a7a);
+}

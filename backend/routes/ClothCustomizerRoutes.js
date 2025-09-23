@@ -1,23 +1,16 @@
-
-
 const express = require("express");
 const router = express.Router();
 
-//Insert Model
-const ClothCustomizer = require("../models/ClothCustomizerModel");
-
-// Insert ClothCustomizer controller
 const ClothCustomizerController = require("../controllers/ClothCustomizerController");
+const { protect } = require("../middleware/auth");
 
-// Import authentication middleware (temporarily disabled)
-// const { protect } = require("../middleware/auth");
+// Require authentication for all cloth customizer routes
+router.use(protect);
 
-// Routes for ClothCustomizer (authentication disabled for testing)
 router.get("/", ClothCustomizerController.getAllClothCustomizers);
-router.post("/", ClothCustomizerController.addClothCustomizer); // Temporarily unprotected
+router.post("/", ClothCustomizerController.addClothCustomizer);
 router.get("/:id", ClothCustomizerController.getClothCustomizerById);
-router.put("/:id", ClothCustomizerController.updateClothCustomizer); // Temporarily unprotected
-router.delete("/:id", ClothCustomizerController.deleteClothCustomizer); // Temporarily unprotected
+router.put("/:id", ClothCustomizerController.updateClothCustomizer);
+router.delete("/:id", ClothCustomizerController.deleteClothCustomizer);
 
-// Export router
 module.exports = router;
