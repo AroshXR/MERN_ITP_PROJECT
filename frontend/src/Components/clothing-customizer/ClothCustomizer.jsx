@@ -39,15 +39,15 @@ function ClothCustomizer() {
   // Function to fetch cart items count (authentication disabled for testing)
   const fetchCartCount = async () => {
     console.log('Fetching cart count - Authentication disabled for testing');
-    
+
     // Temporarily disabled authentication check
     // if (isAuthenticated()) {
     try {
       console.log('Proceeding with cart fetch without authentication');
-      
+
       const response = await axios.get('http://localhost:5001/cloth-customizer');
       console.log('Cart fetch response:', response.data);
-      
+
       if (response.data.status === "ok") {
         setCartItemsCount(response.data.data.length);
       }
@@ -167,7 +167,24 @@ function ClothCustomizer() {
     "#64b5f6",
     "#fff176",
     "#ba68c8",
-    "#4dd0e1"
+    "#4dd0e1",
+    "#ff8a65",
+    "#aed581",
+    "#7986cb",
+    "#4db6ac",
+    "#ffb74d",
+    "#90caf9",
+    "#f06292",
+    "#a1887f",
+    "#ff7043",
+    "#263238",
+    "#37474f",
+    "#424242",
+    "#4a148c",
+    "#880e4f",
+    "#b71c1c",
+    "#0d47a1"
+
   ];
 
 
@@ -270,7 +287,7 @@ function ClothCustomizer() {
 
   const saveClothCustomizer = async () => {
     console.log('Save function called - Authentication disabled for testing');
-    
+
     // Temporarily disabled authentication check
     // if (!isAuthenticated()) {
     //   console.log('User not authenticated, showing login prompt');
@@ -384,7 +401,7 @@ function ClothCustomizer() {
               {isAuthenticated() ? (
                 <div className="user-info">
                   <span>Welcome, {currentUser?.username || 'User'}!</span>
-                  <button 
+                  <button
                     className="logout-btn"
                     onClick={() => {
                       logout();
@@ -412,13 +429,13 @@ function ClothCustomizer() {
                 <div className="guest-info">
                   <span>Guest User - Login to save designs</span>
                   <div className="guest-actions">
-                    <button 
+                    <button
                       className="login-btn"
                       onClick={() => navigate('/login')}
                     >
                       Login
                     </button>
-                    <button 
+                    <button
                       className="register-btn"
                       onClick={() => navigate('/register')}
                     >
@@ -697,7 +714,7 @@ function ClothCustomizer() {
           🛒 {cartItemsCount > 0 && <span className="cart-count">{cartItemsCount}</span>}
         </Link>
       ) : (
-        <button 
+        <button
           className="floating-cart-btn guest-cart-btn"
           onClick={() => {
             alert('Please login to view your cart');
@@ -713,7 +730,7 @@ function ClothCustomizer() {
       {showLoginPrompt && (
         <div className="login-prompt-overlay" onClick={handleOverlayClick}>
           <div className="login-prompt-content">
-            <button 
+            <button
               className="login-prompt-close"
               onClick={closeLoginPrompt}
               aria-label="Close prompt"
@@ -723,13 +740,13 @@ function ClothCustomizer() {
             <h3>Login Required</h3>
             <p>Please log in to save your customizations and add items to cart.</p>
             <div className="login-prompt-buttons">
-              <button 
+              <button
                 className="login-prompt-btn primary"
                 onClick={() => navigate('/login')}
               >
                 Go to Login
               </button>
-              <button 
+              <button
                 className="login-prompt-btn secondary"
                 onClick={closeLoginPrompt}
               >
