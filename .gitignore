@@ -12,6 +12,6 @@ build/
 frontend/.cache/
 
 # Env files (secrets)
-.env
-backend/.env
+#.env
+#backend/.env
 frontend/.env
