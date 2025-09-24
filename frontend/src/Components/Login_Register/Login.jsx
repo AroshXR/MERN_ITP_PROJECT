@@ -153,8 +153,10 @@ function LoginPage() {
   };
 
   return (
-    <div className="container">
+    <div className="w-full min-h-screen flex flex-col">  {/* container w-full min-h-screen flex flex-col */}
+      
       <NavBar />
+      
       <div className="loginPage-container">
 
         <div className="login-header">
@@ -199,6 +201,8 @@ function LoginPage() {
           </form>
         </div>
       </div>
+
+      
       <Footer />
     </div>
   )

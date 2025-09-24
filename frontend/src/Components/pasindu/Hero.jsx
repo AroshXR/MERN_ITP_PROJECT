@@ -81,7 +81,7 @@ const Hero = () => {
       <img
         src={assets.main_homepage}
         alt="Outfit"
-        className="max-h-72 object-cover rounded-md mt-8"
+        className="w-full max-h-80 object-cover rounded-md mt-8"
       />
     </div>
   );

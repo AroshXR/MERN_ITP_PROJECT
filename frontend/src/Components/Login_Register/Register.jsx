@@ -134,7 +134,7 @@ function RegisterPage() {
 
     return (
 
-        <div className="container">
+        <div className="w-full min-h-screen flex flex-col">   {/* container  */}
             <NavBar />
             <div className="loginPage-container">
                 <div className="login-header">
