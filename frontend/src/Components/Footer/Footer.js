@@ -33,6 +33,14 @@ function Footer() {
               <Link to="#" aria-label="X">
                 <i className='fab fa-x'></i>
               </Link>
+              <a
+                href="https://wa.me/94705772010"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+              >
+                <i className='fab fa-whatsapp'></i>
+              </a>
             </div>
           </div>
         </div>

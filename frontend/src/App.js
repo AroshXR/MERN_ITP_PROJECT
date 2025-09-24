@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './AuthGuard/AuthGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
@@ -18,6 +18,7 @@ import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDet
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
+import InventoryManagement from './Components/Inventory-management/InventoryManagement';
 import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGuide';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 import UserAccount from './Components/UserManagement/UserAccount';
@@ -115,6 +116,16 @@ function App() {
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <SupplierManagement />
+            </ProtectedRoute>
+          )}
+        />
+
+        {/* Inventory management - restricted to admin by default */}
+        <Route
+          path="/inventoryManagement"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <InventoryManagement />
             </ProtectedRoute>
           )}
         />

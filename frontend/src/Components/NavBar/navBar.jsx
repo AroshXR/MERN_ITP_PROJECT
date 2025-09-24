@@ -70,6 +70,16 @@ function NavBar() {
             <i className='bx bx-cog'></i> Manage Jobs
           </button>
         </Link>
+        <Link to="/supplierManagement" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-store'></i> Suppliers
+          </button>
+        </Link>
+        <Link to="/inventoryManagement" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className='bx bx-package'></i> Inventory
+          </button>
+        </Link>
         <Link to="/paymentDetails" onClick={() => setMenuOpen(false)}>
           <button className="nav-btn">
             <i className='bx bx-credit-card'></i> Payment Details

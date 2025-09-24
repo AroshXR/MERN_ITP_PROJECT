@@ -1,5 +1,98 @@
 const Supplier = require('../models/SupplierModel');
 const SupplierOrder = require('../models/SupplierOrderModel');
+const MaterialInventory = require('../models/MaterialInventoryModel');
+
+// Helper function to parse items string and add to inventory
+const addItemsToInventory = async (order) => {
+  try {
+    // Parse items string (assuming format: "Item1 x10, Item2 x5, Item3 x20")
+    const itemsString = order.items;
+    const itemsArray = itemsString.split(',').map(item => item.trim());
+    
+    const inventoryItems = [];
+    
+    for (const itemString of itemsArray) {
+      // Extract item name and quantity using regex
+      const match = itemString.match(/^(.+?)\s*x(\d+)$/i);
+      
+      if (match) {
+        const itemName = match[1].trim();
+        const quantity = parseInt(match[2]);
+        const unitPrice = order.total / itemsArray.length / quantity; // Estimate unit price
+        
+        // Check if item already exists in inventory
+        let existingItem = await MaterialInventory.findOne({ 
+          itemName: itemName,
+          supplierId: order.supplierId 
+        });
+        
+        if (existingItem) {
+          // Update existing item quantity
+          existingItem.quantity += quantity;
+          existingItem.totalValue = existingItem.quantity * existingItem.unitPrice;
+          existingItem.lastUpdated = new Date();
+          await existingItem.save();
+          inventoryItems.push(existingItem);
+        } else {
+          // Create new inventory item
+          const newInventoryItem = new MaterialInventory({
+            itemName: itemName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalValue: quantity * unitPrice,
+            supplierId: order.supplierId,
+            supplierName: order.supplierName,
+            orderId: order._id,
+            description: `Added from order #${order._id}`,
+            category: 'Materials',
+            unit: 'pieces'
+          });
+          
+          const savedItem = await newInventoryItem.save();
+          inventoryItems.push(savedItem);
+        }
+      } else {
+        // If format doesn't match, create with quantity 1
+        const unitPrice = order.total / itemsArray.length;
+        
+        let existingItem = await MaterialInventory.findOne({ 
+          itemName: itemString,
+          supplierId: order.supplierId 
+        });
+        
+        if (existingItem) {
+          existingItem.quantity += 1;
+          existingItem.totalValue = existingItem.quantity * existingItem.unitPrice;
+          existingItem.lastUpdated = new Date();
+          await existingItem.save();
+          inventoryItems.push(existingItem);
+        } else {
+          const newInventoryItem = new MaterialInventory({
+            itemName: itemString,
+            quantity: 1,
+            unitPrice: unitPrice,
+            totalValue: unitPrice,
+            supplierId: order.supplierId,
+            supplierName: order.supplierName,
+            orderId: order._id,
+            description: `Added from order #${order._id}`,
+            category: 'Materials',
+            unit: 'pieces'
+          });
+          
+          const savedItem = await newInventoryItem.save();
+          inventoryItems.push(savedItem);
+        }
+      }
+    }
+    
+    console.log(`Added ${inventoryItems.length} items to inventory from order ${order._id}`);
+    return inventoryItems;
+  } catch (error) {
+    console.error('Error adding items to inventory:', error);
+    throw error;
+  }
+};
 
 // Get all suppliers
 exports.getAllSuppliers = async (req, res) => {
@@ -128,14 +221,40 @@ exports.createOrder = async (req, res) => {
 // Update order
 exports.updateOrder = async (req, res) => {
   try {
+    // Get the current order to check status change
+    const currentOrder = await SupplierOrder.findById(req.params.id);
+    if (!currentOrder) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
     const order = await SupplierOrder.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+    
+    // If status changed to 'completed', add items to inventory
+    if (currentOrder.status !== 'completed' && req.body.status === 'completed') {
+      try {
+        const inventoryItems = await addItemsToInventory(order);
+        console.log(`Order ${order._id} completed. Added ${inventoryItems.length} items to inventory.`);
+        
+        return res.status(200).json({
+          order,
+          message: `Order completed successfully. ${inventoryItems.length} items added to inventory.`,
+          inventoryItems
+        });
+      } catch (inventoryError) {
+        console.error('Error adding items to inventory:', inventoryError);
+        // Still return the updated order even if inventory update fails
+        return res.status(200).json({
+          order,
+          warning: 'Order updated but failed to add items to inventory',
+          error: inventoryError.message
+        });
+      }
     }
+    
     res.status(200).json(order);
   } catch (error) {
     res.status(400).json({ message: 'Error updating order', error: error.message });

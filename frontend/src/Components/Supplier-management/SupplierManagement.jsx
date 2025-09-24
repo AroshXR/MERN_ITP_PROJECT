@@ -15,6 +15,7 @@ export default function SupplierManagement() {
   const [modalType, setModalType] = useState("")
   const [editingItem, setEditingItem] = useState(null)
   const [formData, setFormData] = useState({})
+  const [orderItems, setOrderItems] = useState([{ name: "", quantity: 1, unitPrice: 0 }])
   const [reportFilters, setReportFilters] = useState({
     dateFrom: "",
     dateTo: "",
@@ -150,8 +151,20 @@ export default function SupplierManagement() {
       })
       if (!response.ok) throw new Error('Failed to update order')
       const data = await response.json()
-      setOrders(orders.map(o => o._id === id ? data : o))
-      return data
+      
+      // Handle different response formats
+      const updatedOrder = data.order || data
+      const inventoryMessage = data.message || null
+      
+      setOrders(orders.map(o => o._id === id ? updatedOrder : o))
+      
+      // Show inventory message if items were added
+      if (inventoryMessage) {
+        setSuccessMessage(inventoryMessage)
+        setTimeout(() => setSuccessMessage(""), 5000)
+      }
+      
+      return updatedOrder
     } catch (error) {
       console.error('Error updating order:', error)
       throw error
@@ -204,19 +217,50 @@ export default function SupplierManagement() {
   // Search functionality
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
-      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (supplier.name && supplier.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (supplier.contact && supplier.contact.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (supplier.email && supplier.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (supplier.companyDetails?.registrationNumber &&
         supplier.companyDetails.registrationNumber.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
   const filteredOrders = orders.filter(
     (order) =>
-      order.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.items.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.status.toLowerCase().includes(searchTerm.toLowerCase()),
+      (order.supplierName && order.supplierName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.items && order.items.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase())),
   )
+
+  // Order items management
+  const addOrderItem = () => {
+    setOrderItems([...orderItems, { name: "", quantity: 1, unitPrice: 0 }])
+  }
+
+  const removeOrderItem = (index) => {
+    if (orderItems.length > 1) {
+      setOrderItems(orderItems.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateOrderItem = (index, field, value) => {
+    const updatedItems = orderItems.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    )
+    setOrderItems(updatedItems)
+  }
+
+  const formatItemsForBackend = (items) => {
+    return items
+      .filter(item => item.name.trim() && item.quantity > 0)
+      .map(item => `${item.name.trim()} x${item.quantity}`)
+      .join(", ")
+  }
+
+  const calculateTotalFromItems = (items) => {
+    return items.reduce((total, item) => {
+      return total + (parseFloat(item.unitPrice) || 0) * (parseInt(item.quantity) || 0)
+    }, 0)
+  }
 
   // Modal handlers
   const openModal = (type, item = null) => {
@@ -226,6 +270,17 @@ export default function SupplierManagement() {
     setSuccessMessage("") // Clear any existing success messages
     if (item) {
       setFormData(item)
+      // If editing an order, parse the items string back to array format
+      if (type === "order" && item.items) {
+        const parsedItems = item.items.split(", ").map(itemStr => {
+          const match = itemStr.match(/^(.+?)\s+x(\d+)$/)
+          if (match) {
+            return { name: match[1].trim(), quantity: parseInt(match[2]), unitPrice: 0 }
+          }
+          return { name: itemStr, quantity: 1, unitPrice: 0 }
+        })
+        setOrderItems(parsedItems.length > 0 ? parsedItems : [{ name: "", quantity: 1, unitPrice: 0 }])
+      }
     } else {
       setFormData(
         type === "supplier"
@@ -240,6 +295,10 @@ export default function SupplierManagement() {
             items: "",
           },
       )
+      // Reset order items for new orders
+      if (type === "order") {
+        setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
+      }
     }
     setShowModal(true)
   }
@@ -249,6 +308,7 @@ export default function SupplierManagement() {
     setModalType("")
     setEditingItem(null)
     setFormData({})
+    setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
   }
 
   const handleSubmit = async (e) => {
@@ -261,8 +321,9 @@ export default function SupplierManagement() {
         return
       }
     } else if (modalType === "order") {
-      if (!formData.supplierId || !formData.orderDate || !formData.deliveryDate || !formData.total || !formData.items) {
-        alert('Please fill in all required fields for order')
+      const hasValidItems = orderItems.some(item => item.name.trim() && item.quantity > 0)
+      if (!formData.supplierId || !formData.orderDate || !formData.deliveryDate || !hasValidItems) {
+        alert('Please fill in all required fields for order and add at least one valid item')
         return
       }
     }
@@ -285,23 +346,24 @@ export default function SupplierManagement() {
           await updateOrder(editingItem._id, formData)
         } else {
           const supplier = suppliers.find((s) => s._id === formData.supplierId)
+          const formattedItems = formatItemsForBackend(orderItems)
+          const calculatedTotal = calculateTotalFromItems(orderItems)
           const orderData = {
             ...formData,
             supplierId: formData.supplierId,
             supplierName: supplier ? supplier.name : "",
-            total: Number.parseFloat(formData.total),
+            total: calculatedTotal,
+            items: formattedItems,
           }
           await createOrder(orderData)
         }
       }
 
-      // Reset form data and close modal
-      setFormData({})
-      closeModal()
-
-      // Show success message
-      setSuccessMessage(`${modalType === "supplier" ? "Supplier" : "Order"} ${editingItem ? "updated" : "created"} successfully!`)
-      setTimeout(() => setSuccessMessage(""), 3000)
+      // Show success message only if not already set (e.g., by inventory update)
+      if (!successMessage) {
+        setSuccessMessage(`${modalType === "supplier" ? "Supplier" : "Order"} ${editingItem ? "updated" : "created"} successfully!`)
+        setTimeout(() => setSuccessMessage(""), 3000)
+      }
 
       // Refresh the data to ensure we have the latest state
       if (modalType === "supplier") {
@@ -309,9 +371,17 @@ export default function SupplierManagement() {
       } else if (modalType === "order") {
         await fetchOrders()
       }
+
+      console.log('Form submission completed successfully')
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert('Error saving data. Please try again.')
+      setError(`Error saving ${modalType}: ${error.message}`)
+      setTimeout(() => setError(null), 5000)
+    } finally {
+      // Always reset form data and close modal
+      setFormData({})
+      setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
+      closeModal()
     }
   }
 
@@ -770,19 +840,20 @@ Items: ${o.items}
                     </td>
                     <td>{supplier.totalOrders}</td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        onClick={() => openModal("supplier", supplier)}
-                        style={{ marginRight: "5px" }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-destructive btn-small"
-                        onClick={() => handleDelete("supplier", supplier._id)}
-                      >
-                        Delete
-                      </button>
+                      <div className="action-buttons">
+                        <button
+                          className="btn btn-secondary btn-small"
+                          onClick={() => openModal("supplier", supplier)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-destructive btn-small"
+                          onClick={() => handleDelete("supplier", supplier._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -830,16 +901,20 @@ Items: ${o.items}
                     </td>
                     <td>${order.total.toFixed(2)}</td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        onClick={() => openModal("order", order)}
-                        style={{ marginRight: "5px" }}
-                      >
-                        Edit
-                      </button>
-                      <button className="btn btn-destructive btn-small" onClick={() => handleDelete("order", order._id)}>
-                        Delete
-                      </button>
+                      <div className="action-buttons">
+                        <button
+                          className="btn btn-secondary btn-small"
+                          onClick={() => openModal("order", order)}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="btn btn-destructive btn-small" 
+                          onClick={() => handleDelete("order", order._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1093,25 +1168,96 @@ Items: ${o.items}
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Total Amount</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-input"
-                        value={formData.total || ""}
-                        onChange={(e) => setFormData({ ...formData, total: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Items</label>
-                      <textarea
-                        className="form-textarea"
-                        value={formData.items || ""}
-                        onChange={(e) => setFormData({ ...formData, items: e.target.value })}
-                        placeholder="Describe the items in this order..."
-                        required
-                      />
+                      <label className="form-label">Order Items</label>
+                      {orderItems.map((item, index) => (
+                        <div key={index} style={{ 
+                          display: 'flex', 
+                          gap: '10px', 
+                          marginBottom: '10px', 
+                          alignItems: 'center',
+                          padding: '10px',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius)',
+                          backgroundColor: 'var(--muted)'
+                        }}>
+                          <div style={{ flex: 2 }}>
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Item name"
+                              value={item.name}
+                              onChange={(e) => updateOrderItem(index, 'name', e.target.value)}
+                              style={{ margin: 0 }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <input
+                              type="number"
+                              className="form-input"
+                              placeholder="Qty"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                              style={{ margin: 0 }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <input
+                              type="number"
+                              className="form-input"
+                              placeholder="Unit Price"
+                              min="0"
+                              step="0.01"
+                              value={item.unitPrice}
+                              onChange={(e) => updateOrderItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              style={{ margin: 0 }}
+                            />
+                          </div>
+                          <div style={{ flex: 0 }}>
+                            {orderItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeOrderItem(index)}
+                                style={{
+                                  background: 'var(--destructive)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '8px 12px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addOrderItem}
+                        style={{
+                          background: 'var(--primary)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '8px 16px',
+                          cursor: 'pointer',
+                          marginTop: '10px'
+                        }}
+                      >
+                        + Add Item
+                      </button>
+                      <div style={{ 
+                        marginTop: '10px', 
+                        padding: '10px', 
+                        backgroundColor: 'var(--muted)', 
+                        borderRadius: 'var(--radius)',
+                        fontSize: '0.9rem'
+                      }}>
+                        <strong>Calculated Total: ${calculateTotalFromItems(orderItems).toFixed(2)}</strong>
+                      </div>
                     </div>
                   </>
                 )}
