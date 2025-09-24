@@ -198,6 +198,99 @@ const submitIdentityVerification = async (request, response) => {
     }
 };
 
+// Retrieve profile for the authenticated user
+const getCurrentUser = (request, response) => {
+    const user = request.user;
+
+    if (!user) {
+        return response.status(401).json({ status: "error", message: "Not authenticated" });
+    }
+
+    return response.status(200).json({ status: "ok", user: sanitizeUser(user) });
+};
+
+// Update profile for the authenticated user
+const updateCurrentUser = async (request, response) => {
+    const user = request.user;
+    if (!user) {
+        return response.status(401).json({ status: "error", message: "Not authenticated" });
+    }
+
+    const userId = user._id;
+    const {
+        username,
+        address,
+        email,
+        password,
+        phoneNumber
+    } = request.body;
+
+    const updatePayload = {};
+
+    if (username !== undefined) updatePayload.username = username;
+    if (address !== undefined) updatePayload.address = address;
+    if (email !== undefined) updatePayload.email = email;
+    if (phoneNumber !== undefined) updatePayload.phoneNumber = phoneNumber;
+
+    if (!password && Object.keys(updatePayload).length === 0) {
+        return response.status(400).json({ status: "error", message: "No updates provided" });
+    }
+
+    try {
+        if (Object.prototype.hasOwnProperty.call(updatePayload, 'username')) {
+            const existingUsername = await User.findOne({ username: updatePayload.username, _id: { $ne: userId } });
+            if (existingUsername) {
+                return response.status(409).json({ status: "error", message: "Username is already taken" });
+            }
+        }
+
+        if (Object.prototype.hasOwnProperty.call(updatePayload, 'email')) {
+            const existingEmail = await User.findOne({ email: updatePayload.email, _id: { $ne: userId } });
+            if (existingEmail) {
+                return response.status(409).json({ status: "error", message: "Email is already in use" });
+            }
+        }
+
+        if (password) {
+            updatePayload.password = await bcrypt.hash(password, 10);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: updatePayload },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return response.status(404).json({ status: "error", message: "User not found" });
+        }
+
+        return response.status(200).json({ status: "ok", user: sanitizeUser(updatedUser) });
+    } catch (error) {
+        console.error("Failed to update current user:", error);
+        return response.status(500).json({ status: "error", message: "Error updating profile" });
+    }
+};
+
+// Delete the authenticated user's account
+const deleteCurrentUser = async (request, response) => {
+    const user = request.user;
+    if (!user) {
+        return response.status(401).json({ status: "error", message: "Not authenticated" });
+    }
+
+    try {
+        const deleted = await User.findByIdAndDelete(user._id);
+        if (!deleted) {
+            return response.status(404).json({ status: "error", message: "User not found" });
+        }
+        return response.status(200).json({ status: "ok", message: "Account deleted successfully" });
+    } catch (error) {
+        console.error("Failed to delete current user:", error);
+        return response.status(500).json({ status: "error", message: "Error deleting account" });
+    }
+};
+
 // Update identity verification status (admin action)
 const updateIdentityStatus = async (request, response) => {
     const { id } = request.params;
@@ -369,3 +462,6 @@ exports.getUserNotifications = getUserNotifications;
 exports.createNotification = createNotification;
 exports.updateNotification = updateNotification;
 exports.deleteNotification = deleteNotification;
+exports.getCurrentUser = getCurrentUser;
+exports.updateCurrentUser = updateCurrentUser;
+exports.deleteCurrentUser = deleteCurrentUser;

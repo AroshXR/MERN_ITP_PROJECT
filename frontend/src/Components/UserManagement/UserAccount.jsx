@@ -77,7 +77,7 @@ const UserAccount = () => {
             setProfileError('');
 
             try {
-                const response = await axios.get(`http://localhost:5001/users/${userId}`);
+                const response = await axios.get('http://localhost:5001/users/me');
                 if (response.data?.status === 'ok') {
                     applyProfile(response.data.user);
                     updateStoredUser(response.data.user);
@@ -151,12 +151,25 @@ const UserAccount = () => {
             return;
         }
 
+        const hasChanges = profile ? (
+            formState.username !== (profile.username || '') ||
+            formState.email !== (profile.email || '') ||
+            formState.address !== (profile.address || '') ||
+            formState.phoneNumber !== (profile.phoneNumber || '')
+        ) : true;
+
+        if (!hasChanges) {
+            setSaveInProgress(false);
+            setProfileMessage('No changes to save');
+            return;
+        }
+
         setSaveInProgress(true);
         setProfileError('');
         setProfileMessage('');
 
         try {
-            const response = await axios.put(`http://localhost:5001/users/${userId}`, {
+            const response = await axios.put('http://localhost:5001/users/me', {
                 username: formState.username,
                 email: formState.email,
                 address: formState.address,
@@ -167,7 +180,7 @@ const UserAccount = () => {
                 applyProfile(response.data.user);
                 updateStoredUser(response.data.user);
                 setProfileMessage('Profile updated successfully');
-                await refreshAuth(userId);
+                await refreshAuth();
             } else {
                 setProfileError(response.data?.message || 'Unable to update profile');
             }
@@ -194,7 +207,7 @@ const UserAccount = () => {
 
         setDeleteInProgress(true);
         try {
-            const response = await axios.delete(`http://localhost:5001/users/${userId}`);
+            const response = await axios.delete('http://localhost:5001/users/me');
             if (response.data?.status === 'ok') {
                 logout();
                 navigate('/');

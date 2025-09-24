@@ -40,24 +40,30 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(normalizedUser);
     };
 
-    const refreshAuth = async (userId, sessionToken = token) => {
-        const effectiveUserId = userId || currentUser?.id;
+    const refreshAuth = async (_userId, sessionToken = token) => {
         const effectiveToken = sessionToken || token;
         const storedUserRaw = localStorage.getItem(USER_STORAGE_KEY);
 
-        if (!effectiveUserId || !effectiveToken || !storedUserRaw) {
+        if (!effectiveToken || !storedUserRaw) {
             clearAuthState();
             return false;
         }
 
         try {
-            const response = await axios.get(`http://localhost:5001/users/${effectiveUserId}`);
+            const authHeader = `Bearer ${effectiveToken}`;
+            const response = await axios.get('http://localhost:5001/users/me', {
+                headers: {
+                    Authorization: authHeader
+                }
+            });
+
             if (response.data?.status === 'ok' && response.data.user) {
                 const updatedUser = normalizeUser(response.data.user);
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
                 setCurrentUser(updatedUser);
             }
-            axios.defaults.headers.common['Authorization'] = `Bearer ${effectiveToken}`;
+
+            axios.defaults.headers.common['Authorization'] = authHeader;
             setToken(effectiveToken);
             return true;
         } catch (error) {
