@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthGuard/AuthGuard';
 import './navBar.css';
-
+ 
 function NavBar() {
   const location = useLocation();
   const navigate = useNavigate();
