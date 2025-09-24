@@ -9,7 +9,7 @@ const Hero = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center gap-14 bg-gray-100 text-center">
+    <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center gap-14 bg-gray-100 text-center">
       <div className="flex flex-col items-center gap-4">
         <h1 className="text-4xl md:text-5xl font-semibold mt-10">
           Luxury Outfits for Rent
@@ -81,7 +81,7 @@ const Hero = () => {
       <img
         src={assets.main_homepage}
         alt="Outfit"
-        className="w-full max-h-80 object-cover rounded-md mt-8"
+        className="w-full max-auto object-cover rounded-md mt-8"
       />
     </div>
   );
