@@ -293,7 +293,7 @@ export default function OrderManagement() {
     return (
         <div>
             <NavBar />
-            <div className="order-management-container">
+            <div className="order-management-container w-full min-h-screen flex flex-col">
                 
                 {/* Notification */}
                 {notification && (

@@ -1,18 +1,37 @@
-import React from 'react'
-import { assets, dummyUserData } from '../../../assets/assets'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react';
+import { assets, dummyUserData } from '../../../assets/assets';
+import { Link } from 'react-router-dom';
+import './navBarOwner.css'; // ✅ CSS file
 
 const NavbarOwner = () => {
-    const user = dummyUserData;
+  const user = dummyUserData;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className='flex items-center justify-between px-6 md:px-10 py-4 text-gray-500 border-solid border-b-[1px] border-b-black border-t-0 border-l-0 border-r-0 relative transition-all'>
-        <Link to='/' >
-        <img src={assets.logo} alt="" className='h-7' /> </Link>
-        <p>Welcome, {user.name || "Owner"} </p>
-        
-    </div>
-  )
-}
+    <nav className="navbar-owner">
+      {/* Logo → Main Home */}
+      <Link to="/" className="owner-logo">
+        <img src={assets.logo} alt="Klassy T-Shirt Logo" className="h-8" />
+      </Link>
 
-export default NavbarOwner
+      {/* Welcome text (hidden on small screens) */}
+      <p className="welcome-text">
+        Welcome, {user.name || 'Owner'}
+      </p>
+
+      {/* Hamburger menu (mobile only) */}
+      <div className="menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
+        <i className={menuOpen ? 'bx bx-x' : 'bx bx-menu'}></i>
+      </div>
+
+      {/* Right-side nav buttons */}
+      <div className={`nav-buttons ${menuOpen ? 'active' : ''}`}>
+        <Link to="/rentalHome" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn special-btn">Home</button>
+        </Link>
+      </div>
+    </nav>
+  );
+};
+
+export default NavbarOwner;
