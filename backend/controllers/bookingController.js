@@ -72,7 +72,7 @@ const createBooking = async (req, res) => {
 const getUserBooking = async (req, res) => {
     try {
         const { _id } = req.user;
-        const bookings = (await Booking.find({ user: _id }).populate("outfit")).sort({ createdAt: -1 });  // Fixed to use sort() instead of toSorted
+        const bookings = await Booking.find({ user: _id }).populate("outfit").sort({ createdAt: -1 });
 
         res.json({ success: true, bookings });
     } catch (error) {
@@ -84,10 +84,19 @@ const getUserBooking = async (req, res) => {
 // API to get Owner Bookings
 const getOwnerBooking = async (req, res) => {
     try {
-        if (req.user.role !== 'owner') {
+        if (req.user.type !== 'owner' && req.user.role !== 'owner' && req.user.role !== 'admin' && req.user.type !== 'Admin') {
             return res.json({ success: false, message: "Unauthorized" });
         }
-        const bookings = await Booking.find({ owner: req.user._id })
+        
+        // For admin users, get all bookings. For owner users, get only their own
+        let bookingQuery = {};
+        if (req.user.role === 'admin' || req.user.type === 'Admin') {
+            bookingQuery = {}; // Get all bookings
+        } else {
+            bookingQuery = { owner: req.user._id }; // Get only owner's bookings
+        }
+        
+        const bookings = await Booking.find(bookingQuery)
             .populate('outfit user')
             .select("-user.password")
             .sort({ createdAt: -1 });
@@ -102,16 +111,17 @@ const getOwnerBooking = async (req, res) => {
 // API to Change the booking status
 const changeBookingStatus = async (req, res) => {
     try {
-        const { _id } = req.user;
+        const { _id, role, type } = req.user;
         const { bookingId, status } = req.body;
 
         const booking = await Booking.findById(bookingId);
 
-        if (booking.owner.toString() !== _id.toString()) {  // Fixed from 'bookingId.owner' to 'booking.owner'
+        // Admin users can change any booking status, owner users can only change their own
+        if (role !== 'admin' && type !== 'Admin' && booking.owner.toString() !== _id.toString()) {
             return res.json({ success: false, message: "Unauthorized" });
         }
 
-        booking.status = status;  // Fixed typo: "satatus" -> "status"
+        booking.status = status;
         await booking.save();
 
         res.json({ success: true, message: "Status Updated" });

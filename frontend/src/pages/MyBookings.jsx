@@ -11,7 +11,7 @@ const MyBookings = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const currency = process.env.REACT_APP_CURRENCY
-  const { isAuthenticated, getToken } = useAuth()
+  const { isAuthenticated, getToken, currentUser } = useAuth()
 
   const fetchMyBookings = async () => {
     try {
@@ -19,7 +19,6 @@ const MyBookings = () => {
       setError(null);
       
       if (!isAuthenticated()) {
-        console.log('User not authenticated');
         setError('Please log in to view your bookings');
         setLoading(false);
         return;
@@ -36,13 +35,12 @@ const MyBookings = () => {
       
       if (data?.success) {
         setBookings(data.bookings);
-        console.log('Bookings fetched:', data.bookings);
       } else {
         setError('Failed to fetch bookings');
       }
     } catch (err) {
       console.error('Error fetching bookings:', err);
-      setError('Error loading bookings. Please try again.');
+      setError(`Error loading bookings: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -50,7 +48,30 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchMyBookings()
-  }, [])
+  }, [isAuthenticated, currentUser])
+
+  // Refresh data when page becomes visible
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isAuthenticated()) {
+        fetchMyBookings()
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isAuthenticated()) {
+        fetchMyBookings()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isAuthenticated])
 
   return (
     <div>
@@ -58,7 +79,15 @@ const MyBookings = () => {
 
     <div className='px-6 md:px-16 lg:px-24 xl:px-32 2xl:px-48 mt-16 text-sm max-w-8xl'> 
      
-      <Title title='My Bookings' subTitle='View and manage your all bookings' align="left" />
+      <div className="flex justify-between items-center">
+        <Title title='My Bookings' subTitle='View and manage your all bookings' align="left" />
+        <button 
+          onClick={fetchMyBookings}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
       
       {loading && (
         <div className="flex justify-center items-center py-8">
@@ -71,6 +100,7 @@ const MyBookings = () => {
           {error}
         </div>
       )}
+      
       
       {!loading && !error && bookings.length === 0 && (
         <div className="text-center py-8">

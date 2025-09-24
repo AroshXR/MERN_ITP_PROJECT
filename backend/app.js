@@ -160,12 +160,21 @@ app.post("/register", async (req, res) => {
     
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // Set role based on type
+    let role = 'customer';
+    if (type === 'Admin') {
+      role = 'admin';
+    } else if (type === 'owner') {
+      role = 'owner';
+    }
+
     const newUser = await User.create({
       username,
       address,
       email,
       password: hashedPassword,
-      type
+      type,
+      role
     });
     
     res.status(201).json({
@@ -230,7 +239,8 @@ app.post("/login", async (req, res) => {
           id: user._id,
           username: user.username,
           email: user.email,
-          type: user.type
+          type: user.type,
+          role: user.role
         }
       }
     });
@@ -274,6 +284,8 @@ const connectToMongoDB = async () => {
     require("./models/ClothCustomizerModel");
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
+    require("./models/Booking");
+    require("./models/Outfit");
 
         //pasindu
     

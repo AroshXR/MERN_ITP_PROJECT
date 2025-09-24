@@ -17,7 +17,7 @@ const FeaturedSection = () => {
         setOutfits(data.outfits);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching outfits:', err);
     }
   };
 

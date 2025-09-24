@@ -165,8 +165,22 @@ function App() {
         <Route path='/rentalHome' element={<RentalHome />}/>
         <Route path='/outfit-details/:id' element = {<OutfitDetails/>}/>
         <Route path='/outfits' element = {<Outfits/>}/>
-        <Route path='/my-bookings' element = {<MyBookings/>}/>
-        <Route path='/owner' element={<Layout />}>
+        <Route 
+          path='/my-bookings' 
+          element={
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path='/owner' 
+          element={
+            <ProtectedRoute allowedUserTypes={["owner", "Admin"]}>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
             <Route index element={<Dashboard />} />
             <Route path='add-outfit' element={<AddOutfit />} />
             <Route path='manage-outfits' element={<ManageOutfits />} />

@@ -13,6 +13,7 @@ const OutfitDetails = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [reservationDate, setReservationDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
   const currency = process.env.REACT_APP_CURRENCY || 'USD';
   const { isAuthenticated, getToken } = useAuth();
 
@@ -47,6 +48,7 @@ const OutfitDetails = () => {
         return;
       }
 
+      setIsBooking(true);
       const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
       const token = getToken();
       
@@ -62,13 +64,18 @@ const OutfitDetails = () => {
 
       if (data?.success) {
         alert('Booking created successfully!');
-        navigate('/MyBookings');
+        // Small delay to ensure booking is saved
+        setTimeout(() => {
+          navigate('/my-bookings');
+        }, 500);
       } else {
         alert(data?.message || 'Failed to create booking');
       }
     } catch (err) {
       console.error(err);
       alert('Error creating booking');
+    } finally {
+      setIsBooking(false);
     }
   };
 
@@ -199,7 +206,13 @@ const OutfitDetails = () => {
               onChange={(e) => setReturnDate(e.target.value)}
             />
           </div>
-          <button className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer">Book Now</button>
+          <button 
+            type="submit"
+            disabled={isBooking}
+            className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isBooking ? 'Booking...' : 'Book Now'}
+          </button>
           <p className="text-center text-sm">No credit card required to reserve</p>
         </form>
       </div>

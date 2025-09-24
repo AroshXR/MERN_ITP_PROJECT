@@ -12,7 +12,7 @@ import Footer from '../Components/Footer/Footer'
 const RentalHome = () => {
   return (
     <>
-    <Navbar></Navbar>
+    <Navbar />
     <Hero></Hero>
     <FeaturedSection></FeaturedSection>
     <Banner></Banner>

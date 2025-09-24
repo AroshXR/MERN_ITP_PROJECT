@@ -33,6 +33,7 @@ const ManageBookings = () => {
           <thead className='text-gray-500'>
             <tr>
               <th className="p-3 font-medium">Outfit</th>
+              <th className="p-3 font-medium max-md:hidden">Customer</th>
               <th className="p-3 font-medium max-md:hidden">Date Range</th>
               <th className="p-3 font-medium'">Total</th>
               <th className="p-3 font-medium max-md:hidden">Payment</th>
@@ -46,6 +47,10 @@ const ManageBookings = () => {
                 <td className='p-3 flex items-center gap-3'>
                   <img src={booking.outfit.image} alt="" className='h-24 w-16 aspect-square rounded-md object cover' />
                   <p className='font-medium max-md:hidden'>{booking.outfit.brand} {booking.outfit.model} </p>
+                </td>
+
+                <td className='p-3 max-md:hidden'>
+                  {booking.user ? booking.user.username : 'N/A'}
                 </td>
 
                 <td className='p-3 max-md:hidden'>

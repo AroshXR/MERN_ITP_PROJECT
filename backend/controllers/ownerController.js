@@ -194,17 +194,31 @@ const deleteOutfit = async (req, res) => {
 //API to get Dashboard data
 const getDashboardData = async (req, res) => {
     try {
-        const { _id, role } = req.user;
-        if (role !== 'owner') {
+        const { _id, role, type } = req.user;
+        if (role !== 'owner' && role !== 'admin' && type !== 'Admin') {
             return res.json({ success: false, message: "Unauthorized" });
         }
         
-        const outfits = await Outfit.find({ owner: _id })
-        const bookings = await Booking.find({owner: _id}).populate('outfit').sort({createdAt: -1}) ;
+        // For admin users, get all outfits and bookings. For owner users, get only their own
+        let outfitQuery = {};
+        let bookingQuery = {};
+        
+        if (role === 'admin' || type === 'Admin') {
+            // Admin sees all outfits and bookings
+            outfitQuery = {};
+            bookingQuery = {};
+        } else {
+            // Owner sees only their own
+            outfitQuery = { owner: _id };
+            bookingQuery = { owner: _id };
+        }
+        
+        const outfits = await Outfit.find(outfitQuery)
+        const bookings = await Booking.find(bookingQuery).populate('outfit user').sort({createdAt: -1}) ;
 
-        const pendingBookings = await Booking.find({ owner: _id, status: "pending" }).sort({ createdAt: -1 });
-        const confirmedBookings = await Booking.find({ owner: _id, status: "confirmed" }).sort({ createdAt: -1 });
-        const cancelledBookings = await Booking.find({ owner: _id, status: "cancelled" }).sort({ createdAt: -1 });
+        const pendingBookings = await Booking.find({ ...bookingQuery, status: "pending" }).populate('outfit user').sort({ createdAt: -1 });
+        const confirmedBookings = await Booking.find({ ...bookingQuery, status: "confirmed" }).sort({ createdAt: -1 });
+        const cancelledBookings = await Booking.find({ ...bookingQuery, status: "cancelled" }).sort({ createdAt: -1 });
 
         // Calculate monthlyRevenue from bookings where status is confirmed
         const monthlyRevenue = confirmedBookings.reduce((acc, booking) => acc + booking.price, 0);
