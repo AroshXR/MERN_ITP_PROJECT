@@ -25,7 +25,6 @@ function Home() {
         
         <div className="hero-content">
           <div className="hero-text">
-            <span className="hero-badge">✨ Premium Custom Apparel</span>
             <h1 className="hero-title">
               Create Your
               <span className="gradient-text"> Perfect </span>
@@ -36,44 +35,27 @@ function Home() {
               Design, customize, and wear your creativity with confidence.
             </p>
             
-            <div className="hero-buttons">
-              <Link to="/login" className="btn-primary">
-                <span>Start Designing</span>
+            <div className="startButtons">
+              <Link to="/login" className="startButtonsprimary">
+                <span style={{ color: "#fff", }}>Start Designing</span>
                 <i className="arrow-icon">→</i>
               </Link>
-              <Link to="#about" className="btn-secondary">
+              <Link to="#about" className="startButtonssecondary">
                 <span>Learn More</span>
               </Link>
             </div>
-            
-            <div className="hero-stats">
-              <div className="stat">
-                <span className="stat-number">10K+</span>
-                <span className="stat-label">Happy Customers</span>
-              </div>
-              <div className="stat">
-                <span className="stat-number">50K+</span>
-                <span className="stat-label">Designs Created</span>
-              </div>
-              <div className="stat">
-                <span className="stat-number">4.9★</span>
-                <span className="stat-label">Customer Rating</span>
-              </div>
-            </div>
+          
           </div>
           
           <div className="hero-visual">
             <div className="tshirt-showcase">
-              <div className="tshirt-card active">
-                <div className="tshirt-image">👕</div>
+              <div className="tshirt-card">
                 <span className="tshirt-label">Classic Fit</span>
               </div>
               <div className="tshirt-card">
-                <div className="tshirt-image">👔</div>
                 <span className="tshirt-label">Premium</span>
               </div>
               <div className="tshirt-card">
-                <div className="tshirt-image">🎨</div>
                 <span className="tshirt-label">Custom Design</span>
               </div>
             </div>
@@ -94,12 +76,6 @@ function Home() {
               <div className="feature-icon">🎨</div>
               <h3>Custom Designs</h3>
               <p>Create unique designs with our intuitive design tools and premium templates.</p>
-            </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">⚡</div>
-              <h3>Fast Delivery</h3>
-              <p>Quick turnaround times without compromising on quality. Get your shirts in days.</p>
             </div>
             
             <div className="feature-card">

@@ -44,7 +44,11 @@ function AboutUs() {
                     </ul>
                 </section>
 
-                <section className="about-section">
+                
+            </div>
+
+            <section className="about-sections">
+                <section className="contact-section">
                     <h2>Get In Touch</h2>
                     <p>
                         Ready to bring your ideas to life? We're here to help you create something amazing.
@@ -59,7 +63,7 @@ function AboutUs() {
                         Follow us on social media for design inspiration and updates on new features.
                     </p>
                 </section>
-            </div>
+            </section>
 
             <div className="about-stats">
                 <div className="stat-item">
