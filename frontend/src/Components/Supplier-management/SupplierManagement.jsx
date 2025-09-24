@@ -152,19 +152,19 @@ export default function SupplierManagement() {
       })
       if (!response.ok) throw new Error('Failed to update order')
       const data = await response.json()
-      
+
       // Handle different response formats
       const updatedOrder = data.order || data
       const inventoryMessage = data.message || null
-      
+
       setOrders(orders.map(o => o._id === id ? updatedOrder : o))
-      
+
       // Show inventory message if items were added
       if (inventoryMessage) {
         setSuccessMessage(inventoryMessage)
         setTimeout(() => setSuccessMessage(""), 5000)
       }
-      
+
       return updatedOrder
     } catch (error) {
       console.error('Error updating order:', error)
@@ -244,7 +244,7 @@ export default function SupplierManagement() {
   }
 
   const updateOrderItem = (index, field, value) => {
-    const updatedItems = orderItems.map((item, i) => 
+    const updatedItems = orderItems.map((item, i) =>
       i === index ? { ...item, [field]: value } : item
     )
     setOrderItems(updatedItems)
@@ -406,12 +406,12 @@ export default function SupplierManagement() {
     if (reportFilters.dateFrom && reportFilters.dateTo) {
       const fromDate = new Date(reportFilters.dateFrom)
       const toDate = new Date(reportFilters.dateTo)
-      
+
       if (fromDate > toDate) {
         alert('Error: "Date From" cannot be later than "Date To". Please check your date range.')
         return false
       }
-      
+
       // Check if date range is too far in the future
       const today = new Date()
       if (fromDate > today) {
@@ -428,159 +428,159 @@ export default function SupplierManagement() {
       console.log('Generating report with filters:', reportFilters)
       console.log('Available suppliers:', suppliers.length)
       console.log('Available orders:', orders.length)
-      
+
       // Validate date filters first
       if (!validateDateFilters()) {
         setGeneratingReport(false)
         return
       }
-      
+
       // Validate we have data
       if (suppliers.length === 0) {
         alert('No suppliers available. Please add suppliers first.')
         setGeneratingReport(false)
         return
       }
-      
+
       if (orders.length === 0) {
         alert('No orders available. Please add orders first.')
         setGeneratingReport(false)
         return
       }
-      
+
       const filteredSuppliers =
         reportFilters.supplierFilter === "all"
           ? suppliers
           : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
 
-    const filteredOrders = orders.filter((order) => {
-      // Enhanced date parsing to handle different formats
-      let orderDate
-      try {
-        // Handle different date formats that might be stored as strings
-        if (order.orderDate) {
-          // If it's already a valid date string, parse it
-          orderDate = new Date(order.orderDate)
-          
-          // If the date is invalid, try parsing it as a different format
-          if (isNaN(orderDate.getTime())) {
-            // Try parsing as DD/MM/YYYY or MM/DD/YYYY
-            const dateParts = order.orderDate.split(/[-/]/)
-            if (dateParts.length === 3) {
-              // Assume YYYY-MM-DD or DD/MM/YYYY format
-              const year = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[0] : dateParts[2]
-              const month = dateParts[1]
-              const day = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[2] : dateParts[0]
-              orderDate = new Date(year, month - 1, day) // month is 0-indexed
+      const filteredOrders = orders.filter((order) => {
+        // Enhanced date parsing to handle different formats
+        let orderDate
+        try {
+          // Handle different date formats that might be stored as strings
+          if (order.orderDate) {
+            // If it's already a valid date string, parse it
+            orderDate = new Date(order.orderDate)
+
+            // If the date is invalid, try parsing it as a different format
+            if (isNaN(orderDate.getTime())) {
+              // Try parsing as DD/MM/YYYY or MM/DD/YYYY
+              const dateParts = order.orderDate.split(/[-/]/)
+              if (dateParts.length === 3) {
+                // Assume YYYY-MM-DD or DD/MM/YYYY format
+                const year = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[0] : dateParts[2]
+                const month = dateParts[1]
+                const day = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[2] : dateParts[0]
+                orderDate = new Date(year, month - 1, day) // month is 0-indexed
+              }
             }
+          } else {
+            // If no order date, use creation date or current date
+            orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
           }
-        } else {
-          // If no order date, use creation date or current date
+        } catch (error) {
+          console.error('Error parsing order date:', order.orderDate, error)
           orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
         }
-      } catch (error) {
-        console.error('Error parsing order date:', order.orderDate, error)
-        orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
-      }
 
-      // Parse filter dates
-      let fromDate, toDate
-      try {
-        fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
-        toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
-        
-        // Set toDate to end of day to include the entire day
-        if (reportFilters.dateTo) {
-          toDate.setHours(23, 59, 59, 999)
+        // Parse filter dates
+        let fromDate, toDate
+        try {
+          fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
+          toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
+
+          // Set toDate to end of day to include the entire day
+          if (reportFilters.dateTo) {
+            toDate.setHours(23, 59, 59, 999)
+          }
+        } catch (error) {
+          console.error('Error parsing filter dates:', error)
+          fromDate = new Date("2000-01-01")
+          toDate = new Date("2030-12-31")
         }
-      } catch (error) {
-        console.error('Error parsing filter dates:', error)
-        fromDate = new Date("2000-01-01")
-        toDate = new Date("2030-12-31")
+
+        // Debug logging (can be removed in production)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Order date comparison:', {
+            orderId: order._id,
+            originalOrderDate: order.orderDate,
+            parsedOrderDate: orderDate,
+            fromDate: fromDate,
+            toDate: toDate,
+            isValidOrderDate: !isNaN(orderDate.getTime()),
+            dateMatch: orderDate >= fromDate && orderDate <= toDate
+          })
+        }
+
+        const dateMatch = !isNaN(orderDate.getTime()) && orderDate >= fromDate && orderDate <= toDate
+        const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
+
+        // Fix supplier matching - handle both object and string supplierId
+        const orderSupplierId = typeof order.supplierId === 'object' ? order.supplierId._id : order.supplierId
+        const supplierMatch =
+          reportFilters.supplierFilter === "all" || orderSupplierId === reportFilters.supplierFilter
+
+        return dateMatch && statusMatch && supplierMatch
+      })
+
+      console.log('Filtered suppliers:', filteredSuppliers.length)
+      console.log('Filtered orders:', filteredOrders.length)
+
+      // Provide detailed feedback about filtering results
+      const totalOrdersBeforeFilter = orders.length
+      const totalSuppliersBeforeFilter = suppliers.length
+
+      console.log('Filtering summary:', {
+        totalOrdersBefore: totalOrdersBeforeFilter,
+        totalOrdersAfter: filteredOrders.length,
+        totalSuppliersBefore: totalSuppliersBeforeFilter,
+        totalSuppliersAfter: filteredSuppliers.length,
+        dateRange: `${reportFilters.dateFrom || 'All time'} to ${reportFilters.dateTo || 'Present'}`,
+        supplierFilter: reportFilters.supplierFilter,
+        statusFilter: reportFilters.statusFilter
+      })
+
+      // Check if filters resulted in no data
+      if (filteredOrders.length === 0) {
+        let message = 'No orders match your current filters.'
+
+        if (reportFilters.dateFrom || reportFilters.dateTo) {
+          message += `\n\nDate range: ${reportFilters.dateFrom || 'All time'} to ${reportFilters.dateTo || 'Present'}`
+          message += `\nTotal orders in system: ${totalOrdersBeforeFilter}`
+        }
+
+        if (reportFilters.statusFilter !== 'all') {
+          message += `\nStatus filter: ${reportFilters.statusFilter}`
+        }
+
+        if (reportFilters.supplierFilter !== 'all') {
+          const selectedSupplier = suppliers.find(s => s._id === reportFilters.supplierFilter)
+          message += `\nSupplier filter: ${selectedSupplier?.name || 'Unknown'}`
+        }
+
+        message += '\n\nPlease adjust your filters and try again.'
+        alert(message)
+        setGeneratingReport(false)
+        return
       }
 
-      // Debug logging (can be removed in production)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Order date comparison:', {
-          orderId: order._id,
-          originalOrderDate: order.orderDate,
-          parsedOrderDate: orderDate,
-          fromDate: fromDate,
-          toDate: toDate,
-          isValidOrderDate: !isNaN(orderDate.getTime()),
-          dateMatch: orderDate >= fromDate && orderDate <= toDate
-        })
+      const reportData = {
+        totalSuppliers: filteredSuppliers.length,
+        activeSuppliers: filteredSuppliers.filter((s) => s.status === "active").length,
+        totalOrders: filteredOrders.length,
+        pendingOrders: filteredOrders.filter((o) => o.status === "pending").length,
+        completedOrders: filteredOrders.filter((o) => o.status === "completed").length,
+        totalValue: filteredOrders.reduce((sum, order) => sum + order.total, 0),
+        averageOrderValue:
+          filteredOrders.length > 0
+            ? filteredOrders.reduce((sum, order) => sum + order.total, 0) / filteredOrders.length
+            : 0,
       }
 
-      const dateMatch = !isNaN(orderDate.getTime()) && orderDate >= fromDate && orderDate <= toDate
-      const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
-      
-      // Fix supplier matching - handle both object and string supplierId
-      const orderSupplierId = typeof order.supplierId === 'object' ? order.supplierId._id : order.supplierId
-      const supplierMatch =
-        reportFilters.supplierFilter === "all" || orderSupplierId === reportFilters.supplierFilter
+      let content = ""
 
-      return dateMatch && statusMatch && supplierMatch
-    })
-
-    console.log('Filtered suppliers:', filteredSuppliers.length)
-    console.log('Filtered orders:', filteredOrders.length)
-    
-    // Provide detailed feedback about filtering results
-    const totalOrdersBeforeFilter = orders.length
-    const totalSuppliersBeforeFilter = suppliers.length
-    
-    console.log('Filtering summary:', {
-      totalOrdersBefore: totalOrdersBeforeFilter,
-      totalOrdersAfter: filteredOrders.length,
-      totalSuppliersBefore: totalSuppliersBeforeFilter,
-      totalSuppliersAfter: filteredSuppliers.length,
-      dateRange: `${reportFilters.dateFrom || 'All time'} to ${reportFilters.dateTo || 'Present'}`,
-      supplierFilter: reportFilters.supplierFilter,
-      statusFilter: reportFilters.statusFilter
-    })
-    
-    // Check if filters resulted in no data
-    if (filteredOrders.length === 0) {
-      let message = 'No orders match your current filters.'
-      
-      if (reportFilters.dateFrom || reportFilters.dateTo) {
-        message += `\n\nDate range: ${reportFilters.dateFrom || 'All time'} to ${reportFilters.dateTo || 'Present'}`
-        message += `\nTotal orders in system: ${totalOrdersBeforeFilter}`
-      }
-      
-      if (reportFilters.statusFilter !== 'all') {
-        message += `\nStatus filter: ${reportFilters.statusFilter}`
-      }
-      
-      if (reportFilters.supplierFilter !== 'all') {
-        const selectedSupplier = suppliers.find(s => s._id === reportFilters.supplierFilter)
-        message += `\nSupplier filter: ${selectedSupplier?.name || 'Unknown'}`
-      }
-      
-      message += '\n\nPlease adjust your filters and try again.'
-      alert(message)
-      setGeneratingReport(false)
-      return
-    }
-
-    const reportData = {
-      totalSuppliers: filteredSuppliers.length,
-      activeSuppliers: filteredSuppliers.filter((s) => s.status === "active").length,
-      totalOrders: filteredOrders.length,
-      pendingOrders: filteredOrders.filter((o) => o.status === "pending").length,
-      completedOrders: filteredOrders.filter((o) => o.status === "completed").length,
-      totalValue: filteredOrders.reduce((sum, order) => sum + order.total, 0),
-      averageOrderValue:
-        filteredOrders.length > 0
-          ? filteredOrders.reduce((sum, order) => sum + order.total, 0) / filteredOrders.length
-          : 0,
-    }
-
-    let content = ""
-
-    if (reportFilters.reportType === "summary") {
-      content = `SUPPLIER MANAGEMENT SUMMARY REPORT
+      if (reportFilters.reportType === "summary") {
+        content = `SUPPLIER MANAGEMENT SUMMARY REPORT
 Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
 Report Period: ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo || "Present"}
 
@@ -596,23 +596,23 @@ Total Order Value: $${reportData.totalValue.toFixed(2)}
 Average Order Value: $${reportData.averageOrderValue.toFixed(2)}
 
 === SUPPLIER PERFORMANCE ===
-${filteredSuppliers.length > 0 
-  ? filteredSuppliers
-      .map((s) => {
-        const supplierOrders = filteredOrders.filter((o) => {
-          const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
-          return orderSupplierId === s._id
-        })
-        const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
-        return `${s.name}:
+${filteredSuppliers.length > 0
+            ? filteredSuppliers
+              .map((s) => {
+                const supplierOrders = filteredOrders.filter((o) => {
+                  const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+                  return orderSupplierId === s._id
+                })
+                const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
+                return `${s.name}:
   - Status: ${s.status.toUpperCase()}
   - Contact: ${s.contact} (${s.email})
   - Orders in Period: ${supplierOrders.length}
   - Total Value: $${supplierValue.toFixed(2)}
   - Average Order: $${supplierOrders.length > 0 ? (supplierValue / supplierOrders.length).toFixed(2) : "0.00"}`
-      })
-      .join("\n\n")
-  : "No suppliers found matching the current filters."}
+              })
+              .join("\n\n")
+            : "No suppliers found matching the current filters."}
 
 === ORDER ANALYSIS ===
 Orders by Status:
@@ -621,25 +621,25 @@ Orders by Status:
 - Completed: ${reportData.completedOrders} (${reportData.totalOrders > 0 ? ((reportData.completedOrders / reportData.totalOrders) * 100).toFixed(1) : 0}%)
 
 Recent Orders:
-${filteredOrders.length > 0 
-  ? filteredOrders
-      .slice(-10)
-      .map((o) => `- Order #${o._id}: ${o.supplierName} - $${o.total.toFixed(2)} (${o.status}) - ${o.orderDate}`)
-      .join("\n")
-  : "No orders found in the selected period."}`
-    } else if (reportFilters.reportType === "detailed") {
-      content = `DETAILED SUPPLIER MANAGEMENT REPORT
+${filteredOrders.length > 0
+            ? filteredOrders
+              .slice(-10)
+              .map((o) => `- Order #${o._id}: ${o.supplierName} - $${o.total.toFixed(2)} (${o.status}) - ${o.orderDate}`)
+              .join("\n")
+            : "No orders found in the selected period."}`
+      } else if (reportFilters.reportType === "detailed") {
+        content = `DETAILED SUPPLIER MANAGEMENT REPORT
 Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
 Report Period: ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo || "Present"}
 
 === DETAILED SUPPLIER INFORMATION ===
 ${filteredSuppliers
-          .map((s) => {
-            const supplierOrders = filteredOrders.filter((o) => {
-              const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
-              return orderSupplierId === s._id
-            })
-            return `
+            .map((s) => {
+              const supplierOrders = filteredOrders.filter((o) => {
+                const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+                return orderSupplierId === s._id
+              })
+              return `
 SUPPLIER: ${s.name}
 Contact Person: ${s.contact}
 Email: ${s.email}
@@ -651,20 +651,20 @@ Last Order Date: ${s.lastOrder}
 
 Orders in Period:
 ${supplierOrders
-                .map(
-                  (o) => `  - Order #${o._id}: ${o.orderDate} | $${o.total.toFixed(2)} | ${o.status.toUpperCase()}
+                  .map(
+                    (o) => `  - Order #${o._id}: ${o.orderDate} | $${o.total.toFixed(2)} | ${o.status.toUpperCase()}
     Items: ${o.items}
     Delivery: ${o.deliveryDate}`,
-                )
-                .join("\n")}
+                  )
+                  .join("\n")}
   `
-          })
-          .join("\n" + "=".repeat(80) + "\n")}
+            })
+            .join("\n" + "=".repeat(80) + "\n")}
 
 === DETAILED ORDER INFORMATION ===
 ${filteredOrders
-          .map(
-            (o) => `
+            .map(
+              (o) => `
 ORDER #${o._id}
 Supplier: ${o.supplierName}
 Order Date: ${o.orderDate}
@@ -673,20 +673,20 @@ Status: ${o.status.toUpperCase()}
 Total Amount: $${o.total.toFixed(2)}
 Items: ${o.items}
 `,
-          )
-          .join("\n" + "-".repeat(50) + "\n")}`
-    } else if (reportFilters.reportType === "financial") {
-      const monthlyData = {}
-      filteredOrders.forEach((order) => {
-        const month = order.orderDate.substring(0, 7)
-        if (!monthlyData[month]) {
-          monthlyData[month] = { orders: 0, value: 0 }
-        }
-        monthlyData[month].orders++
-        monthlyData[month].value += order.total
-      })
+            )
+            .join("\n" + "-".repeat(50) + "\n")}`
+      } else if (reportFilters.reportType === "financial") {
+        const monthlyData = {}
+        filteredOrders.forEach((order) => {
+          const month = order.orderDate.substring(0, 7)
+          if (!monthlyData[month]) {
+            monthlyData[month] = { orders: 0, value: 0 }
+          }
+          monthlyData[month].orders++
+          monthlyData[month].value += order.total
+        })
 
-      content = `FINANCIAL ANALYSIS REPORT
+        content = `FINANCIAL ANALYSIS REPORT
 Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
 Report Period: ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo || "Present"}
 
@@ -699,49 +699,49 @@ Highest Value Order: $${filteredOrders.length > 0 ? Math.max(...filteredOrders.m
 Lowest Value Order: $${filteredOrders.length > 0 ? Math.min(...filteredOrders.map((o) => o.total)).toFixed(2) : "0.00"}
 
 === MONTHLY BREAKDOWN ===
-${Object.keys(monthlyData).length > 0 
-  ? Object.entries(monthlyData)
-      .sort()
-      .map(
-        ([month, data]) =>
-          `${month}: ${data.orders} orders, $${data.value.toFixed(2)} total, $${(data.value / data.orders).toFixed(2)} average`,
-      )
-      .join("\n")
-  : "No order data available for monthly breakdown."}
+${Object.keys(monthlyData).length > 0
+            ? Object.entries(monthlyData)
+              .sort()
+              .map(
+                ([month, data]) =>
+                  `${month}: ${data.orders} orders, $${data.value.toFixed(2)} total, $${(data.value / data.orders).toFixed(2)} average`,
+              )
+              .join("\n")
+            : "No order data available for monthly breakdown."}
 
 === SUPPLIER FINANCIAL PERFORMANCE ===
 ${filteredSuppliers
-          .map((s) => {
-            const supplierOrders = filteredOrders.filter((o) => {
-              const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
-              return orderSupplierId === s._id
+            .map((s) => {
+              const supplierOrders = filteredOrders.filter((o) => {
+                const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+                return orderSupplierId === s._id
+              })
+              const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
+              const percentage = reportData.totalValue > 0 ? ((supplierValue / reportData.totalValue) * 100).toFixed(1) : 0
+              return `${s.name}: $${supplierValue.toFixed(2)} (${percentage}% of total)`
             })
-            const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
-            const percentage = reportData.totalValue > 0 ? ((supplierValue / reportData.totalValue) * 100).toFixed(1) : 0
-            return `${s.name}: $${supplierValue.toFixed(2)} (${percentage}% of total)`
-          })
-          .join("\n")}
+            .join("\n")}
 
 === ORDER STATUS FINANCIAL BREAKDOWN ===
 Pending Orders Value: $${filteredOrders
-          .filter((o) => o.status === "pending")
-          .reduce((sum, order) => sum + order.total, 0)
-          .toFixed(2)}
+            .filter((o) => o.status === "pending")
+            .reduce((sum, order) => sum + order.total, 0)
+            .toFixed(2)}
 Active Orders Value: $${filteredOrders
-          .filter((o) => o.status === "active")
-          .reduce((sum, order) => sum + order.total, 0)
-          .toFixed(2)}
+            .filter((o) => o.status === "active")
+            .reduce((sum, order) => sum + order.total, 0)
+            .toFixed(2)}
 Completed Orders Value: $${filteredOrders
-          .filter((o) => o.status === "completed")
-          .reduce((sum, order) => sum + order.total, 0)
-          .toFixed(2)}`
-    } else if (reportFilters.reportType === "suppliers") {
-      content = `SUPPLIERS DATA EXPORT
+            .filter((o) => o.status === "completed")
+            .reduce((sum, order) => sum + order.total, 0)
+            .toFixed(2)}`
+      } else if (reportFilters.reportType === "suppliers") {
+        content = `SUPPLIERS DATA EXPORT
 Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
 
 ${suppliers
-          .map(
-            (s) => `Supplier: ${s.name}
+            .map(
+              (s) => `Supplier: ${s.name}
 Contact: ${s.contact}
 Email: ${s.email}
 Phone: ${s.phone}
@@ -749,15 +749,15 @@ Status: ${s.status.toUpperCase()}
 Total Orders: ${s.totalOrders}
 Last Order: ${s.lastOrder}
 `,
-          )
-          .join("\n" + "-".repeat(50) + "\n")}`
-    } else if (reportFilters.reportType === "orders") {
-      content = `ORDERS DATA EXPORT
+            )
+            .join("\n" + "-".repeat(50) + "\n")}`
+      } else if (reportFilters.reportType === "orders") {
+        content = `ORDERS DATA EXPORT
 Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
 
 ${orders
-          .map(
-            (o) => `Order ID: ${o._id}
+            .map(
+              (o) => `Order ID: ${o._id}
 Supplier: ${o.supplierName}
 Order Date: ${o.orderDate}
 Delivery Date: ${o.deliveryDate}
@@ -765,22 +765,22 @@ Status: ${o.status.toUpperCase()}
 Total: $${o.total.toFixed(2)}
 Items: ${o.items}
 `,
-          )
-          .join("\n" + "-".repeat(50) + "\n")}`
-    }
+            )
+            .join("\n" + "-".repeat(50) + "\n")}`
+      }
 
       setReportContent(content)
       setViewingReport(true)
       setGeneratingReport(false)
-    
-    // Show success message with filtering results
-    const filterMessage = `Report generated successfully!\n\nFiltered Results:\n- ${filteredOrders.length} orders (from ${totalOrdersBeforeFilter} total)\n- ${filteredSuppliers.length} suppliers (from ${totalSuppliersBeforeFilter} total)`
-    
-    if (reportFilters.dateFrom || reportFilters.dateTo) {
-      console.log(filterMessage)
-    }
-    
-    console.log('Report generated successfully')
+
+      // Show success message with filtering results
+      const filterMessage = `Report generated successfully!\n\nFiltered Results:\n- ${filteredOrders.length} orders (from ${totalOrdersBeforeFilter} total)\n- ${filteredSuppliers.length} suppliers (from ${totalSuppliersBeforeFilter} total)`
+
+      if (reportFilters.dateFrom || reportFilters.dateTo) {
+        console.log(filterMessage)
+      }
+
+      console.log('Report generated successfully')
     } catch (error) {
       console.error('Error generating report:', error)
       alert('Error generating report. Please try again.')
@@ -847,14 +847,14 @@ For questions about this report, contact: admin@klassytshirts.com
     const csvData = []
     const currentDate = new Date()
     const reportId = `RPT-${currentDate.getTime()}`
-    
+
     // Professional CSV Header with proper structure
     csvData.push(["═══════════════════════════════════════════════════════════════════════════"])
     csvData.push(["KLASSY T SHIRTS - SUPPLIER MANAGEMENT SYSTEM"])
     csvData.push(["BUSINESS INTELLIGENCE REPORT"])
     csvData.push(["═══════════════════════════════════════════════════════════════════════════"])
     csvData.push([""])
-    
+
     // Report Metadata Section
     csvData.push(["REPORT INFORMATION"])
     csvData.push(["Field", "Value"])
@@ -869,8 +869,8 @@ For questions about this report, contact: admin@klassytshirts.com
     csvData.push([""])
 
     // Apply filters to get the actual data being reported
-    const filteredSuppliers = reportFilters.supplierFilter === "all" 
-      ? suppliers 
+    const filteredSuppliers = reportFilters.supplierFilter === "all"
+      ? suppliers
       : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
 
     const filteredOrders = orders.filter((order) => {
@@ -879,7 +879,7 @@ For questions about this report, contact: admin@klassytshirts.com
       try {
         if (order.orderDate) {
           orderDate = new Date(order.orderDate)
-          
+
           if (isNaN(orderDate.getTime())) {
             const dateParts = order.orderDate.split(/[-/]/)
             if (dateParts.length === 3) {
@@ -901,7 +901,7 @@ For questions about this report, contact: admin@klassytshirts.com
       try {
         fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
         toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
-        
+
         if (reportFilters.dateTo) {
           toDate.setHours(23, 59, 59, 999)
         }
@@ -922,8 +922,8 @@ For questions about this report, contact: admin@klassytshirts.com
     csvData.push(["EXECUTIVE SUMMARY"])
     csvData.push(["Metric", "Value", "Percentage", "Notes"])
     csvData.push(["Total Suppliers", filteredSuppliers.length, "100%", "Based on current filters"])
-    csvData.push(["Active Suppliers", filteredSuppliers.filter(s => s.status === "active").length, 
-      `${filteredSuppliers.length > 0 ? ((filteredSuppliers.filter(s => s.status === "active").length / filteredSuppliers.length) * 100).toFixed(1) : 0}%`, 
+    csvData.push(["Active Suppliers", filteredSuppliers.filter(s => s.status === "active").length,
+      `${filteredSuppliers.length > 0 ? ((filteredSuppliers.filter(s => s.status === "active").length / filteredSuppliers.length) * 100).toFixed(1) : 0}%`,
       "Currently active suppliers"])
     csvData.push(["Total Orders", filteredOrders.length, "100%", "Orders in selected period"])
     csvData.push(["Pending Orders", filteredOrders.filter(o => o.status === "pending").length,
@@ -942,12 +942,12 @@ For questions about this report, contact: admin@klassytshirts.com
       csvData.push(["Supplier Name", "Contact Person", "Email", "Phone", "Status", "Total Orders", "Last Order Date", "Registration Number"])
       filteredSuppliers.forEach((s) => {
         csvData.push([
-          s.name, 
-          s.contact, 
-          s.email, 
-          s.phone, 
-          s.status.toUpperCase(), 
-          s.totalOrders || 0, 
+          s.name,
+          s.contact,
+          s.email,
+          s.phone,
+          s.status.toUpperCase(),
+          s.totalOrders || 0,
           s.lastOrder || "N/A",
           s.companyDetails?.registrationNumber || "N/A"
         ])
@@ -964,11 +964,11 @@ For questions about this report, contact: admin@klassytshirts.com
         const deliveryDate = new Date(o.deliveryDate)
         const daysDiff = Math.ceil((deliveryDate - orderDate) / (1000 * 60 * 60 * 24))
         csvData.push([
-          o._id, 
-          o.supplierName, 
-          o.orderDate, 
-          o.deliveryDate, 
-          o.status.toUpperCase(), 
+          o._id,
+          o.supplierName,
+          o.orderDate,
+          o.deliveryDate,
+          o.status.toUpperCase(),
           `$${o.total.toFixed(2)}`,
           o.items || "N/A",
           `${daysDiff} days`
@@ -983,7 +983,7 @@ For questions about this report, contact: admin@klassytshirts.com
       csvData.push(["Analysis Type", "Value", "Details"])
       csvData.push(["Highest Order Value", `$${filteredOrders.length > 0 ? Math.max(...filteredOrders.map(o => o.total)).toFixed(2) : "0.00"}`, "Single largest order"])
       csvData.push(["Lowest Order Value", `$${filteredOrders.length > 0 ? Math.min(...filteredOrders.map(o => o.total)).toFixed(2) : "0.00"}`, "Single smallest order"])
-      
+
       // Monthly breakdown
       const monthlyData = {}
       filteredOrders.forEach((order) => {
@@ -1210,53 +1210,53 @@ For questions about this report, contact: admin@klassytshirts.com
     <div className="main">
       <NavBar />
       <div className="dashboard-header">
-          <h1>Supplier Management System</h1>
- 
-          {successMessage && (
-            <div style={{
-              backgroundColor: '#0b0b0bff',
-              color: '#121312ff',
-              padding: '10px',
-              borderRadius: '5px',
-              marginTop: '10px',
-              border: '1px solid #080908ff'
-            }}>
-              {successMessage}
-            </div>
-          )}
-          {error && (
-            <div style={{
-              backgroundColor: '#121212ff',
-              color: '#0a0a0aff',
-              padding: '10px',
-              borderRadius: '5px',
-              marginTop: '10px',
-              border: '1px solid #0c0c0cff'
-            }}>
-              Error: {error}
-              <button
-                onClick={() => {
-                  setError(null)
-                  window.location.reload()
-                }}
-                style={{
-                  marginLeft: '10px',
-                  padding: '5px 10px',
-                  backgroundColor: '#0e0d0dff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                Retry
-              </button>
-            </div>
-          )}
+        <h1>Supplier Management System</h1>
 
-        </div>
+        {successMessage && (
+          <div style={{
+            backgroundColor: '#0b0b0bff',
+            color: '#121312ff',
+            padding: '10px',
+            borderRadius: '5px',
+            marginTop: '10px',
+            border: '1px solid #080908ff'
+          }}>
+            {successMessage}
+          </div>
+        )}
+        {error && (
+          <div style={{
+            backgroundColor: '#121212ff',
+            color: '#0a0a0aff',
+            padding: '10px',
+            borderRadius: '5px',
+            marginTop: '10px',
+            border: '1px solid #0c0c0cff'
+          }}>
+            Error: {error}
+            <button
+              onClick={() => {
+                setError(null)
+                window.location.reload()
+              }}
+              style={{
+                marginLeft: '10px',
+                padding: '5px 10px',
+                backgroundColor: '#0e0d0dff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+      </div>
       <div className="supplier-container">
-        
+
 
         <div className="nav-tabs">
           <button
@@ -1449,8 +1449,8 @@ For questions about this report, contact: admin@klassytshirts.com
                         >
                           Edit
                         </button>
-                        <button 
-                          className="btn btn-destructive btn-small" 
+                        <button
+                          className="btn btn-destructive btn-small"
                           onClick={() => handleDelete("order", order._id)}
                         >
                           Delete
@@ -1737,10 +1737,10 @@ For questions about this report, contact: admin@klassytshirts.com
                     <div className="form-group">
                       <label className="form-label">Order Items</label>
                       {orderItems.map((item, index) => (
-                        <div key={index} style={{ 
-                          display: 'flex', 
-                          gap: '10px', 
-                          marginBottom: '10px', 
+                        <div key={index} style={{
+                          display: 'flex',
+                          gap: '10px',
+                          marginBottom: '10px',
                           alignItems: 'center',
                           padding: '10px',
                           border: '1px solid var(--border)',
@@ -1816,10 +1816,10 @@ For questions about this report, contact: admin@klassytshirts.com
                       >
                         + Add Item
                       </button>
-                      <div style={{ 
-                        marginTop: '10px', 
-                        padding: '10px', 
-                        backgroundColor: 'var(--muted)', 
+                      <div style={{
+                        marginTop: '10px',
+                        padding: '10px',
+                        backgroundColor: 'var(--muted)',
                         borderRadius: 'var(--radius)',
                         fontSize: '0.9rem'
                       }}>
@@ -1839,14 +1839,14 @@ For questions about this report, contact: admin@klassytshirts.com
                 </div>
               </form>
             </div>
-          
+
           </div>
-          
+
         )}
       </div>
-            <div >
-              <Footer></Footer>
-            </div>
+      <div >
+        <Footer></Footer>
+      </div>
     </div>
 
   )

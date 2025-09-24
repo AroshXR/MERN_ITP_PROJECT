@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+﻿import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './AuthGuard/AuthGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
@@ -25,6 +25,7 @@ import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
+import OrderSummaryPage from './Components/OrderManagement/OrderSummaryPage';
 
 
 import RentalHome from './pages/RentalHome';
@@ -55,6 +56,7 @@ function App() {
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/orderSummary" element={<OrderSummaryPage />} />
 
         {/* Applicant and informational routes */}
         <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />

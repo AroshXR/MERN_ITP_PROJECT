@@ -1,0 +1,178 @@
+.order-summary-page {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+}
+
+.page-title {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 600;
+}
+
+.state {
+	padding: 12px 16px;
+	border-radius: 8px;
+	background: #f5f5f5;
+}
+
+.state-error {
+	background: #ffe8e8;
+	color: #b00020;
+}
+
+.summary-grid {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.card {
+	background: #ffffff;
+	border: 1px solid #eaeaea;
+	border-radius: 10px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.card .label {
+	font-size: 12px;
+	color: #555;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.card .value {
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.report-section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 8px;
+}
+
+.section-title {
+	font-size: 18px;
+	font-weight: 600;
+	margin: 0 0 4px 0;
+}
+
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: flex-end;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.field label {
+	font-size: 12px;
+	color: #333;
+}
+
+.field input[type="date"] {
+	padding: 8px 10px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	background: #fff;
+}
+
+.actions {
+	display: flex;
+	gap: 8px;
+}
+
+.btn {
+	padding: 8px 12px;
+	border-radius: 8px;
+	border: 1px solid #ddd;
+	background: #fafafa;
+	cursor: pointer;
+}
+
+.btn.primary {
+	background: #0f62fe;
+	border-color: #0f62fe;
+	color: white;
+}
+
+.btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.report {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.report-summary {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px 16px;
+	background: #fff;
+	border: 1px solid #eaeaea;
+	border-radius: 10px;
+	padding: 12px;
+}
+
+.report-summary .row {
+	font-size: 14px;
+	color: #222;
+	display: flex;
+	justify-content: space-between;
+}
+
+.table-wrapper {
+	background: #fff;
+	border: 1px solid #eaeaea;
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+.orders-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.orders-table thead {
+	background: #f7f7f7;
+}
+
+.orders-table th, .orders-table td {
+	padding: 10px 12px;
+	border-bottom: 1px solid #eee;
+	text-align: left;
+	font-size: 14px;
+}
+
+.orders-table td.empty {
+	text-align: center;
+	color: #666;
+}
+
+.status.completed { color: #0a7b34; font-weight: 600; }
+.status.pending { color: #b08000; font-weight: 600; }
+.status.cancelled, .status.canceled { color: #b00020; font-weight: 600; }
+
+@media (max-width: 1200px) {
+	.summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+	.summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.report-summary { grid-template-columns: 1fr; }
+}
