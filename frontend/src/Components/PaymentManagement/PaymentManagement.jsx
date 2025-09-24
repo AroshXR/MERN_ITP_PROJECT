@@ -1,10 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import axios from "axios"
 import "./PaymentManagement.css"
+import { useAuth } from '../../AuthGuard/AuthGuard'
+import { useNavigate } from 'react-router-dom'
 
 const CheckoutPage = () => {
+  const navigate = useNavigate()
+  const { isAuthenticated, getToken, logout } = useAuth()
+  
   const [currentStep, setCurrentStep] = useState(1)
   const [shippingMethod, setShippingMethod] = useState("standard")
   const [paymentMethod, setPaymentMethod] = useState("card")
@@ -13,6 +18,11 @@ const CheckoutPage = () => {
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState("")
+  
+  // Cart and pricing state
+  const [cartItems, setCartItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [cartError, setCartError] = useState(null)
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -38,8 +48,9 @@ const CheckoutPage = () => {
     giftMessage: ""
   })
 
-  const subtotal = 139.97
-  const shipping = shippingMethod === "express" ? 15.99 : shippingMethod === "overnight" ? 29.99 : 5.99
+  // Calculate pricing from cart items
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0)
+  const shipping = cartItems.length > 0 ? (shippingMethod === "express" ? 15.99 : shippingMethod === "overnight" ? 29.99 : 5.99) : 0
   const tax = subtotal * 0.08
   const giftWrapFee = giftWrap ? 4.99 : 0
   const total = subtotal + shipping + tax + giftWrapFee
@@ -49,6 +60,71 @@ const CheckoutPage = () => {
     { number: 2, title: "Payment", icon: "💳" },
     { number: 3, title: "Review", icon: "🛡️" },
   ]
+
+  // Fetch cart items on component mount
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      setCartError('Please log in to proceed with checkout.')
+      setLoading(false)
+      navigate('/login')
+      return
+    }
+    fetchCartItems()
+  }, [])
+
+  const fetchCartItems = async () => {
+    try {
+      const authToken = getToken()
+      if (!authToken) {
+        setCartError('Authentication required. Please log in.')
+        navigate('/login')
+        return
+      }
+
+      const response = await axios.get('http://localhost:5001/cloth-customizer', {
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      })
+
+      if (response.data.status === "ok") {
+        const transformedItems = response.data.data.map((item, index) => ({
+          id: item._id || `item-${index}`,
+          name: `Custom ${item.clothingType || 'Clothing'}`,
+          price: item.totalPrice && item.quantity ? (item.totalPrice / item.quantity) : (item.totalPrice || 0),
+          quantity: item.quantity || 1,
+          size: item.size || 'Standard',
+          color: item.color || 'Default',
+          clothingType: item.clothingType || 'tshirt',
+          selectedDesign: item.selectedDesign || null,
+          placedDesigns: item.placedDesigns || [],
+          totalPrice: item.totalPrice || 0,
+          createdAt: item.createdAt || new Date().toISOString()
+        }))
+
+        setCartItems(transformedItems)
+        
+        if (transformedItems.length === 0) {
+          setCartError('Your cart is empty. Please add items to your cart before proceeding to checkout.')
+        }
+      } else {
+        setCartError('Failed to fetch cart items')
+      }
+    } catch (error) {
+      console.error('Error fetching cart items:', error)
+      
+      if (error.response?.status === 401) {
+        logout()
+        setCartError('Your session has expired. Please log in again.')
+        navigate('/login')
+        return
+      }
+      
+      setCartError('Failed to load cart items. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -166,16 +242,21 @@ const CheckoutPage = () => {
           tax: tax,
           giftWrap: giftWrap,
           giftWrapFee: giftWrapFee,
-          total: total
+          total: total,
+          cartItems: cartItems
         },
         giftMessage: formData.giftMessage,
-        userId: null // You can add user authentication later
+        userId: getToken() ? JSON.parse(atob(getToken().split('.')[1])).userId : null
       }
 
       console.log('Submitting payment data:', paymentData)
 
       // Send to backend
-      const response = await axios.post('http://localhost:5001/payment', paymentData)
+      const response = await axios.post('http://localhost:5001/payment', paymentData, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`
+        }
+      })
       
       if (response.data.status === 'ok') {
         setSubmitMessage(`Payment details saved successfully! Payment ID: ${response.data.data.paymentId}`)
@@ -194,6 +275,91 @@ const CheckoutPage = () => {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="checkout-container">
+        <div className="loading-container" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '50vh',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          <div className="loading-spinner" style={{
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #3498db',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            animation: 'spin 2s linear infinite'
+          }}></div>
+          <p>Loading your cart...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (cartError) {
+    return (
+      <div className="checkout-container">
+        <div className="error-container" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '50vh',
+          flexDirection: 'column',
+          gap: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #f5c6cb',
+            maxWidth: '500px'
+          }}>
+            <h3>⚠️ Checkout Error</h3>
+            <p>{cartError}</p>
+            <div style={{ marginTop: '20px', gap: '10px', display: 'flex', justifyContent: 'center' }}>
+              <button 
+                onClick={() => navigate('/orderManagement')} 
+                className="btn btn-outline"
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Go to Cart
+              </button>
+              <button 
+                onClick={fetchCartItems} 
+                className="btn btn-primary"
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -549,14 +715,20 @@ const CheckoutPage = () => {
                   <div className="review-section">
                     <h3>Order Summary</h3>
                     <div className="order-items">
-                      <div className="order-item">
-                        <span>Premium T-Shirt (2x)</span>
-                        <span>$59.98</span>
-                      </div>
-                      <div className="order-item">
-                        <span>Classic Jeans (1x)</span>
-                        <span>$79.99</span>
-                      </div>
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="order-item">
+                          <span>
+                            {item.name} - {item.size} ({item.color}) ({item.quantity}x)
+                          </span>
+                          <span>${item.totalPrice.toFixed(2)}</span>
+                        </div>
+                      ))}
+                      {cartItems.length === 0 && (
+                        <div className="order-item">
+                          <span>No items in cart</span>
+                          <span>$0.00</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -565,13 +737,17 @@ const CheckoutPage = () => {
                   <div className="review-section">
                     <h3>Shipping Address</h3>
                     <p className="address">
-                      John Doe
+                      {formData.firstName} {formData.lastName}
                       <br />
-                      123 Main Street
+                      {formData.address}
                       <br />
-                      New York, NY 10001
+                      {formData.city}, {formData.state} {formData.zipCode}
                       <br />
-                      United States
+                      {formData.country}
+                      <br />
+                      📧 {formData.email}
+                      <br />
+                      📞 {formData.phone}
                     </p>
                   </div>
 
