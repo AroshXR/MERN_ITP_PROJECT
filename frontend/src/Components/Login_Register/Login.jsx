@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import './LoginPage.css';
 import loginImage from '../images/login-img.jpg';
 import NavBar from '../NavBar/navBar';
@@ -23,7 +23,7 @@ function LoginPage() {
   const getDefaultRoute = (userType) => {
     switch (userType) {
       case 'Admin':
-        return '/admin';
+        return '/admin-hub';
       case 'Tailor':
         return '/tailorHome';
       case 'Applicant':
