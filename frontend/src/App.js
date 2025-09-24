@@ -38,6 +38,8 @@ import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
 //import { Toaster} from 'react-hot-toast'
 
+import AdminHub from './Components/AdminHub/AdminHub';
+
 function App() {
   return (
     <AuthProvider>
@@ -94,7 +96,7 @@ function App() {
         <Route
           path="/user/account"
           element={(
-            <ProtectedRoute allowedUserTypes={["Customer", "Applicant", "Tailor"]}>
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant", "Tailor", "Admin"]}>
               <UserAccount />
             </ProtectedRoute>
           )}
@@ -132,6 +134,14 @@ function App() {
 
         {/* Admin routes */}
         <Route
+          path="/admin-hub"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminHub />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
           path="/admin"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
@@ -139,6 +149,7 @@ function App() {
             </ProtectedRoute>
           )}
         />
+
         <Route
           path="/admin-jobs"
           element={(

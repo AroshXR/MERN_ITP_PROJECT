@@ -114,6 +114,42 @@ export default function AdminApplicantManagement() {
       {loading && <div className="admin-applicants__info">Loading...</div>}
       {error && <div className="admin-applicants__error">{error}</div>}
 
+      {interviewForm.open && (
+        <section className="inline-scheduler">
+          <div className="inline-scheduler__header">
+            <h3>Schedule Interview</h3>
+            <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>✕</button>
+          </div>
+          <div className="inline-scheduler__body">
+            <label>Date & Time</label>
+            <input type="datetime-local" value={interviewForm.scheduledAt} onChange={(e) => setInterviewForm(prev => ({ ...prev, scheduledAt: e.target.value }))} />
+            <label>Mode</label>
+            <select value={interviewForm.mode} onChange={(e) => setInterviewForm(prev => ({ ...prev, mode: e.target.value }))}>
+              <option value="in-person">In person</option>
+              <option value="online">Online</option>
+            </select>
+            {interviewForm.mode === 'in-person' && (
+              <>
+                <label>Location</label>
+                <input type="text" value={interviewForm.location} onChange={(e) => setInterviewForm(prev => ({ ...prev, location: e.target.value }))} />
+              </>
+            )}
+            {interviewForm.mode === 'online' && (
+              <>
+                <label>Meeting Link</label>
+                <input type="text" value={interviewForm.meetingLink} onChange={(e) => setInterviewForm(prev => ({ ...prev, meetingLink: e.target.value }))} />
+              </>
+            )}
+            <label>Notes</label>
+            <textarea value={interviewForm.notes} onChange={(e) => setInterviewForm(prev => ({ ...prev, notes: e.target.value }))} />
+          </div>
+          <div className="inline-scheduler__footer">
+            <button className="btn" onClick={submitInterview}>Save</button>
+            <button className="btn btn--ghost" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>Cancel</button>
+          </div>
+        </section>
+      )}
+
       <div className="admin-applicants__table">
           <div className="table__head">
           <div>Name</div>
@@ -143,7 +179,7 @@ export default function AdminApplicantManagement() {
               <button className="btn btn--reject" onClick={() => onApproveReject(a._id, 'rejected')}>Reject</button>
             </div>
             <div>
-              <button className="btn" onClick={() => openInterview(a)}>Schedule</button>
+              <button className="btn" onClick={() => openInterview(a)} disabled={a.status === 'rejected'} title={a.status === 'rejected' ? 'Cannot schedule for rejected applications' : ''}>Schedule</button>
               {a.interview?.scheduledAt && (
                 <div className="interview-badge">
                   {new Date(a.interview.scheduledAt).toLocaleString()}
@@ -153,44 +189,7 @@ export default function AdminApplicantManagement() {
           </div>
         ))}
       </div>
-
-      {interviewForm.open && (
-        <div className="modal">
-          <div className="modal__content">
-            <div className="modal__header">
-              <h3>Schedule Interview</h3>
-              <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>✕</button>
-            </div>
-            <div className="modal__body">
-              <label>Date & Time</label>
-              <input type="datetime-local" value={interviewForm.scheduledAt} onChange={(e) => setInterviewForm(prev => ({ ...prev, scheduledAt: e.target.value }))} />
-              <label>Mode</label>
-              <select value={interviewForm.mode} onChange={(e) => setInterviewForm(prev => ({ ...prev, mode: e.target.value }))}>
-                <option value="in-person">In person</option>
-                <option value="online">Online</option>
-              </select>
-              {interviewForm.mode === 'in-person' && (
-                <>
-                  <label>Location</label>
-                  <input type="text" value={interviewForm.location} onChange={(e) => setInterviewForm(prev => ({ ...prev, location: e.target.value }))} />
-                </>
-              )}
-              {interviewForm.mode === 'online' && (
-                <>
-                  <label>Meeting Link</label>
-                  <input type="text" value={interviewForm.meetingLink} onChange={(e) => setInterviewForm(prev => ({ ...prev, meetingLink: e.target.value }))} />
-                </>
-              )}
-              <label>Notes</label>
-              <textarea value={interviewForm.notes} onChange={(e) => setInterviewForm(prev => ({ ...prev, notes: e.target.value }))} />
-            </div>
-            <div className="modal__footer">
-              <button className="btn" onClick={submitInterview}>Save</button>
-              <button className="btn btn--ghost" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

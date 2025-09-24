@@ -8,8 +8,10 @@ const Career = () => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobOpenings, setJobOpenings] = useState([]);
+  const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const API_BASE_URL = 'http://localhost:5001';
 
@@ -24,8 +26,10 @@ const Career = () => {
       setError('');
       const response = await axios.get(`${API_BASE_URL}/jobs`);
       if (response.data.data && response.data.data.length > 0) {
+        setAllJobs(response.data.data);
         setJobOpenings(response.data.data);
       } else {
+        setAllJobs([]);
         setJobOpenings([]);
       }
     } catch (err) {
@@ -38,12 +42,38 @@ const Career = () => {
         const parsedJobs = JSON.parse(storedJobs);
         // Filter only active jobs
         const activeJobs = parsedJobs.filter(job => job.status === 'active');
+        setAllJobs(activeJobs);
         setJobOpenings(activeJobs);
       } else {
+        setAllJobs([]);
         setJobOpenings([]);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applySearch = () => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setJobOpenings(allJobs);
+      return;
+    }
+    const filtered = allJobs.filter(job => {
+      const hay = [job.title, job.department, job.location, job.type, job.description]
+        .filter(Boolean)
+        .join(' ') // combine
+        .toLowerCase();
+      const reqs = Array.isArray(job.requirements) ? job.requirements.join(' ').toLowerCase() : '';
+      return hay.includes(q) || reqs.includes(q);
+    });
+    setJobOpenings(filtered);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applySearch();
     }
   };
 
@@ -143,6 +173,19 @@ const Career = () => {
 
           <div className="job-openings">
             <h2>Current Openings</h2>
+            <div className="job-search">
+              <input
+                type="text"
+                className="job-search-input"
+                placeholder="Search by title, department, location, or keyword..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+              />
+              <button className="job-search-btn" onClick={applySearch}>
+                Search
+              </button>
+            </div>
             {loading ? (
               <div className="loading-message">
                 <p>Loading job openings...</p>

@@ -85,19 +85,9 @@ function NavBar() {
         )}
         {userType === 'Admin' && (
           <>
-            <Link to="/admin" onClick={closeMenu}>
+            <Link to="/admin-hub" onClick={closeMenu}>
               <button className="nav-btn">
                 <i className='bx bx-shield'></i> Admin
-              </button>
-            </Link>
-            <Link to="/admin-jobs" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-cog'></i> Manage Jobs
-              </button>
-            </Link>
-            <Link to="/admin/users" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-group'></i> Users
               </button>
             </Link>
           </>

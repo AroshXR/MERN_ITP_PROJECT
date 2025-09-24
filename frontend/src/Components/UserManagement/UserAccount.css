@@ -1,4 +1,4 @@
-﻿.user-account-page {
+.user-account-page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -86,20 +86,63 @@
 
 .form-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 3rem;
+    padding-top: 1rem;
+    border-top: 30px solid #ececec;
 }
 
-.form-actions button { padding: 0.65rem 1.5rem; border-radius: 999px; border: 2px solid #111; background: #111; color: #fff; font-weight: 700; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.form-actions button { padding: 0.65rem 1.5rem; border-radius: 999px; border: 2px solid #111; background: #111; color: #fff; font-weight: 700; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease; min-width: 160px; }
 
 .form-actions button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0,0,0,.25); }
+
+.form-actions button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.12);
+}
 
 .form-actions button:disabled {
     cursor: not-allowed;
     opacity: 0.6;
 }
 
-.form-actions .danger { background: #dc3545; border-color: #dc3545; }
+.form-actions .danger { background: #dc3545; border-color: #dc3545; color: #fff; }
+.form-actions .danger:hover:not(:disabled) { filter: brightness(1.02); box-shadow: 0 10px 20px rgba(220,53,69,.35); transform: translateY(-1px); }
+
+/* Ensure only the primary action buttons on the account page are black */
+.user-account-page .form-actions .primary-btn {
+    background: #111 !important;
+    border-color: #111 !important;
+    color: #fff !important;
+}
+.user-account-page .form-actions .primary-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0,0,0,.25);
+}
+
+/* Responsive behavior: stack buttons on smaller screens */
+@media (max-width: 720px) {
+    .form-actions {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .form-actions button {
+        flex: 1 1 calc(50% - 0.75rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .form-actions {
+        justify-content: center;
+    }
+    .form-actions button {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+}
 
 .form-feedback {
     margin: 0;

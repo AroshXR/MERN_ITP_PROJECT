@@ -1,0 +1,10 @@
+.admin-hub-page{min-height:100vh;background:#f7f7f9}
+.admin-hub{width:min(1200px,92%);margin:0 auto;padding:24px 0 48px}
+.admin-hub__header h1{margin:0;font-size:2rem}
+.admin-hub__header p{margin:6px 0 16px;color:#4b5563}
+.admin-hub__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.hub-card{display:flex;flex-direction:column;gap:6px;align-items:flex-start;padding:16px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.06);cursor:pointer;text-align:left}
+.hub-card:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(15,23,42,.12)}
+.hub-card i{font-size:1.6rem;color:#111}
+.hub-card h3{margin:4px 0 0}
+.hub-card p{margin:0;color:#4b5563}

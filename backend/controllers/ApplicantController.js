@@ -1,4 +1,5 @@
 const Applicant = require("../models/ApplicantModel");
+const User = require("../models/User");
 const { sendEmail } = require("../utils/email");
 
 // Input validation helper
@@ -335,6 +336,28 @@ const updateApplicantStatus = async (req, res, next) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
+    // Create an in-app notification for the matching User (by email)
+    try {
+      const user = await User.findOne({ email: updatedApplicant.gmail.toLowerCase(), type: "Applicant" }).select("_id");
+      if (user) {
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $push: {
+              notifications: {
+                message: `Your application for ${updatedApplicant.position} is ${status.toUpperCase()}${statusMessage ? `: ${statusMessage}` : ''}.`,
+                level: status === 'approved' ? 'success' : status === 'rejected' ? 'error' : 'info',
+                read: false,
+                createdAt: new Date()
+              }
+            }
+          }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("⚠️ Failed to create user notification:", notifyErr?.message);
+    }
+
     // Notify applicant via email
     const subject = `Application Status Update - ${status.toUpperCase()}`;
     const messageText = statusMessage || `Your application for the position of ${updatedApplicant.position} has been ${status}.`;
@@ -408,6 +431,15 @@ const scheduleInterview = async (req, res, next) => {
       return res.status(400).json({ message: "scheduledAt is required" });
     }
 
+    // Do not allow scheduling if rejected
+    const current = await Applicant.findById(id).select('status');
+    if (!current) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
+    if (current.status === 'rejected') {
+      return res.status(400).json({ message: "Cannot schedule interview for a rejected application" });
+    }
+
     const interview = {
       scheduledAt: new Date(scheduledAt),
       location: location || undefined,
@@ -424,6 +456,30 @@ const scheduleInterview = async (req, res, next) => {
 
     if (!updatedApplicant) {
       return res.status(404).json({ message: "Applicant not found" });
+    }
+
+    // Create an in-app notification for the matching User (by email)
+    try {
+      const user = await User.findOne({ email: updatedApplicant.gmail.toLowerCase(), type: "Applicant" }).select("_id");
+      if (user) {
+        const interviewTime = new Date(interview.scheduledAt).toLocaleString();
+        const notifMessage = `Your interview for ${updatedApplicant.position} has been scheduled on ${interviewTime}${interview.mode ? ` (${interview.mode})` : ''}${interview.location ? ` at ${interview.location}` : ''}.`;
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $push: {
+              notifications: {
+                message: notifMessage,
+                level: 'info',
+                read: false,
+                createdAt: new Date()
+              }
+            }
+          }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("⚠️ Failed to create interview notification:", notifyErr?.message);
     }
 
     const interviewTime = new Date(interview.scheduledAt).toLocaleString();

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthGuard/AuthGuard';
@@ -386,18 +386,8 @@ const UserAccount = () => {
                                 <span>Account Type</span>
                                 <input type="text" value={profile?.type || ''} disabled />
                             </label>
-                            {profile?.identitySubmittedAt && (
-                                <label>
-                                    <span>Identity Submitted</span>
-                                    <input
-                                        type="text"
-                                        value={new Date(profile.identitySubmittedAt).toLocaleString()}
-                                        disabled
-                                    />
-                                </label>
-                            )}
                             <div className="form-actions">
-                                <button type="submit" disabled={saveInProgress}>
+                                <button type="submit" className="primary-btn" disabled={saveInProgress}>
                                     {saveInProgress ? 'Saving...' : 'Save Changes'}
                                 </button>
                                 <button
@@ -409,6 +399,16 @@ const UserAccount = () => {
                                     {deleteInProgress ? 'Deleting...' : 'Delete Account'}
                                 </button>
                             </div>
+                            {profile?.identitySubmittedAt && (
+                                <label>
+                                    <span>Identity Submitted</span>
+                                    <input
+                                        type="text"
+                                        value={new Date(profile.identitySubmittedAt).toLocaleString()}
+                                        disabled
+                                    />
+                                </label>
+                            )}
                             {profileMessage && <p className="form-feedback success">{profileMessage}</p>}
                             {profileError && <p className="form-feedback error">{profileError}</p>}
                         </form>
@@ -443,7 +443,7 @@ const UserAccount = () => {
                             />
                         </label>
                         <div className="form-actions">
-                            <button type="submit" disabled={identitySaving}>
+                            <button type="submit" className="primary-btn" disabled={identitySaving}>
                                 {identitySaving ? 'Submitting...' : 'Submit for Verification'}
                             </button>
                         </div>

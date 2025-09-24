@@ -31,6 +31,43 @@ const AdminJobManagement = () => {
     fetchJobs();
   }, []);
 
+  const downloadApplicantReport = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/applicant/reports`);
+      const rows = res.data?.data || [];
+      if (!rows.length) {
+        alert('No applicant data to download');
+        return;
+      }
+      const headers = ['id','name','email','position','department','status','appliedAt'];
+      const csv = [headers.join(',')]
+        .concat(
+          rows.map(r => [
+            r.id,
+            JSON.stringify(r.name || ''),
+            r.email || '',
+            JSON.stringify(r.position || ''),
+            JSON.stringify(r.department || ''),
+            r.status || '',
+            r.appliedAt ? new Date(r.appliedAt).toISOString() : ''
+          ].join(','))
+        )
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `applicant_report_${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to download report:', e);
+      alert('Failed to download applicant report');
+    }
+  };
+
   const fetchJobs = async () => {
     try {
       setLoading(true);
@@ -267,16 +304,9 @@ const AdminJobManagement = () => {
             Next <i className="bx bx-arrow-forward"></i>
           </button>
         </div>
-        <button
-          className="add-job-btn"
-          onClick={() => setShowJobForm(true)}
-        >
-          <i className="bx bx-plus"></i> Post New Job
-        </button>
       </div>
       <div className='main'>
         <div className="admin-job-management">
-
 
           <div className="jobs-list">
             <h2>Current Jobs ({jobs.length})</h2>
@@ -339,6 +369,11 @@ const AdminJobManagement = () => {
                 ))}
               </div>
             )}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+              <button className="add-job-btn" onClick={() => { setShowJobForm(true); }}>
+                <i className="bx bx-plus"></i> Post New Job
+              </button>
+            </div>
           </div>
 
           {showJobForm && (
