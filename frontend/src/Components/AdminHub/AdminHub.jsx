@@ -53,6 +53,12 @@ export default function AdminHub() {
             <p>Review and manage order summaries and invoices.</p>
           </button>
 
+          <button className="hub-card" onClick={() => navigate('/owner')}>
+            <i className='bx bx-home-alt'></i>
+            <h3>Rental Management</h3>
+            <p>Manage rental listings, bookings, and dashboards.</p>
+          </button>
+
           <button className="hub-card" onClick={() => navigate('/admin-jobs')}>
             <i className='bx bx-cog'></i>
             <h3>Job Management</h3>
