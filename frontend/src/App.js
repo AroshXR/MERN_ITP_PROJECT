@@ -18,7 +18,7 @@ import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDet
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
-import InventoryManagement from './Components/Inventory-management/InventoryManagement';
+import MaterialInventoryManagement from './Components/MaterialInventory-management/MaterialInventoryManagement';
 import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGuide';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 import UserAccount from './Components/UserManagement/UserAccount';
@@ -125,7 +125,7 @@ function App() {
           path="/inventoryManagement"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
-              <InventoryManagement />
+              <MaterialInventoryManagement />
             </ProtectedRoute>
           )}
         />

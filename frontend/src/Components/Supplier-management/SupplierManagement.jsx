@@ -1031,7 +1031,7 @@ For questions about this report, contact: admin@klassytshirts.com
       <div className="supplier-container">
         <div className="dashboard-header">
           <h1>Supplier Management System</h1>
-          <p>Loading...</p>
+          <h3>Loading...</h3>
         </div>
       </div>
     )
@@ -1056,7 +1056,7 @@ For questions about this report, contact: admin@klassytshirts.com
       <NavBar />
       <div className="dashboard-header">
           <h1>Supplier Management System</h1>
-          <p>Manage your clothing store suppliers and orders efficiently</p>
+ 
           {successMessage && (
             <div style={{
               backgroundColor: '#0b0b0bff',
