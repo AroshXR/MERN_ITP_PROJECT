@@ -124,6 +124,29 @@ export default function InventoryManagement() {
     }
   }
 
+  const consumeItem = async (id, quantityUsed, reason, usedBy) => {
+    try {
+      const response = await fetch(`${INVENTORY_API_URL}/${id}/use`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quantityUsed, reason, usedBy }),
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to use item')
+      }
+      const data = await response.json()
+      setInventoryItems(inventoryItems.map(item => item._id === id ? data.item : item))
+      return data
+    } catch (error) {
+      console.error('Error using item:', error)
+      throw error
+    }
+  }
+
+
   const deleteInventoryItem = async (id) => {
     try {
       const response = await fetch(`${INVENTORY_API_URL}/${id}`, {
@@ -192,6 +215,14 @@ export default function InventoryManagement() {
         quantity: item.quantity,
         reason: ""
       })
+    } else if (type === "use" && item) {
+      setFormData({
+        quantityUsed: 1,
+        reason: "Production use",
+        usedBy: "",
+        availableStock: item.quantity,
+        unit: item.unit
+      })
     } else if (item) {
       setFormData(item)
     } else {
@@ -225,6 +256,12 @@ export default function InventoryManagement() {
       if (modalType === "quantity") {
         await updateItemQuantity(editingItem._id, parseInt(formData.quantity), formData.reason)
         setSuccessMessage("Quantity updated successfully!")
+      } else if (modalType === "use") {
+        const result = await consumeItem(editingItem._id, parseInt(formData.quantityUsed), formData.reason, formData.usedBy)
+        setSuccessMessage(`Used ${formData.quantityUsed} ${formData.unit}. Remaining: ${result.remainingStock} ${formData.unit}`)
+        if (result.alertSent) {
+          setSuccessMessage(prev => prev + " | Low stock alert sent!")
+        }
       } else if (modalType === "item") {
         if (editingItem) {
           await updateInventoryItem(editingItem._id, formData)
@@ -257,13 +294,13 @@ export default function InventoryManagement() {
         await deleteInventoryItem(id)
         setSuccessMessage("Item deleted successfully!")
         setTimeout(() => setSuccessMessage(""), 3000)
-        await fetchInventoryStats()
       } catch (error) {
-        console.error('Error deleting item:', error)
-        setError('Error deleting item. Please try again.')
+        setError(error.message)
+        setTimeout(() => setError(null), 5000)
       }
     }
   }
+
 
   if (loading) {
     return (
@@ -494,6 +531,14 @@ export default function InventoryManagement() {
                     <td>
                       <div className="action-buttons">
                         <button
+                          className="btn btn-success btn-small"
+                          onClick={() => openModal("use", item)}
+                          title="Use Item"
+                          disabled={item.quantity === 0}
+                        >
+                          Use
+                        </button>
+                        <button
                           className="btn btn-secondary btn-small"
                           onClick={() => openModal("quantity", item)}
                           title="Update Quantity"
@@ -610,6 +655,53 @@ export default function InventoryManagement() {
                         value={formData.reason || ""}
                         onChange={(e) => setFormData({...formData, reason: e.target.value})}
                         placeholder="Enter reason for quantity change..."
+                      />
+                    </div>
+                  </>
+                ) : modalType === "use" ? (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Item: {editingItem?.itemName}</label>
+                      <p className="form-help">Available Stock: {formData.availableStock} {formData.unit}</p>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Quantity to Use *</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={formData.quantityUsed || ""}
+                        onChange={(e) => setFormData({...formData, quantityUsed: e.target.value})}
+                        required
+                        min="1"
+                        max={formData.availableStock}
+                      />
+                      <small className="form-help">Maximum: {formData.availableStock} {formData.unit}</small>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Reason for Use *</label>
+                      <select
+                        className="form-select"
+                        value={formData.reason || ""}
+                        onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                        required
+                      >
+                        <option value="">Select reason...</option>
+                        <option value="Production use">Production use</option>
+                        <option value="Quality testing">Quality testing</option>
+                        <option value="Sample creation">Sample creation</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Damaged/Defective">Damaged/Defective</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Used By</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.usedBy || ""}
+                        onChange={(e) => setFormData({...formData, usedBy: e.target.value})}
+                        placeholder="Enter name of person using the item..."
                       />
                     </div>
                   </>

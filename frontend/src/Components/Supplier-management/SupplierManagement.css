@@ -206,6 +206,15 @@ body {
   color: var(--destructive-foreground);
 }
 
+.btn-success {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
 .btn-small {
   padding: 5px 8px;
   font-size: 0.75rem;
@@ -511,6 +520,12 @@ body {
 
   .report-actions {
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .report-actions button {
+    margin-left: 0 !important;
+    margin-bottom: 5px;
   }
 
   .report-content {

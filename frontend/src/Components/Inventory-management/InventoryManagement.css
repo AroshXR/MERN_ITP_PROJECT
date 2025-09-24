@@ -213,6 +213,30 @@ body {
   color: var(--destructive-foreground);
 }
 
+.btn-destructive:hover {
+  background: var(--destructive-hover);
+}
+
+.btn-success {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+.btn-success:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
 .btn-small {
   padding: 5px 8px;
   font-size: 0.75rem;
@@ -348,13 +372,19 @@ body {
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--input);
-  color: var(--foreground);
-  font-size: 1rem;
-  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-help {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 .form-textarea {

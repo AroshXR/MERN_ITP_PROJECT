@@ -21,4 +21,10 @@ router.delete('/:id', InventoryController.deleteInventoryItem);
 // Special route for quantity updates
 router.patch('/:id/quantity', InventoryController.updateItemQuantity);
 
+// Use item route - decreases quantity when items are used
+router.patch('/:id/use', InventoryController.useItem);
+
+// Check and send low stock alerts
+router.post('/alerts/check', InventoryController.checkLowStockAlerts);
+
 module.exports = router;
