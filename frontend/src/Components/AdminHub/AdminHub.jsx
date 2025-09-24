@@ -31,7 +31,7 @@ export default function AdminHub() {
 
           <button className="hub-card" onClick={() => navigate('/inventoryManagement')}>
             <i className='bx bx-package'></i>
-            <h3>Inventory Management</h3>
+            <h3>Material Inventory Management</h3>
             <p>Track materials and stock levels.</p>
           </button>
 
