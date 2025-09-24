@@ -43,6 +43,7 @@ export default function Reports() {
     
     try {
       const reportData = {
+        title: 'Klassy T Shirts',
         generatedAt: new Date().toISOString(),
         summary: analytics.summary,
         applicantsByPosition: analytics.applicantsByPosition,
@@ -73,7 +74,13 @@ export default function Reports() {
     }
     
     try {
+      const headerTitle = ['Klassy T Shirts'];
+      const section = ['Pending Applicants'];
+      const blank = [''];
       const csvData = [
+        headerTitle,
+        section,
+        blank,
         ['Name', 'Email', 'Position', 'Status', 'Applied At', 'Resume File'],
         ...analytics.pendingApplications.map(app => [
           app.name,
@@ -125,9 +132,19 @@ export default function Reports() {
       }
 
       const fileLabel = reportStatus === 'all' ? 'all' : reportStatus;
+      const sectionLabel = (status => {
+        switch (status) {
+          case 'approved': return 'Approved Applicants';
+          case 'rejected': return 'Rejected Applicants';
+          case 'pending': return 'Pending Applicants';
+          default: return 'Applicant Details';
+        }
+      })(reportStatus);
 
       if (format === 'json') {
         const payload = {
+          title: 'Klassy T Shirts',
+          section: sectionLabel,
           generatedAt: new Date().toISOString(),
           status: reportStatus,
           totalApplicants: applicants.length,
@@ -156,7 +173,13 @@ export default function Reports() {
         applicant.resume?.filename || 'N/A'
       ]);
 
-      const csvRows = [header, ...rows].map((row) =>
+      const csvRows = [
+        ['Klassy T Shirts'],
+        [sectionLabel],
+        [''],
+        header,
+        ...rows
+      ].map((row) =>
         row
           .map((value) => {
             const str = value ?? '';

@@ -38,19 +38,33 @@ const AdminJobManagement = () => {
         alert('No applicant data to download');
         return;
       }
-      const headers = ['id','name','email','position','department','status','appliedAt'];
-      const csv = [headers.join(',')]
-        .concat(
-          rows.map(r => [
-            r.id,
-            JSON.stringify(r.name || ''),
-            r.email || '',
-            JSON.stringify(r.position || ''),
-            JSON.stringify(r.department || ''),
-            r.status || '',
-            r.appliedAt ? new Date(r.appliedAt).toISOString() : ''
-          ].join(','))
-        )
+      const titleRow = ['Klassy T Shirts'];
+      const sectionRow = ['Applicant Details'];
+      const blankRow = [''];
+      const headers = ['ID','Name','Email','Position','Department','Status','Applied At'];
+
+      const csvRows = [
+        titleRow,
+        sectionRow,
+        blankRow,
+        headers,
+        ...rows.map(r => [
+          r.id,
+          r.name || '',
+          r.email || '',
+          r.position || '',
+          r.department || '',
+          r.status || '',
+          r.appliedAt ? new Date(r.appliedAt).toLocaleString() : ''
+        ])
+      ];
+
+      const csv = csvRows
+        .map(row => row.map(val => {
+          const str = val ?? '';
+          const escaped = String(str).replace(/"/g, '""');
+          return `"${escaped}"`;
+        }).join(','))
         .join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);

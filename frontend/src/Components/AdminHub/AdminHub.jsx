@@ -35,8 +35,8 @@ export default function AdminHub() {
             <p>Track materials and stock levels.</p>
           </button>
 
-          <button className="hub-card" onClick={() => navigate('/supplierManagement')}>
-            <i className='bx bx-truck'></i>
+          <button className="hub-card supplier-card" onClick={() => navigate('/supplierManagement')}>
+            <i className='bx bxs-truck'></i>
             <h3>Supplier Management</h3>
             <p>Manage suppliers and orders.</p>
           </button>
