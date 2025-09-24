@@ -401,12 +401,39 @@ export default function SupplierManagement() {
     }
   }
 
+  // Helper function to validate date filters
+  const validateDateFilters = () => {
+    if (reportFilters.dateFrom && reportFilters.dateTo) {
+      const fromDate = new Date(reportFilters.dateFrom)
+      const toDate = new Date(reportFilters.dateTo)
+      
+      if (fromDate > toDate) {
+        alert('Error: "Date From" cannot be later than "Date To". Please check your date range.')
+        return false
+      }
+      
+      // Check if date range is too far in the future
+      const today = new Date()
+      if (fromDate > today) {
+        const confirmFuture = window.confirm('Warning: Your "Date From" is in the future. This may result in no data. Continue anyway?')
+        if (!confirmFuture) return false
+      }
+    }
+    return true
+  }
+
   const generateReport = () => {
     setGeneratingReport(true)
     try {
       console.log('Generating report with filters:', reportFilters)
       console.log('Available suppliers:', suppliers.length)
       console.log('Available orders:', orders.length)
+      
+      // Validate date filters first
+      if (!validateDateFilters()) {
+        setGeneratingReport(false)
+        return
+      }
       
       // Validate we have data
       if (suppliers.length === 0) {
@@ -427,11 +454,65 @@ export default function SupplierManagement() {
           : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
 
     const filteredOrders = orders.filter((order) => {
-      const orderDate = new Date(order.orderDate)
-      const fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
-      const toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
+      // Enhanced date parsing to handle different formats
+      let orderDate
+      try {
+        // Handle different date formats that might be stored as strings
+        if (order.orderDate) {
+          // If it's already a valid date string, parse it
+          orderDate = new Date(order.orderDate)
+          
+          // If the date is invalid, try parsing it as a different format
+          if (isNaN(orderDate.getTime())) {
+            // Try parsing as DD/MM/YYYY or MM/DD/YYYY
+            const dateParts = order.orderDate.split(/[-/]/)
+            if (dateParts.length === 3) {
+              // Assume YYYY-MM-DD or DD/MM/YYYY format
+              const year = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[0] : dateParts[2]
+              const month = dateParts[1]
+              const day = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[2] : dateParts[0]
+              orderDate = new Date(year, month - 1, day) // month is 0-indexed
+            }
+          }
+        } else {
+          // If no order date, use creation date or current date
+          orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
+        }
+      } catch (error) {
+        console.error('Error parsing order date:', order.orderDate, error)
+        orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
+      }
 
-      const dateMatch = orderDate >= fromDate && orderDate <= toDate
+      // Parse filter dates
+      let fromDate, toDate
+      try {
+        fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
+        toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
+        
+        // Set toDate to end of day to include the entire day
+        if (reportFilters.dateTo) {
+          toDate.setHours(23, 59, 59, 999)
+        }
+      } catch (error) {
+        console.error('Error parsing filter dates:', error)
+        fromDate = new Date("2000-01-01")
+        toDate = new Date("2030-12-31")
+      }
+
+      // Debug logging (can be removed in production)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Order date comparison:', {
+          orderId: order._id,
+          originalOrderDate: order.orderDate,
+          parsedOrderDate: orderDate,
+          fromDate: fromDate,
+          toDate: toDate,
+          isValidOrderDate: !isNaN(orderDate.getTime()),
+          dateMatch: orderDate >= fromDate && orderDate <= toDate
+        })
+      }
+
+      const dateMatch = !isNaN(orderDate.getTime()) && orderDate >= fromDate && orderDate <= toDate
       const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
       
       // Fix supplier matching - handle both object and string supplierId
@@ -445,9 +526,40 @@ export default function SupplierManagement() {
     console.log('Filtered suppliers:', filteredSuppliers.length)
     console.log('Filtered orders:', filteredOrders.length)
     
+    // Provide detailed feedback about filtering results
+    const totalOrdersBeforeFilter = orders.length
+    const totalSuppliersBeforeFilter = suppliers.length
+    
+    console.log('Filtering summary:', {
+      totalOrdersBefore: totalOrdersBeforeFilter,
+      totalOrdersAfter: filteredOrders.length,
+      totalSuppliersBefore: totalSuppliersBeforeFilter,
+      totalSuppliersAfter: filteredSuppliers.length,
+      dateRange: `${reportFilters.dateFrom || 'All time'} to ${reportFilters.dateTo || 'Present'}`,
+      supplierFilter: reportFilters.supplierFilter,
+      statusFilter: reportFilters.statusFilter
+    })
+    
     // Check if filters resulted in no data
-    if (filteredSuppliers.length === 0 && filteredOrders.length === 0) {
-      alert('No data matches your current filters. Please adjust your filters and try again.')
+    if (filteredOrders.length === 0) {
+      let message = 'No orders match your current filters.'
+      
+      if (reportFilters.dateFrom || reportFilters.dateTo) {
+        message += `\n\nDate range: ${reportFilters.dateFrom || 'All time'} to ${reportFilters.dateTo || 'Present'}`
+        message += `\nTotal orders in system: ${totalOrdersBeforeFilter}`
+      }
+      
+      if (reportFilters.statusFilter !== 'all') {
+        message += `\nStatus filter: ${reportFilters.statusFilter}`
+      }
+      
+      if (reportFilters.supplierFilter !== 'all') {
+        const selectedSupplier = suppliers.find(s => s._id === reportFilters.supplierFilter)
+        message += `\nSupplier filter: ${selectedSupplier?.name || 'Unknown'}`
+      }
+      
+      message += '\n\nPlease adjust your filters and try again.'
+      alert(message)
       setGeneratingReport(false)
       return
     }
@@ -659,10 +771,19 @@ Items: ${o.items}
 
       setReportContent(content)
       setViewingReport(true)
+      setGeneratingReport(false)
+    
+    // Show success message with filtering results
+    const filterMessage = `Report generated successfully!\n\nFiltered Results:\n- ${filteredOrders.length} orders (from ${totalOrdersBeforeFilter} total)\n- ${filteredSuppliers.length} suppliers (from ${totalSuppliersBeforeFilter} total)`
+    
+    if (reportFilters.dateFrom || reportFilters.dateTo) {
+      console.log(filterMessage)
+    }
+    
+    console.log('Report generated successfully')
     } catch (error) {
       console.error('Error generating report:', error)
-      alert('Error generating report. Please check your filters and try again.')
-    } finally {
+      alert('Error generating report. Please try again.')
       setGeneratingReport(false)
     }
   }
@@ -753,10 +874,44 @@ For questions about this report, contact: admin@klassytshirts.com
       : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
 
     const filteredOrders = orders.filter((order) => {
-      const orderDate = new Date(order.orderDate)
-      const fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
-      const toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
-      const dateMatch = orderDate >= fromDate && orderDate <= toDate
+      // Enhanced date parsing to handle different formats (same as main filter)
+      let orderDate
+      try {
+        if (order.orderDate) {
+          orderDate = new Date(order.orderDate)
+          
+          if (isNaN(orderDate.getTime())) {
+            const dateParts = order.orderDate.split(/[-/]/)
+            if (dateParts.length === 3) {
+              const year = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[0] : dateParts[2]
+              const month = dateParts[1]
+              const day = dateParts.length === 3 && dateParts[0].length === 4 ? dateParts[2] : dateParts[0]
+              orderDate = new Date(year, month - 1, day)
+            }
+          }
+        } else {
+          orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
+        }
+      } catch (error) {
+        console.error('Error parsing order date for CSV:', order.orderDate, error)
+        orderDate = order.createdAt ? new Date(order.createdAt) : new Date()
+      }
+
+      let fromDate, toDate
+      try {
+        fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
+        toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
+        
+        if (reportFilters.dateTo) {
+          toDate.setHours(23, 59, 59, 999)
+        }
+      } catch (error) {
+        console.error('Error parsing filter dates for CSV:', error)
+        fromDate = new Date("2000-01-01")
+        toDate = new Date("2030-12-31")
+      }
+
+      const dateMatch = !isNaN(orderDate.getTime()) && orderDate >= fromDate && orderDate <= toDate
       const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
       const orderSupplierId = typeof order.supplierId === 'object' ? order.supplierId._id : order.supplierId
       const supplierMatch = reportFilters.supplierFilter === "all" || orderSupplierId === reportFilters.supplierFilter
@@ -1393,7 +1548,7 @@ For questions about this report, contact: admin@klassytshirts.com
                 {viewingReport && (
                   <>
                     <button
-                      className="btn btn-primary"
+                      className="supbtn"
                       onClick={downloadReportAsTXT}
                       style={{ marginLeft: "10px" }}
                       title="Download complete report with headers and footers"
@@ -1401,7 +1556,7 @@ For questions about this report, contact: admin@klassytshirts.com
                       📄 Download TXT
                     </button>
                     <button
-                      className="btn btn-success"
+                      className="supbtn"
                       onClick={downloadReportAsCSV}
                       style={{ marginLeft: "10px" }}
                       title="Download data in CSV format with headers"
@@ -1409,7 +1564,7 @@ For questions about this report, contact: admin@klassytshirts.com
                       📊 Download CSV
                     </button>
                     <button
-                      className="btn btn-primary"
+                      className="supbtn"
                       onClick={downloadReportAsHTML}
                       style={{ marginLeft: "10px" }}
                       title="Download formatted HTML report for web viewing"

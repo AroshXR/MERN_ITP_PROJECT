@@ -866,7 +866,7 @@ export default function MaterialInventoryManagement() {
                         </td>
                         <td>
                           <button
-                            className="btn btn-primary btn-small"
+                            className="supbtn"
                             onClick={() => openModal("quantity", item)}
                           >
                             Restock
