@@ -77,11 +77,14 @@ const AddOutfit = () => {
   return (
     <div className='px-4 py-10 md:px-10 flex-1 '>
 
+      <div class="w-[800px] h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 ">
+
+        <div className="text-center mt-26">
       <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and car specifications." />
+      </div>
 
       
-
-      <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-6 max-w-xl '>
+      <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-10 max-w-xl ml-20 '>
 
         
         {/* Main Outfit Image (Required) */}
@@ -227,7 +230,7 @@ const AddOutfit = () => {
             <textarea rows={5}  placeholder='e.g. Elegant gowns, Trendy cocktail dresses, Timeless evening wear  ' required className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none' value={outfit.description} onChange={e=> setOutfit({...outfit, description: e.target.value})} > </textarea>
           </div>
 
-           <div className="rainbow  w-[175px]">
+           <div className="rainbow  w-[175px] mx-auto">
       <button type="button">
         List Your Outfit
       </button>
@@ -236,6 +239,9 @@ const AddOutfit = () => {
     
 
       </form>
+
+      
+</div>
 
       
 
