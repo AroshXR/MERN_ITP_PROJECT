@@ -19,6 +19,11 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    background: linear-gradient(135deg, #000, #2b2b2b);
+    color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.25);
 }
 
 .header-nav-actions { display: flex; align-items: center; gap: .5rem; }
@@ -31,6 +36,25 @@
 .user-account-header h1 {
     margin: 0;
     font-size: 2rem;
+    color: #fff;
+}
+
+.user-account-header h1 i { margin-right: 8px; vertical-align: middle; }
+
+/* Subtitle under the black header */
+.account-subtitle {
+    margin: 8px 0 0;
+    color: #515151;
+}
+
+/* Hide the helper description within the header so only title, buttons, and badge remain */
+.user-account-header > div p { display: none; }
+
+/* Ensure the status badge reads well on dark background */
+.user-account-header .status-tag {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.22);
 }
 
 .panel {
@@ -49,10 +73,27 @@
 
 .panel h2 {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panel h2::before {
+    content: "";
+    width: 6px;
+    height: 20px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #000, #2b2b2b);
 }
 
 .panel-description { margin: 0; color: #515151; }
+
+/* Better spacing for grid */
+.form-grid {
+    grid-row-gap: 1rem;
+    grid-column-gap: 1rem;
+}
 
 .form-grid {
     display: grid;
@@ -65,18 +106,29 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    font-weight: 600;
-    color: #1e293b;
+    font-weight: 700;
+    color: #0f172a;
 }
 
 .form-grid input,
 .form-vertical textarea,
 .form-vertical input,
-.form-grid textarea { padding: 0.75rem; border-radius: 8px; border: 1px solid #e5e5e5; background: #f8fafc; font-size: 0.95rem; }
+.form-grid textarea { padding: 0.8rem 0.9rem; border-radius: 10px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 0.98rem; transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+
+.form-grid input:hover,
+.form-vertical textarea:hover,
+.form-vertical input:hover,
+.form-grid textarea:hover { border-color: #cbd5e1; }
 
 .form-grid input:focus,
 .form-vertical textarea:focus,
-.form-vertical input:focus { outline: none; border-color: #111111; box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); }
+.form-vertical input:focus { outline: none; border-color: #111111; box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); background: #fff; }
+
+/* Disabled inputs */
+.form-grid input:disabled,
+.form-grid textarea:disabled,
+.form-vertical input:disabled,
+.form-vertical textarea:disabled { background: #f3f4f6; color: #6b7280; }
 
 .form-vertical {
     display: flex;

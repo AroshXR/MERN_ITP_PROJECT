@@ -306,8 +306,7 @@ const UserAccount = () => {
             <main className="user-account-content">
                 <header className="user-account-header">
                     <div>
-                        <h1>Your Account</h1>
-                        <p>Manage your profile, notifications, and identity verification.</p>
+                        <h1><i className="bx bx-user-circle"></i> Your Account</h1>
                     </div>
                     <div className="header-nav-actions">
                         <button
@@ -329,6 +328,7 @@ const UserAccount = () => {
                         {statusLabels[profile?.identityStatus || 'unverified']}
                     </div>
                 </header>
+                <p className="account-subtitle">Manage your profile, notifications, and identity verification.</p>
 
                 {profileLoading ? (
                     <section className="panel">

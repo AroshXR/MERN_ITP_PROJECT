@@ -87,7 +87,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DBNAME = process.env.MONGODB_DBNAME;
 
 if (!MONGODB_URI) {
-  console.error("❌ Missing MONGODB_URI in .env file");
+  console.error("Missing MONGODB_URI in .env file");
   console.error("Please create backend/.env with: MONGODB_URI=your_mongodb_connection_string");
   process.exit(1);
 }
@@ -257,8 +257,8 @@ app.post("/login", async (req, res) => {
 
 // Universal MongoDB connection with cross-platform DNS resolution
 const connectToMongoDB = async () => {
-  console.log("🚀 Starting backend server...");
-  console.log(`📍 Platform: ${process.platform} | Node: ${process.version}`);
+  console.log("Starting backend server...");
+  console.log(`Platform: ${process.platform} | Node: ${process.version}`);
   
   try {
     // Connect with universal settings that work on any OS/network
@@ -293,16 +293,16 @@ const connectToMongoDB = async () => {
         //pasindu
     require("./models/MaterialInventoryModel");
     
-    console.log("📦 All models loaded successfully");
+    console.log("All models loaded successfully");
 
     // Start the server
     app.listen(PORT, () => {
-      console.log(`🌐 Server running on http://localhost:${PORT}`);
-      console.log("🎯 Ready to accept connections!");
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log("Ready to accept connections!");
     });
 
   } catch (error) {
-    console.error("❌ MongoDB connection failed:");
+    console.error("MongoDB connection failed:");
     console.error(`   Error: ${error.message}`);
     
     // Provide helpful troubleshooting info

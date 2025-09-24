@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminJobManagement.css';
-import NavBar from '../NavBar/navBar';
 import { useNavigate } from 'react-router-dom';
 
 const AdminJobManagement = () => {
@@ -284,10 +283,8 @@ const AdminJobManagement = () => {
 
   return (
     <div>
-      <NavBar />
-      <div className="admin-header">
-        <h1>Job Management Dashboard</h1>
-        <p>Post and manage job openings</p>
+      <div className="admin-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Job Management</h3>
         <div className="header-nav-actions">
           <button
             type="button"
