@@ -297,8 +297,9 @@ const AdminJobManagement = () => {
 
   return (
     <div>
-      <div className="admin-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Job Management</h3>
+      <div className="admin-header">
+        <h1>Job Management</h1>
+        <p>Post and manage job openings</p>
         <div className="header-nav-actions">
           <button
             type="button"
