@@ -14,7 +14,7 @@ const OutfitDetails = () => {
   const [reservationDate, setReservationDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [isBooking, setIsBooking] = useState(false);
-  const currency = process.env.REACT_APP_CURRENCY || 'USD';
+  const currency = process.env.REACT_APP_CURRENCY || 'LKR';
   const { isAuthenticated, getToken } = useAuth();
 
   const fetchOutfit = async () => {

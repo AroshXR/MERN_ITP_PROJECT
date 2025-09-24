@@ -3,10 +3,12 @@ import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
 import { assets } from '../../assets/assets'
 import "./RainbowButton.css";
+import { useAuth } from '../../AuthGuard/AuthGuard'
 
 const AddOutfit = () => {
 
   const currency = process.env.REACT_APP_CURRENCY
+  const { getToken } = useAuth()
 
   const [mainImage, setMainImage] = useState(null)
   const [additionalImages, setAdditionalImages] = useState([])
@@ -53,8 +55,12 @@ const AddOutfit = () => {
       
       form.append('outfitData', JSON.stringify(outfit))
 
+      const token = getToken()
       const { data } = await axios.post(`${BASE_URL}/api/owner/add-outfit`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
       })
 
       if(data?.success){
@@ -230,11 +236,11 @@ const AddOutfit = () => {
             <textarea rows={5}  placeholder='e.g. Elegant gowns, Trendy cocktail dresses, Timeless evening wear  ' required className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none' value={outfit.description} onChange={e=> setOutfit({...outfit, description: e.target.value})} > </textarea>
           </div>
 
-           <div className="rainbow  w-[175px] mx-auto">
-      <button type="button">
-        List Your Outfit
-      </button>
-    </div>
+          <div className="rainbow  w-[175px] mx-auto">
+            <button type="submit">
+              List Your Outfit
+            </button>
+          </div>
 
     
 
