@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminJobManagement.css';
 import NavBar from '../NavBar/navBar';
+import { useNavigate } from 'react-router-dom';
 
 const AdminJobManagement = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [showJobForm, setShowJobForm] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
@@ -249,6 +251,22 @@ const AdminJobManagement = () => {
       <div className="admin-header">
         <h1>Job Management Dashboard</h1>
         <p>Post and manage job openings</p>
+        <div className="header-nav-actions">
+          <button
+            type="button"
+            className="header-nav-btn secondary"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bx bx-arrow-back"></i> Back
+          </button>
+          <button
+            type="button"
+            className="header-nav-btn primary"
+            onClick={() => navigate('/admin-applicants')}
+          >
+            Next <i className="bx bx-arrow-forward"></i>
+          </button>
+        </div>
         <button
           className="add-job-btn"
           onClick={() => setShowJobForm(true)}

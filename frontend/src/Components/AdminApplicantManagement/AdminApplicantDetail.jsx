@@ -73,8 +73,21 @@ export default function AdminApplicantDetail() {
     <div className="admin-applicants detail">
       <div className="admin-applicants__header">
         <h2>Applicant Details</h2>
-        <div>
-          <Link to="/admin-applicants" className="btn btn--ghost">Back</Link>
+        <div className="header-nav-actions">
+          <button
+            type="button"
+            className="header-nav-btn secondary"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bx bx-arrow-back"></i> Back
+          </button>
+          <button
+            type="button"
+            className="header-nav-btn primary"
+            onClick={() => navigate('/admin-jobs')}
+          >
+            Next <i className="bx bx-arrow-forward"></i>
+          </button>
         </div>
       </div>
 

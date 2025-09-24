@@ -309,6 +309,22 @@ const UserAccount = () => {
                         <h1>Your Account</h1>
                         <p>Manage your profile, notifications, and identity verification.</p>
                     </div>
+                    <div className="header-nav-actions">
+                        <button
+                            type="button"
+                            className="header-nav-btn secondary"
+                            onClick={() => navigate(-1)}
+                        >
+                            <i className="bx bx-arrow-back"></i> Back
+                        </button>
+                        <button
+                            type="button"
+                            className="header-nav-btn primary"
+                            onClick={() => navigate('/userHome')}
+                        >
+                            Next <i className="bx bx-arrow-forward"></i>
+                        </button>
+                    </div>
                     <div className={statusStyles[profile?.identityStatus || 'unverified']}>
                         {statusLabels[profile?.identityStatus || 'unverified']}
                     </div>

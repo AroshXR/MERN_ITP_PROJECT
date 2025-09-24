@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './AdminApplicantManagement.css';
 
 const API_BASE_URL = 'http://localhost:5001';
 
 export default function AdminApplicantManagement() {
+  const navigate = useNavigate();
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -81,6 +83,22 @@ export default function AdminApplicantManagement() {
     <div className="admin-applicants">
       <div className="admin-applicants__header">
         <h2>Applicant Management</h2>
+        <div className="header-nav-actions">
+          <button
+            type="button"
+            className="header-nav-btn secondary"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bx bx-arrow-back"></i> Back
+          </button>
+          <button
+            type="button"
+            className="header-nav-btn primary"
+            onClick={() => navigate('/admin-jobs')}
+          >
+            Next <i className="bx bx-arrow-forward"></i>
+          </button>
+        </div>
         <div className="admin-applicants__filters">
           <label>Status:&nbsp;</label>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>

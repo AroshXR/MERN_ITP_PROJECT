@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EditApplicationForm.css';
 
-const EditApplicationForm = ({ application, onSubmit, onClose }) => {
+const EditApplicationForm = ({ application, onSubmit, onClose, onPrev = () => {}, onNext = () => {}, hasPrev = false, hasNext = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     gmail: '',
@@ -156,6 +156,27 @@ const EditApplicationForm = ({ application, onSubmit, onClose }) => {
             <i className="bx bx-x"></i>
           </button>
         </div>
+
+        {(hasPrev || hasNext) && (
+          <div className="edit-form-navigation">
+            <button
+              type="button"
+              className="nav-toggle prev"
+              onClick={onPrev}
+              disabled={!hasPrev || isSubmitting}
+            >
+              <i className="bx bx-chevron-left"></i> Previous
+            </button>
+            <button
+              type="button"
+              className="nav-toggle next"
+              onClick={onNext}
+              disabled={!hasNext || isSubmitting}
+            >
+              Next <i className="bx bx-chevron-right"></i>
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="edit-application-form">
           <div className="form-row">

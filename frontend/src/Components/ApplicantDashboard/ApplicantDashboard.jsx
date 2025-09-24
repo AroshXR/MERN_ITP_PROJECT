@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ApplicantDashboard.css';
 import EditApplicationForm from './EditApplicationForm';
 import NavBar from '../NavBar/navBar';
@@ -6,11 +7,13 @@ import NavBar from '../NavBar/navBar';
 const API_BASE_URL = 'http://localhost:5001';
 
 const ApplicantDashboard = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const [searchEmail, setSearchEmail] = useState('');
 
   const statusSummary = useMemo(() => {
@@ -83,22 +86,71 @@ const ApplicantDashboard = () => {
     }
   };
 
-  const handleEdit = (application) => {
+  const handleEdit = (application, index) => {
     setSelectedApplication(application);
+    setSelectedIndex(index);
     setShowEditForm(true);
+  };
+
+  const handleNavigateEdit = (direction) => {
+    if (!showEditForm || selectedIndex === null) {
+      return;
+    }
+
+    const newIndex = selectedIndex + direction;
+    if (newIndex < 0 || newIndex >= applications.length) {
+      return;
+    }
+
+    setSelectedIndex(newIndex);
+    setSelectedApplication(applications[newIndex]);
   };
 
   const handleDelete = (applicationId) => {
     if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
-      const updatedApplications = applications.filter((app) => app.id !== applicationId);
+      const currentSelectedId =
+        selectedIndex !== null && applications[selectedIndex]
+          ? applications[selectedIndex]._id || applications[selectedIndex].id
+          : null;
+
+      const updatedApplications = applications.filter(
+        (app) => (app._id || app.id) !== applicationId
+      );
       setApplications(updatedApplications);
 
       // Update localStorage
       const storedApplications = localStorage.getItem('jobApplications');
       if (storedApplications) {
         const allApplications = JSON.parse(storedApplications);
-        const filteredApplications = allApplications.filter((app) => app.id !== applicationId);
+        const filteredApplications = allApplications.filter(
+          (app) => (app._id || app.id) !== applicationId
+        );
         localStorage.setItem('jobApplications', JSON.stringify(filteredApplications));
+      }
+
+      if (showEditForm && selectedIndex !== null) {
+        if (!updatedApplications.length) {
+          setShowEditForm(false);
+          setSelectedApplication(null);
+          setSelectedIndex(null);
+        } else if (currentSelectedId === applicationId) {
+          const newIndex = Math.min(selectedIndex, updatedApplications.length - 1);
+          setSelectedIndex(newIndex);
+          setSelectedApplication(updatedApplications[newIndex]);
+        } else {
+          const refreshedIndex = updatedApplications.findIndex(
+            (app) => (app._id || app.id) === currentSelectedId
+          );
+
+          if (refreshedIndex === -1) {
+            setShowEditForm(false);
+            setSelectedApplication(null);
+            setSelectedIndex(null);
+          } else {
+            setSelectedIndex(refreshedIndex);
+            setSelectedApplication(updatedApplications[refreshedIndex]);
+          }
+        }
       }
 
       alert('Application deleted successfully');
@@ -106,29 +158,42 @@ const ApplicantDashboard = () => {
   };
 
   const handleUpdateApplication = (updatedApplication) => {
-    const updatedApplications = applications.map((app) =>
-      app.id === updatedApplication.id ? updatedApplication : app
-    );
+    const updatedApplications = applications.map((app) => {
+      const appId = app._id || app.id;
+      const updatedId = updatedApplication._id || updatedApplication.id;
+      return appId === updatedId ? updatedApplication : app;
+    });
     setApplications(updatedApplications);
 
     // Update localStorage
     const storedApplications = localStorage.getItem('jobApplications');
     if (storedApplications) {
       const allApplications = JSON.parse(storedApplications);
-      const updatedAllApplications = allApplications.map((app) =>
-        app.id === updatedApplication.id ? updatedApplication : app
-      );
+      const updatedId = updatedApplication._id || updatedApplication.id;
+      const updatedAllApplications = allApplications.map((app) => {
+        const appId = app._id || app.id;
+        return appId === updatedId ? updatedApplication : app;
+      });
       localStorage.setItem('jobApplications', JSON.stringify(updatedAllApplications));
+    }
+
+    if (selectedIndex !== null) {
+      const refreshed = updatedApplications[selectedIndex];
+      if (refreshed) {
+        setSelectedApplication(refreshed);
+      }
     }
 
     setShowEditForm(false);
     setSelectedApplication(null);
+    setSelectedIndex(null);
     alert('Application updated successfully');
   };
 
   const handleCloseEditForm = () => {
     setShowEditForm(false);
     setSelectedApplication(null);
+    setSelectedIndex(null);
   };
 
   if (loading) {
@@ -141,6 +206,22 @@ const ApplicantDashboard = () => {
       <div className="dashboard-header">
         <h1>My Applications Dashboard</h1>
         <p>View and manage your job applications</p>
+        <div className="dashboard-header-actions">
+          <button
+            type="button"
+            className="header-nav-btn secondary"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bx bx-arrow-back"></i> Back
+          </button>
+          <button
+            type="button"
+            className="header-nav-btn primary"
+            onClick={() => navigate('/career')}
+          >
+            Next Opportunities <i className="bx bx-arrow-forward"></i>
+          </button>
+        </div>
       </div>
       <div className="applicant-dashboard">
         <div className="search-section">
@@ -192,7 +273,7 @@ const ApplicantDashboard = () => {
             )}
 
             <div className="applications-grid">
-              {applications.map((application) => {
+              {applications.map((application, index) => {
                 const cardKey = application._id || application.id;
                 const statusKey = (application.status || 'pending')
                   .toLowerCase()
@@ -249,7 +330,7 @@ const ApplicantDashboard = () => {
 
                     <div className="application-actions">
                       <button
-                        onClick={() => handleEdit(application)}
+                        onClick={() => handleEdit(application, index)}
                         className="edit-btn"
                       >
                         <i className="bx bx-edit"></i> Edit
@@ -273,6 +354,10 @@ const ApplicantDashboard = () => {
             application={selectedApplication}
             onSubmit={handleUpdateApplication}
             onClose={handleCloseEditForm}
+            onPrev={() => handleNavigateEdit(-1)}
+            onNext={() => handleNavigateEdit(1)}
+            hasPrev={selectedIndex !== null && selectedIndex > 0}
+            hasNext={selectedIndex !== null && selectedIndex < applications.length - 1}
           />
         )}
       </div>
