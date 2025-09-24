@@ -12,10 +12,10 @@ const toNumber = (value) => {
 // Compute summary metrics from an orders array
 const computeSummary = (orders) => {
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + toNumber(order.totalAmount || order.total || order.amount), 0);
+    const totalRevenue = orders.reduce((sum, order) => sum + toNumber(order.totalAmount || order.total || order.amount || (order.orderDetails && order.orderDetails.total)), 0);
     const completedOrders = orders.filter((o) => (o.status || '').toLowerCase() === 'completed').length;
-    const pendingOrders = orders.filter((o) => (o.status || '').toLowerCase() === 'pending').length;
-    const cancelledOrders = orders.filter((o) => (o.status || '').toLowerCase() === 'cancelled' || (o.status || '').toLowerCase() === 'canceled').length;
+    const pendingOrders = orders.filter((o) => (o.status || '').toLowerCase() === 'pending' || (o.status || '').toLowerCase() === 'processing').length;
+    const cancelledOrders = orders.filter((o) => (o.status || '').toLowerCase() === 'cancelled' || (o.status || '').toLowerCase() === 'canceled' || (o.status || '').toLowerCase() === 'failed').length;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     return {
@@ -56,10 +56,10 @@ export default function OrderSummaryPage() {
             setError('');
             try {
                 const token = typeof getToken === 'function' ? getToken() : null;
-                const response = await axios.get('http://localhost:5001/orders', {
+                const response = await axios.get('http://localhost:5001/payment', {
                     headers: token ? { Authorization: `Bearer ${token}` } : undefined
                 });
-                const list = Array.isArray(response.data?.orders) ? response.data.orders : (Array.isArray(response.data) ? response.data : []);
+                const list = Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data?.orders) ? response.data.orders : (Array.isArray(response.data) ? response.data : []));
                 setOrders(list);
             } catch (err) {
                 setError('Failed to load orders.');
@@ -80,7 +80,7 @@ export default function OrderSummaryPage() {
         const start = startDate ? toDateOnly(startDate) : null;
         const end = endDate ? toDateOnly(endDate) : null;
         return orders.filter((o) => {
-            const orderDate = toDateOnly(o.createdAt || o.orderDate || o.date || o.created_on);
+            const orderDate = toDateOnly(o.createdAt || o.orderDate || o.date || o.created_on || o.CreatedAt);
             if (!orderDate) return false;
             if (start && orderDate < start) return false;
             if (end) {
@@ -116,11 +116,11 @@ export default function OrderSummaryPage() {
 
         const orderHeader = ['Order ID', 'Customer', 'Status', 'Total', 'Date'];
         const orderRows = filteredOrders.map((o) => [
-            o.id || o._id || '',
-            (o.customerName || o.customer || o.user?.name || o.user?.email || ''),
+            o.id || o._id || o.OrderID || '',
+            (o.customerName || o.customer || (o.userId && (o.userId.firstName && o.userId.lastName ? `${o.userId.firstName} ${o.userId.lastName}` : o.userId.email)) || o.user?.name || o.user?.email || ''),
             o.status || '',
-            toNumber(o.totalAmount || o.total || o.amount),
-            (o.createdAt || o.orderDate || o.date || '')
+            toNumber(o.totalAmount || o.total || o.amount || (o.orderDetails && o.orderDetails.total)),
+            (o.createdAt || o.orderDate || o.date || o.CreatedAt || '')
         ]);
 
         const escapeCsv = (value) => {
@@ -245,12 +245,12 @@ export default function OrderSummaryPage() {
                                         </thead>
                                         <tbody>
                                             {filteredOrders.map((o) => (
-                                                <tr key={o.id || o._id}>
-                                                    <td>{o.id || o._id}</td>
-                                                    <td>{o.customerName || o.customer || o.user?.name || o.user?.email || '-'}</td>
+                                                <tr key={o.id || o._id || o.OrderID}>
+                                                    <td>{o.id || o._id || o.OrderID}</td>
+                                                    <td>{(o.customerName || o.customer || (o.userId && (o.userId.firstName && o.userId.lastName ? `${o.userId.firstName} ${o.userId.lastName}` : o.userId.email)) || o.user?.name || o.user?.email || '-')}</td>
                                                     <td className={`status ${String(o.status || '').toLowerCase()}`}>{o.status || '-'}</td>
-                                                    <td>{formatCurrency(toNumber(o.totalAmount || o.total || o.amount))}</td>
-                                                    <td>{o.createdAt || o.orderDate || o.date || '-'}</td>
+                                                    <td>{formatCurrency(toNumber(o.totalAmount || o.total || o.amount || (o.orderDetails && o.orderDetails.total)))}</td>
+                                                    <td>{o.createdAt || o.orderDate || o.date || o.CreatedAt || '-'}</td>
                                                 </tr>
                                             ))}
                                             {!filteredOrders.length && (
