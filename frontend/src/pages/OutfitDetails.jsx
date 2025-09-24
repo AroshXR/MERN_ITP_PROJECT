@@ -16,6 +16,9 @@ const OutfitDetails = () => {
   const [reservationDate, setReservationDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [document, setDocument] = useState(null);
   const currency = process.env.REACT_APP_CURRENCY || 'LKR';
   const { isAuthenticated, getToken } = useAuth();
   
@@ -51,17 +54,42 @@ const OutfitDetails = () => {
         return;
       }
 
+      if (!phone || !email || !document) {
+        alert('Please fill in all required fields: phone, email, and upload a document');
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+
+      // Basic phone validation
+      const phoneRegex = /^[0-9]{10,}$/;
+      if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+        alert('Please enter a valid phone number (at least 10 digits)');
+        return;
+      }
+
       setIsBooking(true);
       const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
       const token = getToken();
       
-      const { data } = await axios.post(`${BASE_URL}/api/booking/create`, {
-        outfit: outfit._id,
-        reservationDate,
-        returnDate
-      }, {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('outfit', outfit._id);
+      formData.append('reservationDate', reservationDate);
+      formData.append('returnDate', returnDate);
+      formData.append('phone', phone);
+      formData.append('email', email);
+      formData.append('document', document);
+      
+      const { data } = await axios.post(`${BASE_URL}/api/booking/create`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
 
@@ -202,30 +230,83 @@ const OutfitDetails = () => {
           <p className="flex items-center justify-between text-2xl text-gray-800 font-semibold">{currency}{outfit.pricePerDay} <span className="text-base text-gray-400 font-normal">per day</span> </p>
 
           <hr className="border-borderColor my-6" />
-          <div className="flex flex-col gap-2">
-            <label htmlFor="reservation-date">Reservation Date</label>
-            <input 
-              type="date" 
-              className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" 
-              required 
-              id="reservation-date" 
-              min={new Date().toISOString().split('T')[0]} 
-              value={reservationDate}
-              onChange={(e) => setReservationDate(e.target.value)}
-            />
+          
+          {/* Contact Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-800">Contact Information</h3>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="phone">Phone Number *</label>
+              <input 
+                type="tel" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                required 
+                id="phone" 
+                placeholder="e.g., 0771234567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="email">Email Address *</label>
+              <input 
+                type="email" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                required 
+                id="email" 
+                placeholder="e.g., john@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="document">Upload ID Document *</label>
+              <input 
+                type="file" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                required 
+                id="document" 
+                accept="image/*,.pdf"
+                onChange={(e) => setDocument(e.target.files[0])}
+              />
+              <p className="text-xs text-gray-400">Upload your NIC, Passport, or Driver's License</p>
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="return-date">Return Date</label>
-            <input 
-              type="date" 
-              className="border border-solid border-borderColor px-3 py-2 rounded-lg" 
-              required 
-              id="return-date" 
-              min={reservationDate || new Date().toISOString().split('T')[0]} 
-              value={returnDate}
-              onChange={(e) => setReturnDate(e.target.value)}
-            />
+
+          <hr className="border-borderColor my-6" />
+          
+          {/* Booking Dates */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-800">Booking Dates</h3>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="reservation-date">Reservation Date</label>
+              <input 
+                type="date" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" 
+                required 
+                id="reservation-date" 
+                min={new Date().toISOString().split('T')[0]} 
+                value={reservationDate}
+                onChange={(e) => setReservationDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="return-date">Return Date</label>
+              <input 
+                type="date" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg" 
+                required 
+                id="return-date" 
+                min={reservationDate || new Date().toISOString().split('T')[0]} 
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+              />
+            </div>
           </div>
+          
           <button 
             type="submit"
             disabled={isBooking}

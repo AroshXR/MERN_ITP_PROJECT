@@ -40,7 +40,25 @@ const checkAvailabilityOfOutfit = async (req, res) => {
 const createBooking = async (req, res) => {
     try {
         const { _id } = req.user;
-        const { outfit, reservationDate, returnDate } = req.body;
+        const { outfit, reservationDate, returnDate, phone, email } = req.body;
+        const documentFile = req.file;
+
+        // Validate required fields
+        if (!phone || !email || !documentFile) {
+            return res.json({ success: false, message: "Phone, email, and document are required" });
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.json({ success: false, message: "Invalid email format" });
+        }
+
+        // Basic phone validation (should contain only digits and be at least 10 characters)
+        const phoneRegex = /^[0-9]{10,}$/;
+        if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+            return res.json({ success: false, message: "Invalid phone number format" });
+        }
 
         const isAvailable = await checkAvailability(outfit, reservationDate, returnDate);
         if (!isAvailable) {
@@ -58,7 +76,17 @@ const createBooking = async (req, res) => {
         const noOfDays = Math.ceil((returned - reserved) / (1000 * 60 * 60 * 24));  // Calculate number of days
         const price = outfitData.pricePerDay * noOfDays;
         
-        await Booking.create({ outfit, owner: outfitData.owner, user: _id, reservationDate, returnDate, price });
+        await Booking.create({ 
+            outfit, 
+            owner: outfitData.owner, 
+            user: _id, 
+            reservationDate, 
+            returnDate, 
+            price,
+            phone,
+            email,
+            document: documentFile.path // Store the file path
+        });
 
         res.json({ success: true, message: "Booking Created" });
 
@@ -131,11 +159,38 @@ const changeBookingStatus = async (req, res) => {
     }
 };
 
+// API to delete booking
+const deleteBooking = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { bookingId } = req.params;
+
+        const booking = await Booking.findById(bookingId);
+
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+
+        // Only the user who created the booking can delete it
+        if (booking.user.toString() !== _id.toString()) {
+            return res.json({ success: false, message: "Unauthorized to delete this booking" });
+        }
+
+        await Booking.findByIdAndDelete(bookingId);
+
+        res.json({ success: true, message: "Booking deleted successfully" });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // Exporting functions using CommonJS
 module.exports = {
     checkAvailabilityOfOutfit,
     createBooking,
     getUserBooking,
     getOwnerBooking,
-    changeBookingStatus
+    changeBookingStatus,
+    deleteBooking
 };
