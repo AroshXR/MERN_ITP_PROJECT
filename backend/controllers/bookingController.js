@@ -4,7 +4,8 @@ const Outfit = require("../models/Outfit");
 // Function to check the availability of the Outfit at a given date
 const checkAvailability = async (outfit, reservationDate, returnDate) => {
     const bookings = await Booking.find({
-        outfit,  // Fixed typo from 'outfift' to 'outfit'
+        outfit,
+        status: "confirmed", // Only check confirmed bookings
         reservationDate: { $lte: returnDate },
         returnDate: { $gte: reservationDate },
     });
@@ -47,6 +48,9 @@ const createBooking = async (req, res) => {
         }
 
         const outfitData = await Outfit.findById(outfit);
+        if (!outfitData) {
+            return res.json({ success: false, message: "Outfit not found" });
+        }
 
         // Calculate price based on Reservation Date and Return Date
         const reserved = new Date(reservationDate);
@@ -83,7 +87,10 @@ const getOwnerBooking = async (req, res) => {
         if (req.user.role !== 'owner') {
             return res.json({ success: false, message: "Unauthorized" });
         }
-        const bookings = (await Booking.find({ owner: req.user._id })).populate('outfit user').select("-user.password").sort({ createdAt: -1 });
+        const bookings = await Booking.find({ owner: req.user._id })
+            .populate('outfit user')
+            .select("-user.password")
+            .sort({ createdAt: -1 });
 
         res.json({ success: true, bookings });
     } catch (error) {

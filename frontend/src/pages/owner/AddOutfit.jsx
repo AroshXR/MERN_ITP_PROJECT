@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
 import { assets } from '../../assets/assets'
 
@@ -6,7 +7,8 @@ const AddOutfit = () => {
 
   const currency = process.env.REACT_APP_CURRENCY
 
-  const [image,setImage] = useState(null)
+  const [mainImage, setMainImage] = useState(null)
+  const [additionalImages, setAdditionalImages] = useState([])
 
   const [outfit , setOutfit] = useState({
     brand : '',
@@ -21,9 +23,54 @@ const AddOutfit = () => {
     description : '',
   })
 
+  const handleAdditionalImageChange = (index, file) => {
+    const newImages = [...additionalImages]
+    newImages[index] = file
+    setAdditionalImages(newImages)
+  }
+
   const onSubmitHandler = async (e)=> {
     e.preventDefault();
+    try{
+      if(!mainImage){
+        alert('Please select a main image')
+        return
+      }
 
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+      const form = new FormData()
+      
+      // Add main image
+      form.append('mainImage', mainImage)
+      
+      // Add additional images (up to 3)
+      additionalImages.forEach((image, index) => {
+        if (image) {
+          form.append('additionalImages', image)
+        }
+      })
+      
+      form.append('outfitData', JSON.stringify(outfit))
+
+      const { data } = await axios.post(`${BASE_URL}/api/owner/add-outfit`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      if(data?.success){
+        alert('Outfit Added')
+        // reset form
+        setMainImage(null)
+        setAdditionalImages([])
+        setOutfit({
+          brand:'', model:'', condition:'', pricePerDay:0, category:'', size:'', color:'', material:'', location:'', description:''
+        })
+      }else{
+        alert(data?.message || 'Failed to add outfit')
+      }
+    }catch(err){
+      console.error(err)
+      alert('Error adding outfit')
+    }
   }
 
   return (
@@ -33,13 +80,38 @@ const AddOutfit = () => {
 
       <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-6 max-w-xl'>
 
-        {/* Outfit Image */}
+        {/* Main Outfit Image (Required) */}
         <div className='flex items-center gap-2 w-full'>
-          <label htmlFor="outfit-image">
-            <img src={image ? URL.createObjectURL(image) : assets.upload_icon} alt=""  className='h-14 rounded cursor-pointer'/>
-            <input type="file"  id="outfit-image" accept="image/*" hidden onChange={e=>setImage(e.target.files[0])} />
+          <label htmlFor="main-outfit-image">
+            <img src={mainImage ? URL.createObjectURL(mainImage) : assets.upload_icon} alt=""  className='h-14 rounded cursor-pointer'/>
+            <input type="file"  id="main-outfit-image" accept="image/*" hidden onChange={e=>setMainImage(e.target.files[0])} />
           </label>
-          <p className='text-sm text-gray-500'>Upload a picture of your Outfit</p>
+          <p className='text-sm text-gray-500'>Upload main picture of your Outfit (Required)</p>
+        </div>
+
+        {/* Additional Images (Optional) */}
+        <div className='flex flex-col gap-3'>
+          <p className='text-sm text-gray-500'>Additional Images (Optional - up to 3)</p>
+          <div className='grid grid-cols-3 gap-3'>
+            {[0, 1, 2].map((index) => (
+              <div key={index} className='flex items-center gap-2'>
+                <label htmlFor={`additional-image-${index}`}>
+                  <img 
+                    src={additionalImages[index] ? URL.createObjectURL(additionalImages[index]) : assets.upload_icon} 
+                    alt=""  
+                    className='h-12 rounded cursor-pointer'
+                  />
+                  <input 
+                    type="file"  
+                    id={`additional-image-${index}`} 
+                    accept="image/*" 
+                    hidden 
+                    onChange={e=>handleAdditionalImageChange(index, e.target.files[0])} 
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Outfit Brand and Model */}

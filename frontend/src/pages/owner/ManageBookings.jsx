@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { dummyMyBookingsData } from '../../assets/assets'
+import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
 
 const ManageBookings = () => {
@@ -8,7 +8,13 @@ const ManageBookings = () => {
   const [bookings, setBookings] = useState([]) 
 
   const fetchOwnerBookings = async( )=>{
-    setBookings(dummyMyBookingsData)
+    try{
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+      const { data } = await axios.get(`${BASE_URL}/api/booking/owner`)
+      if(data?.success){
+        setBookings(data.bookings)
+      }
+    }catch(err){ console.error(err) }
   }
 
   useEffect(()=>{
@@ -42,26 +48,31 @@ const ManageBookings = () => {
                   <p className='font-medium max-md:hidden'>{booking.outfit.brand} {booking.outfit.model} </p>
                 </td>
 
-                <td className='p-3 max:hidden'>
-                  {booking.reservationDate.split('T')[0] } to {booking.returnDate.split('T')[0]}
+                <td className='p-3 max-md:hidden'>
+                  {new Date(booking.reservationDate).toLocaleDateString()} to {new Date(booking.returnDate).toLocaleDateString()}
                 </td>
 
                 <td className='p-3 '> {currency } {booking.price}  </td>
 
-                <td className='p-3 max:hidden'>
+                <td className='p-3 max-md:hidden'>
                   <span className='bg-gray-100 px-3 py-1 rounded-full text-xs'>Offline</span>
                 </td>
 
                 <td className='p-3 '> 
-                  {booking.status === "pending" ? (
-                    <select value={booking.status} className='px-2 py-1.5 mt-1 text-gray-500 border border-borderColor rounded-md outline-none' >
-                      <option value="pending">Pending</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="confirmed">Confirmed</option>
-                    </select>
-                  ) : (
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-500' : 'bg-red-100 text-red-500 '} `}>{booking.status} </span>
-                  )}
+                  <select value={booking.status} className='px-2 py-1.5 mt-1 text-gray-500 border border-borderColor rounded-md outline-none' onChange={async (e)=>{
+                    try{
+                      const status = e.target.value
+                      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+                      const { data } = await axios.post(`${BASE_URL}/api/booking/change-status`, { bookingId: booking._id, status })
+                      if(data?.success){
+                        fetchOwnerBookings()
+                      }
+                    }catch(err){ console.error(err) }
+                  }}>
+                    <option value="pending">Pending</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="confirmed">Confirmed</option>
+                  </select>
                 </td>
 
                 

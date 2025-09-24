@@ -25,6 +25,7 @@ import AdminUserManagement from './Components/AdminManagement/AdminUserManagemen
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
 
+
 import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
 import Outfits from './pages/Outfits';
@@ -34,10 +35,12 @@ import Dashboard from './pages/owner/Dashboard';
 import AddOutfit from './pages/owner/AddOutfit';
 import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
+//import { Toaster} from 'react-hot-toast'
 
 function App() {
   return (
     <AuthProvider>
+      
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />

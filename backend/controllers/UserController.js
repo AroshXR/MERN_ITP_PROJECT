@@ -1,6 +1,9 @@
-﻿const mongoose = require("mongoose");
+﻿
+
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+
 
 const sanitizeUser = (user) => {
     if (!user) {
@@ -358,6 +361,10 @@ const deleteNotification = async (request, response) => {
     }
 };
 
+
+
+
+
 exports.getAllUsers = getAllUsers;
 exports.addUsers = addUsers;
 exports.getById = getById;
@@ -369,3 +376,5 @@ exports.getUserNotifications = getUserNotifications;
 exports.createNotification = createNotification;
 exports.updateNotification = updateNotification;
 exports.deleteNotification = deleteNotification;
+
+

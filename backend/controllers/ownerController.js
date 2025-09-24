@@ -21,28 +21,64 @@ const addOutfit = async (req, res) => {
     try {
         const { _id } = req.user;
         let outfit = JSON.parse(req.body.outfitData);
-        const imageFile = req.file;
+        const files = req.files; // This is an object with field names as keys
 
-        // Upload Imagekit
-        const fileBuffer = fs.readFileSync(imageFile.path);
-        const response = await imagekit.upload({
-            file: fileBuffer,
-            fileName: imageFile.originalname,
+        if (!files || (!files.mainImage && !files.additionalImages)) {
+            return res.json({ success: false, message: "At least one image is required" });
+        }
+
+        // Upload main image (required)
+        const mainImageFile = files.mainImage ? files.mainImage[0] : null;
+        if (!mainImageFile) {
+            return res.json({ success: false, message: "Main image is required" });
+        }
+
+        const mainFileBuffer = fs.readFileSync(mainImageFile.path);
+        const mainResponse = await imagekit.upload({
+            file: mainFileBuffer,
+            fileName: mainImageFile.originalname,
             folder: '/outfits'
         });
 
-        // Optimization through imagekit URL transformation
-        const optimizedImageUrl = imagekit.url({
-            path: response.filePath,
+        const mainOptimizedImageUrl = imagekit.url({
+            path: mainResponse.filePath,
             transformation: [
-                { width: '1280' }, // width resizing
-                { quality: 'auto' }, // auto compression
-                { format: 'webp' } // convert to modern format
+                { width: '1280' },
+                { quality: 'auto' },
+                { format: 'webp' }
             ]
         });
 
-        const image = optimizedImageUrl;
-        await Outfit.create({ ...outfit, owner: _id, image });  // store the outfit data in MongoDB
+        // Upload additional images (optional, max 3)
+        const additionalImages = [];
+        const additionalFiles = files.additionalImages || [];
+        
+        for (let i = 0; i < Math.min(additionalFiles.length, 3); i++) {
+            const file = additionalFiles[i];
+            const fileBuffer = fs.readFileSync(file.path);
+            const response = await imagekit.upload({
+                file: fileBuffer,
+                fileName: file.originalname,
+                folder: '/outfits'
+            });
+
+            const optimizedImageUrl = imagekit.url({
+                path: response.filePath,
+                transformation: [
+                    { width: '1280' },
+                    { quality: 'auto' },
+                    { format: 'webp' }
+                ]
+            });
+            additionalImages.push(optimizedImageUrl);
+        }
+
+        await Outfit.create({ 
+            ...outfit, 
+            owner: _id, 
+            image: mainOptimizedImageUrl,
+            images: additionalImages
+        });
 
         res.json({ success: true, message: "Outfit Added" });
 
@@ -54,12 +90,58 @@ const addOutfit = async (req, res) => {
 
 
 //API to list owner Outfits
-
 const getOwnerOutfits = async (req, res) => {
     try {
         const { _id } = req.user;
         const outfits = await Outfit.find({ owner: _id });
         res.json({ success: true, outfits });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+//API to get all outfits (for frontend browsing)
+const getAllOutfits = async (req, res) => {
+    try {
+        const { location, category, search, minPrice, maxPrice } = req.query;
+        
+        let query = { isAvailable: true };
+        
+        if (location) query.location = location;
+        if (category) query.category = category;
+        if (minPrice || maxPrice) {
+            query.pricePerDay = {};
+            if (minPrice) query.pricePerDay.$gte = Number(minPrice);
+            if (maxPrice) query.pricePerDay.$lte = Number(maxPrice);
+        }
+        if (search) {
+            query.$or = [
+                { brand: { $regex: search, $options: 'i' } },
+                { model: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        // Get all outfits matching the query
+        let outfits = await Outfit.find(query).populate('owner', 'username email');
+        
+        // Filter out outfits with confirmed bookings
+        const availableOutfits = [];
+        
+        for (const outfit of outfits) {
+            const confirmedBookings = await Booking.find({
+                outfit: outfit._id,
+                status: 'confirmed'
+            });
+            
+            // Only include outfit if no confirmed bookings exist
+            if (confirmedBookings.length === 0) {
+                availableOutfits.push(outfit);
+            }
+        }
+        
+        res.json({ success: true, outfits: availableOutfits });
     } catch (error) {
         console.log(error.message);
         res.json({ success: false, message: error.message });
@@ -120,16 +202,19 @@ const getDashboardData = async (req, res) => {
         const outfits = await Outfit.find({ owner: _id })
         const bookings = await Booking.find({owner: _id}).populate('outfit').sort({createdAt: -1}) ;
 
-        const pendingBookings =await Booking.find({owner: _id, status: "pending"})
-        const completedBookings =await Booking.find({owner: _id, status: "confirmed"})
+        const pendingBookings = await Booking.find({ owner: _id, status: "pending" }).sort({ createdAt: -1 });
+        const confirmedBookings = await Booking.find({ owner: _id, status: "confirmed" }).sort({ createdAt: -1 });
+        const cancelledBookings = await Booking.find({ owner: _id, status: "cancelled" }).sort({ createdAt: -1 });
 
-        //Calculate monthlyRevenue from bookings where status is confirmed
-        const monthlyRevenue = bookings.slice().filter(booking => booking.status === 'confirmed').reduce((acc,booking)=> acc+ booking.price, 0)
+        // Calculate monthlyRevenue from bookings where status is confirmed
+        const monthlyRevenue = confirmedBookings.reduce((acc, booking) => acc + booking.price, 0);
 
         const dashboardData = {
             totalOutfits: outfits.length,
             totalBookings: bookings.length,
-            pendingBookings: bookings.slice(0,3),
+            pendingBookings: pendingBookings.slice(0,3),
+            confirmedBookings: confirmedBookings.length,
+            cancelledBookings: cancelledBookings.length,
             monthlyRevenue
         }
 
@@ -185,6 +270,7 @@ module.exports = {
     changeRoleToOwner,
     addOutfit,
     getOwnerOutfits,
+    getAllOutfits,
     toggleOutfitAvailability,
     deleteOutfit,
     getDashboardData,

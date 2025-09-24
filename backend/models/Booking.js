@@ -7,7 +7,8 @@ const bookingSchema = new mongoose.Schema({
     user: {type: ObjectId, ref: "User", required : true },
     owner: {type: ObjectId, ref: "User", required : true },
     reservationDate: {type: Date,required:true},
-    status : {type: String, enum: ["pending ", "confirmed" , "cancelled"], default:"pending"},
+    returnDate: {type: Date, required: true},
+    status : {type: String, enum: ["pending", "confirmed" , "cancelled"], default:"pending"},
     price: {type: Number, required: true}
 
 
