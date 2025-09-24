@@ -654,11 +654,6 @@ export default function MaterialInventoryManagement() {
                             <span className="quantity-number">{item.quantity}</span>
                             <span className="quantity-unit">{item.unit}</span>
                           </div>
-                          {item.quantity <= item.minimumStock && (
-                            <div className="stock-warning">
-                               Low Stock (Min: {item.minimumStock})
-                            </div>
-                          )}
                         </td>
                         <td className="pricing-info">
                           <div className="price-display">
@@ -777,12 +772,6 @@ export default function MaterialInventoryManagement() {
                           <span className="detail-value">{item.supplierName}</span>
                         </div>
                       </div>
-                      
-                      {item.quantity <= item.minimumStock && (
-                        <div className="low-stock-alert">
-                          ⚠️ Low Stock Alert (Min: {item.minimumStock})
-                        </div>
-                      )}
                     </div>
                     
                     <div className="card-actions">
