@@ -31,6 +31,8 @@ function NavBar() {
   const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = () => {
+    const confirmed = window.confirm('Are you sure you want to log out?');
+    if (!confirmed) return;
     logout();
     navigate('/login');
     closeMenu();
