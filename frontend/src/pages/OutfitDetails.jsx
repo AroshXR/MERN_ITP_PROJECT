@@ -95,6 +95,15 @@ const OutfitDetails = () => {
     setCurrentSlide((prevSlide) => (prevSlide - 1 + totalSlides) % totalSlides);
   };
 
+  // 👇 Paste your auto-slide useEffect here
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 3000); // 3 seconds per slide
+
+    return () => clearInterval(interval); // cleanup on unmount
+  }, [currentSlide, outfit]);
+
   if (!outfit) return <Loader />;
 
   const allImages = [outfit.image, ...(outfit.images || [])].filter(Boolean);
