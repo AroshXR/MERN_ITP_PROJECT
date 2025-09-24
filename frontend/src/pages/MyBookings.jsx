@@ -116,7 +116,7 @@ const MyBookings = () => {
             {/* Outfit Image + Info */}
             <div className='md:col-span-1'>
               <div className='rounded-md overflow-hidden mb-3'>
-                <img src={booking.outfit.image} alt="" className='w-60 h-60 aspect-video object-cover object-top'  />  {/* You can customize the image here */}
+                <img src={booking.outfit.image} alt="" className='w-60 h-60 aspect-video object-cover object-top'  />  
               </div>
 
               <p className='text-lg font-medium mt-2'>{booking.outfit.brand} {booking.outfit.model} </p>

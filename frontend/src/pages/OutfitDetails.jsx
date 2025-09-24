@@ -5,6 +5,7 @@ import Loader from '../Components/pasindu/Loader';
 import './OutfitDetails.css';
 import axios from 'axios';
 import { useAuth } from '../AuthGuard/AuthGuard';
+import Navbar from '../Components/pasindu/Navbar';
 
 const OutfitDetails = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ const OutfitDetails = () => {
   const [isBooking, setIsBooking] = useState(false);
   const currency = process.env.REACT_APP_CURRENCY || 'LKR';
   const { isAuthenticated, getToken } = useAuth();
+  
 
   const fetchOutfit = async () => {
     try {
@@ -98,9 +100,14 @@ const OutfitDetails = () => {
   const allImages = [outfit.image, ...(outfit.images || [])].filter(Boolean);
   const totalSlides = allImages.length;
 
+  
+
   return (
-    <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
-      <button onClick={() => navigate(-1)} className="back-button">
+    <div>
+      <Navbar/>
+      <div className=" ">
+    <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16 ">
+      <button onClick={() => navigate(-1)} className="back-button ">
         <img src={assets.arrow_icon} alt="Back" />
         Back to all Outfits
       </button>
@@ -109,7 +116,7 @@ const OutfitDetails = () => {
         {/* Left: Outfit Image and Details */}
         <div className="lg:col-span-2">
           {/* Image Slider */}
-          <div className="flex items-center">
+          <div className="flex items-center -ml-20 mr-6">
             <button onClick={prevSlide} className="md:p-2 p-1 bg-black/30 md:mr-6 mr-2 rounded-full hover:bg-black/50">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -129,14 +136,14 @@ const OutfitDetails = () => {
               </div>
             </div>
 
-            <button onClick={nextSlide} className="p-1 md:p-2 bg-black/30 md:ml-6 ml-2 rounded-full hover:bg-black/50">
+            <button onClick={nextSlide} className="p-1 md:p-2 bg-black/30 md:ml-1 ml-1 rounded-full hover:bg-black/50">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 pt-6">
             <div>
               <h1 className="text-3xl font-bold">{outfit.brand} {outfit.model}</h1>
               <p className="text-gray-500 text-lg">{outfit.category} • {outfit.condition}</p>
@@ -216,6 +223,8 @@ const OutfitDetails = () => {
           <p className="text-center text-sm">No credit card required to reserve</p>
         </form>
       </div>
+    </div>
+    </div>
     </div>
   );
 }
