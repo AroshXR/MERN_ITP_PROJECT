@@ -65,6 +65,7 @@ const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
 const inventoryRouter = require("./routes/InventoryRoutes");
+const orderRouter = require("./routes/OrderRoutes");
 
 
      //pasindu
@@ -108,6 +109,7 @@ app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
 app.use("/inventory", inventoryRouter);
+app.use("/orders", orderRouter);
 
     //pasindu                                                         sdsdsdssdsdsdsdsd
     app.use("/api/owner", ownerRouter);
@@ -122,6 +124,25 @@ app.get("/test", (req, res) => {
         message: "Backend server is running", 
         timestamp: new Date().toISOString() 
     });
+});
+
+// Debug endpoint to check orders collection
+app.get("/debug/orders", async (req, res) => {
+    try {
+        const Order = require("./models/OrderModel");
+        const orders = await Order.find().limit(10).sort({ CreatedAt: -1 });
+        res.json({
+            status: "ok",
+            message: "Orders from database",
+            count: orders.length,
+            data: orders
+        });
+    } catch (error) {
+        res.json({
+            status: "error",
+            message: "Error fetching orders: " + error.message
+        });
+    }
 });
 
 // Test email configuration endpoint

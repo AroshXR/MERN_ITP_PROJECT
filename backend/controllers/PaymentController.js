@@ -1,4 +1,12 @@
 const PaymentDetails = require("../models/PaymentDetailsModel");
+const Order = require("../models/OrderModel");
+
+// Generate unique order ID
+const generateOrderId = () => {
+  const timestamp = Date.now().toString();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `ORD-${timestamp}-${random}`;
+};
 
 // Create new payment details
 const createPaymentDetails = async (req, res) => {
@@ -77,14 +85,78 @@ const createPaymentDetails = async (req, res) => {
 
     console.log("Payment details saved successfully:", savedPaymentDetails._id);
 
+    // Create orders for each cart item
+    const createdOrders = [];
+    console.log("Processing cart items for order creation:", orderDetails.cartItems?.length || 0);
+    
+    if (orderDetails.cartItems && orderDetails.cartItems.length > 0) {
+      for (const item of orderDetails.cartItems) {
+        console.log(`Processing cart item:`, {
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          totalPrice: item.totalPrice
+        });
+        
+        try {
+          // Validate that the item ID is a valid ObjectId for DesignID
+          if (!item.id || !item.id.match(/^[0-9a-fA-F]{24}$/)) {
+            console.warn(`Skipping item with invalid ID: ${item.id} (not a valid ObjectId)`);
+            continue;
+          }
+          
+          console.log(`Valid ObjectId found for item: ${item.id}`);
+
+          // Use the userId directly (it's already extracted from JWT in frontend)
+          let userObjectId = userId;
+
+          const orderData = {
+            OrderID: generateOrderId(),
+            quantity: item.quantity || 1,
+            PaymentID: savedPaymentDetails._id.toString(),
+            DesignID: item.id, // This should be a valid ObjectId from ClothCustomizer
+            Price: item.totalPrice || item.price || 0,
+            AdminID: userObjectId, // User who placed the order
+            ItemID: item.id,
+            CreatedAt: new Date()
+          };
+
+          console.log("Creating order with data:", orderData);
+          
+          const newOrder = new Order(orderData);
+          const savedOrder = await newOrder.save();
+          
+          console.log("Order saved to database:", {
+            _id: savedOrder._id,
+            OrderID: savedOrder.OrderID,
+            collection: 'orders'
+          });
+          createdOrders.push({
+            orderId: savedOrder.OrderID,
+            _id: savedOrder._id,
+            itemName: item.name,
+            quantity: savedOrder.quantity,
+            price: savedOrder.Price
+          });
+
+          console.log("Order created successfully:", savedOrder.OrderID);
+        } catch (orderError) {
+          console.error("Error creating order for item:", item.id, orderError.message);
+          // Continue with other items even if one fails
+        }
+      }
+    }
+
     res.status(201).json({
       status: "ok",
-      message: "Payment details saved successfully",
+      message: "Payment details and orders saved successfully",
       data: {
         paymentId: savedPaymentDetails._id,
         status: savedPaymentDetails.status,
         total: savedPaymentDetails.orderDetails.total,
-        createdAt: savedPaymentDetails.createdAt
+        createdAt: savedPaymentDetails.createdAt,
+        orders: createdOrders,
+        totalOrders: createdOrders.length
       }
     });
 

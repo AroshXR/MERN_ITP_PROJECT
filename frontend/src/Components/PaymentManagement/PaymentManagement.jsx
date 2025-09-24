@@ -259,12 +259,23 @@ const CheckoutPage = () => {
       })
 
       if (response.data.status === 'ok') {
-        setSubmitMessage(`Payment details saved successfully! Payment ID: ${response.data.data.paymentId}`)
+        const { paymentId, orders, totalOrders } = response.data.data
+        let successMessage = `Payment successful! Payment ID: ${paymentId}`
+        
+        if (orders && totalOrders > 0) {
+          successMessage += `\n${totalOrders} order(s) created:`
+          orders.forEach(order => {
+            successMessage += `\n• ${order.itemName} (Qty: ${order.quantity}) - Order ID: ${order.orderId}`
+          })
+        }
+        
+        setSubmitMessage(successMessage)
+        
         // Reset form or redirect to success page
         setTimeout(() => {
           // You can redirect to a success page or reset the form
           window.location.reload()
-        }, 3000)
+        }, 5000) // Increased timeout to allow reading order details
       } else {
         setSubmitMessage('Error saving payment details: ' + response.data.message)
       }
@@ -895,12 +906,15 @@ const CheckoutPage = () => {
           right: '20px',
           padding: '15px 20px',
           borderRadius: '8px',
-          backgroundColor: submitMessage.includes('successfully') ? '#d4edda' : '#f8d7da',
-          color: submitMessage.includes('successfully') ? '#155724' : '#721c24',
-          border: `1px solid ${submitMessage.includes('successfully') ? '#c3e6cb' : '#f5c6cb'}`,
+          backgroundColor: submitMessage.includes('successful') ? '#d4edda' : '#f8d7da',
+          color: submitMessage.includes('successful') ? '#155724' : '#721c24',
+          border: `1px solid ${submitMessage.includes('successful') ? '#c3e6cb' : '#f5c6cb'}`,
           zIndex: 1000,
-          maxWidth: '400px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          maxWidth: '500px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          whiteSpace: 'pre-line',
+          fontSize: '14px',
+          lineHeight: '1.4'
         }}>
           {submitMessage}
         </div>
