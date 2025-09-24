@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
 import { assets } from '../../assets/assets'
+import "./RainbowButton.css";
 
 const AddOutfit = () => {
 
@@ -74,14 +75,17 @@ const AddOutfit = () => {
   }
 
   return (
-    <div className='px-4 py-10 md:px-10 flex-1'>
+    <div className='px-4 py-10 md:px-10 flex-1 '>
 
       <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and car specifications." />
 
-      <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-6 max-w-xl'>
+      
 
+      <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-6 max-w-xl '>
+
+        
         {/* Main Outfit Image (Required) */}
-        <div className='flex items-center gap-2 w-full'>
+        <div className='flex items-center gap-2 w-full '>
           <label htmlFor="main-outfit-image">
             <img src={mainImage ? URL.createObjectURL(mainImage) : assets.upload_icon} alt=""  className='h-14 rounded cursor-pointer'/>
             <input type="file"  id="main-outfit-image" accept="image/*" hidden onChange={e=>setMainImage(e.target.files[0])} />
@@ -223,14 +227,19 @@ const AddOutfit = () => {
             <textarea rows={5}  placeholder='e.g. Elegant gowns, Trendy cocktail dresses, Timeless evening wear  ' required className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none' value={outfit.description} onChange={e=> setOutfit({...outfit, description: e.target.value})} > </textarea>
           </div>
 
+           <div className="rainbow  w-[175px]">
+      <button type="button">
+        List Your Outfit
+      </button>
+    </div>
 
-          <button className='flex items-center gap-2 px-4 py-2.5 mt-4 bg-primary text-white rounded-md font-medium w-max cursor-pointer'>
-            <img src={assets.tick_icon} alt="" />
-            List Your Car
-          </button>
+    
 
       </form>
-        
+
+      
+
+
     </div>
   )
 }
