@@ -8,48 +8,78 @@ function AboutUs() {
     const navigate = useNavigate();
 
     return (
-            <div className="about-content">
-                <h2>About Klassy T Shirts</h2>
-                <p>Discover our story, mission, and values.</p>
+        <div className="about-content">
+            <h2>About Klassy T-Shirts</h2>
+            <p>Discover our story, mission, and values that drive us to create exceptional custom apparel experiences.</p>
 
-                <div className="about-sections">
-                    <section className="about-section">
-                        <h2>Our Story</h2>
-                        <p>
-                            Klassy T Shirts was founded to bring creativity and individuality to everyone’s wardrobe. We provide high-quality custom apparel designed to let you express yourself.
-                        </p>
-                    </section>
+            <div className="about-sections">
+                <section className="about-section">
+                    <h2>Our Story</h2>
+                    <p>
+                        Founded with a vision to revolutionize custom apparel, Klassy T-Shirts emerged from the belief that everyone deserves to wear their creativity. We combine cutting-edge design technology with premium materials to bring your unique vision to life.
+                    </p>
+                    <p>
+                        From our humble beginnings to becoming a trusted name in custom apparel, we've remained committed to quality, innovation, and customer satisfaction.
+                    </p>
+                </section>
 
-                    <section className="about-section">
-                        <h2>Our Mission</h2>
-                        <p>
-                            Our mission is to empower customers to create personalized designs while delivering comfort, style, and durability.
-                        </p>
-                    </section>
+                <section className="about-section">
+                    <h2>Our Mission</h2>
+                    <p>
+                        To empower individuals and businesses to express their unique identity through high-quality, customizable apparel that combines style, comfort, and durability.
+                    </p>
+                    <p>
+                        We strive to make custom design accessible, affordable, and enjoyable for everyone, while maintaining the highest standards of quality and service.
+                    </p>
+                </section>
 
-                    <section className="about-section">
-                        <h2>Our Values</h2>
-                        <ul>
-                            <li><strong>Creativity:</strong> Encouraging self-expression through unique designs.</li>
-                            <li><strong>Quality:</strong> Premium materials and excellent craftsmanship.</li>
-                            <li><strong>Customer Satisfaction:</strong> Your happiness is our priority.</li>
-                            <li><strong>Sustainability:</strong> Eco-friendly practices whenever possible.</li>
-                        </ul>
-                    </section>
+                <section className="about-section">
+                    <h2>Our Values</h2>
+                    <ul>
+                        <li><strong>Creativity:</strong> Fostering self-expression through innovative design tools and unlimited customization options.</li>
+                        <li><strong>Quality:</strong> Using premium materials and state-of-the-art printing techniques for lasting results.</li>
+                        <li><strong>Customer-Centric:</strong> Putting your satisfaction and experience at the heart of everything we do.</li>
+                        <li><strong>Sustainability:</strong> Committed to eco-friendly practices and responsible manufacturing processes.</li>
+                        <li><strong>Innovation:</strong> Continuously improving our technology and services to exceed expectations.</li>
+                    </ul>
+                </section>
 
-                    <section className="about-section">
-                        <h2>Contact Us</h2>
-                        <p>
-                            Have questions or want to learn more?
-                            <Link to="/contact" style={{ textDecoration: 'none', marginLeft: '30px' }}>
-                                <button className="cta-button">Send a message</button>
-                            </Link>
-                            <br />
-                            Or Reach out at <a href="mailto:support@klassytshirts.com">support@klassytshirts.com</a>
-                        </p>
-                    </section>
+                <section className="about-section">
+                    <h2>Get In Touch</h2>
+                    <p>
+                        Ready to bring your ideas to life? We're here to help you create something amazing.
+                    </p>
+                    <Link to="/contact">
+                        <button className="cta-button">Start Your Project</button>
+                    </Link>
+                    <p>
+                        Questions? Reach out to our team at <a href="mailto:support@klassytshirts.com">support@klassytshirts.com</a>
+                    </p>
+                    <p>
+                        Follow us on social media for design inspiration and updates on new features.
+                    </p>
+                </section>
+            </div>
+
+            <div className="about-stats">
+                <div className="stat-item">
+                    <span className="stat-number">15K+</span>
+                    <span className="stat-label">Happy Customers</span>
+                </div>
+                <div className="stat-item">
+                    <span className="stat-number">75K+</span>
+                    <span className="stat-label">Designs Created</span>
+                </div>
+                <div className="stat-item">
+                    <span className="stat-number">4.9★</span>
+                    <span className="stat-label">Customer Rating</span>
+                </div>
+                <div className="stat-item">
+                    <span className="stat-number">99%</span>
+                    <span className="stat-label">Satisfaction Rate</span>
                 </div>
             </div>
+        </div>
     );
 }
 
