@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { assets, cityList } from '../../assets/assets';
 import { useAuth } from '../../AuthGuard/AuthGuard';
 import { useNavigate } from 'react-router-dom';
+import "./hero.css"
 
 const Hero = () => {
   const [pickupCategory, setPickupCategory] = useState('');
@@ -24,59 +25,49 @@ const Hero = () => {
         )}
       </div>
 
-      <form className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 rounded-lg md:rounded-full w-full max-w-4xl bg-white shadow-[0px_8px_20px_rgba(0,0,0,0.1)]">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-14 md:ml-8">
-          <div className="flex flex-col items-start gap-2">
-            <select
-              required
-              value={pickupCategory}
-              onChange={(e) => setPickupCategory(e.target.value)}
-              className="border border-gray-300 rounded-md p-2"
-            >
-              <option value="">Choose Your Style</option>
-              {cityList.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
+      <form className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 rounded-lg md:rounded-full w-full max-w-4xl classic-form">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-14 md:ml-8">
+        <div className="flex flex-col items-start gap-2">
+          <select
+            required
+            value={pickupCategory}
+            onChange={(e) => setPickupCategory(e.target.value)}
+            className="classic-select"
+          >
+            <option value="">Choose Your Style</option>
+            {cityList.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
 
-            <p className="px-1 text-sm text-gray-500">
-              {pickupCategory ? pickupCategory : 'Please Select Your Style'}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-start gap-2">
-            <label htmlFor="reservation-date" className="text-sm">
-              Reservation Date
-            </label>
-            <input
-              type="date"
-              id="pickup-date"
-              min={new Date().toISOString().split('T')[0]}
-              className="border border-gray-300 rounded-md p-2"
-              required
-            />
-          </div>
-
-          <div className="flex flex-col items-start gap-2">
-            <label htmlFor="return-date" className="text-sm">
-              Return Date
-            </label>
-            <input
-              type="date"
-              id="return-date"
-              className="border border-gray-300 rounded-md p-2"
-              required
-            />
-          </div>
+          <p className="px-1 text-sm text-gray-400">{pickupCategory ? pickupCategory : "Please Select Your Style"}</p>
         </div>
 
-        <button className="flex items-center justify-center gap-2 px-6 py-3 mt-6 md:mt-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full cursor-pointer">
-          <img src={assets.search_icon} alt="search" className="brightness-300" />
-          Search
-        </button>
-      </form>
+        <div className="flex flex-col items-start gap-2">
+          <label htmlFor="reservation-date" className="text-sm text-white">
+            Reservation Date
+          </label>
+          <input
+            type="date"
+            id="reservation-date"
+            min={new Date().toISOString().split("T")[0]}
+            className="classic-input"
+            required
+          />
+        </div>
+
+        <div className="flex flex-col items-start gap-2">
+          <label htmlFor="return-date" className="text-sm text-white">
+            Return Date
+          </label>
+          <input type="date" id="return-date" className="classic-input" required />
+        </div>
+      </div>
+
+      <button className="flex items-center justify-center gap-2 px-6 py-3 mt-6 md:mt-0 classic-button">Search</button>
+    </form>
 
       <img
         src={assets.main_homepage}

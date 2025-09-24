@@ -1,0 +1,53 @@
+/* Replaced futuristic styling with classic black and white design matching original dimensions */
+.classic-form {
+  background: #000000;
+  border: 2px solid #333333;
+  box-shadow: 0px 8px 20px rgba(255, 255, 255, 0.1);
+}
+
+.classic-select,
+.classic-input {
+  border: 1px solid #666666;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: #1a1a1a;
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.classic-select:focus,
+.classic-input:focus {
+  outline: none;
+  border-color: #ffffff;
+  background: #000000;
+}
+
+.classic-select:hover,
+.classic-input:hover {
+  border-color: #999999;
+}
+
+.classic-select option {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.classic-button {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.classic-button:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.classic-button:active {
+  transform: translateY(0);
+}
