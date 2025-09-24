@@ -4,6 +4,7 @@ import { assets } from '../assets/assets'
 import OutfitCard from '../Components/pasindu/OutfitCard'
 import Navbar from '../Components/pasindu/Navbar'
 import axios from 'axios'
+import Footer from '../Components/Footer/Footer'
 
 const Outfits = () => {
   const [input, setInput] = useState('')
@@ -128,6 +129,7 @@ const Outfits = () => {
           ))}
         </div>
       </div>
+      <Footer></Footer>
     </div>
   )
 }
