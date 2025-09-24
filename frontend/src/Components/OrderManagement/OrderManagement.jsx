@@ -293,8 +293,8 @@ export default function OrderManagement() {
     return (
         <div>
             <NavBar />
-            <div className="order-management-container w-full min-h-screen flex flex-col">
-                
+            <div className="order-management-container">
+
                 {/* Notification */}
                 {notification && (
                     <div className={`notification ${notification.type}`}>
@@ -350,7 +350,20 @@ export default function OrderManagement() {
                                                         <h3 className="item-name">{item.name || `Custom ${item.clothingType || 'Clothing'}`}</h3>
                                                         <div className="item-details">
                                                             <p><strong>Size:</strong> {item.size || 'N/A'}</p>
-                                                            <p><strong>Color:</strong> {item.color || 'N/A'}</p>
+                                                            {/* <p><strong>Color:</strong> {item.color || 'N/A'}</p> */}
+                                                            <div className="color-preview">
+                                                                <div
+                                                                    className="color-palette"
+                                                                    style={{
+                                                                        backgroundColor: item.color,
+                                                                        width: "24px",
+                                                                        height: "24px",
+                                                                        borderRadius: "50%",
+                                                                        border: "1px solid #ccc",
+                                                                    }}
+                                                                    title={item.color}
+                                                                />
+                                                            </div>
                                                             <p><strong>Type:</strong> {item.clothingType || 'N/A'}</p>
                                                             {item.selectedDesign && item.selectedDesign.name && (
                                                                 <p><strong>Design:</strong> {item.selectedDesign.name}</p>
