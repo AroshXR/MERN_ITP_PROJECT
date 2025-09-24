@@ -39,12 +39,16 @@ const FeaturedSection = () => {
           ))
         }
       </div>
-      <button
-        onClick={() => { navigate('/Outfits'); window.scrollTo(0, 0); }}
-        className="flex items-center justify-center gap-2 px-6 py-2 border border-borderColor hover:bg-gray-50 rounded-md mt-18 cursor-pointer"
-      >
-        Explore All Outfits <img src={assets.arrow_icon} alt="arrow" />
-      </button>
+      <div className="button-bg rounded-full p-0.5 hover:scale-105 transition duration-300 active:scale-100">
+  <button
+    onClick={() => { navigate('/Outfits'); window.scrollTo(0, 0); }}
+    className="px-8 py-2.5 text-sm text-white rounded-full font-medium bg-gray-800 flex items-center gap-2"
+  >
+    Explore All Outfits
+    <img src={assets.arrow_icon} alt="arrow" className="w-4 h-4" />
+  </button>
+</div>
+
     </div>
   );
 }

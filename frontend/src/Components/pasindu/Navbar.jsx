@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { assets, menuLinks } from '../../assets/assets'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import './Navbar.css'; // Import the custom CSS
+import './Navbar.css'
 import { useAuth } from '../../AuthGuard/AuthGuard'
 
 const Navbar = () => {
@@ -11,23 +11,42 @@ const Navbar = () => {
   const { isAuthenticated, currentUser, logout } = useAuth()
 
   return (
-    <div className={`navbar-container ${location.pathname === "/" ? "bg-light" : "bg-white"}`}>
-      <Link to='/'>
-        <img
-          src={assets.logo}
-          alt="logo"
-          style={{ height: '60px', width: 'auto', transform: 'translate(-20px, -10px)' }}
-          className="h-8 flex-shrink-0"
-        />
-      </Link>
+    <nav className="navbar">
+      {/* Logo */}
+      <h2 className="logo" onClick={() => navigate('/')}>
+        Klassy T Shirts
+      </h2>
 
-      <div className={`navbar-links-container ${open ? 'show' : ''}`}>
+      {/* Mobile toggle */}
+      <div
+        className="menu-icon"
+        onClick={() => setOpen(!open)}
+      >
+        <i className={open ? 'bx bx-x' : 'bx bx-menu'}></i>
+      </div>
+
+      <div className={`nav-content ${open ? 'active' : ''}`}>
         {/* Menu Links */}
-        {menuLinks.map((link, index) => (
-          <Link key={index} to={link.path}>
-            {link.name}
-          </Link>
-        ))}
+        <div className="nav-links">
+          {menuLinks.map((link, index) => {
+            const highlight =
+              link.name === 'Home' ||
+              link.name === 'Outfit' ||
+              link.name === 'My Bookings'
+
+            return (
+              <Link
+  key={index}
+  to={link.name === 'Home' ? '/rentalHome' : link.path}
+  onClick={() => setOpen(false)}
+>
+  <button className={highlight ? 'nav-btn special-btn' : 'nav-btn'}>
+    {link.name}
+  </button>
+</Link>
+            )
+          })}
+        </div>
 
         {/* Search Bar */}
         <div className="search-bar">
@@ -56,16 +75,7 @@ const Navbar = () => {
           )}
         </div>
       </div>
-
-      {/* Mobile Menu Toggle */}
-      <button
-        className="mobile-menu-btn"
-        aria-label="Menu"
-        onClick={() => setOpen(!open)}
-      >
-        <img src={open ? assets.close_icon : assets.menu_icon} alt="menu" />
-      </button>
-    </div>
+    </nav>
   )
 }
 
