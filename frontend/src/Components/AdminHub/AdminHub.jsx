@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../NavBar/navBar';
+import Footer from '../Footer/Footer';
 import './AdminHub.css';
 
 export default function AdminHub() {
@@ -59,6 +60,7 @@ export default function AdminHub() {
           </button>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
