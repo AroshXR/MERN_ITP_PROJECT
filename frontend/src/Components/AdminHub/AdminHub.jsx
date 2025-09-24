@@ -28,6 +28,18 @@ export default function AdminHub() {
             <p>Manage users and roles.</p>
           </button>
 
+          <button className="hub-card" onClick={() => navigate('/inventoryManagement')}>
+            <i className='bx bx-package'></i>
+            <h3>Inventory Management</h3>
+            <p>Track materials and stock levels.</p>
+          </button>
+
+          <button className="hub-card" onClick={() => navigate('/supplierManagement')}>
+            <i className='bx bx-truck'></i>
+            <h3>Supplier Management</h3>
+            <p>Manage suppliers and orders.</p>
+          </button>
+
           <button className="hub-card" onClick={() => navigate('/admin-jobs')}>
             <i className='bx bx-cog'></i>
             <h3>Job Management</h3>

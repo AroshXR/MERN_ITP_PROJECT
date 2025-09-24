@@ -88,7 +88,7 @@ function App() {
         <Route
           path="/paymentDetails"
           element={(
-            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+            <ProtectedRoute allowedUserTypes="Admin">
               <PaymentDetailsDisplay />
             </ProtectedRoute>
           )}

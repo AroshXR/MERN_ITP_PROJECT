@@ -92,13 +92,7 @@ function NavBar() {
             </Link>
           </>
         )}
-        {isCustomerOrApplicant && (
-          <Link to="/paymentDetails" onClick={closeMenu}>
-            <button className="nav-btn">
-              <i className='bx bx-credit-card'></i> Payment Details
-            </button>
-          </Link>
-        )}
+        
         <Link to="/contact" onClick={closeMenu}>
           <button className="nav-btn">
             <i className='bx bx-phone'></i> Contact Us
