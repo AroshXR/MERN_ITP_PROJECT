@@ -884,6 +884,19 @@ body {
   min-width: 120px;
 }
 
+/* Force black buttons in modal form actions */
+.form-actions .btn-primary,
+.form-actions .btn-secondary {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+}
+
+.form-actions .btn-primary:hover,
+.form-actions .btn-secondary:hover {
+  background: #111111;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
