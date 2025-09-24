@@ -40,6 +40,12 @@ export default function AdminHub() {
             <p>Manage suppliers and orders.</p>
           </button>
 
+          <button className="hub-card" onClick={() => navigate('/paymentDetails')}>
+            <i className='bx bx-credit-card'></i>
+            <h3>Payment Details</h3>
+            <p>View and analyze payment transactions.</p>
+          </button>
+
           <button className="hub-card" onClick={() => navigate('/admin-jobs')}>
             <i className='bx bx-cog'></i>
             <h3>Job Management</h3>
