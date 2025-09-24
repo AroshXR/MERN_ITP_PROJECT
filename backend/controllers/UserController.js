@@ -1,6 +1,9 @@
-﻿const mongoose = require("mongoose");
+﻿
+
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+
 
 const sanitizeUser = (user) => {
     if (!user) {
@@ -450,6 +453,10 @@ const deleteNotification = async (request, response) => {
         return response.status(500).json({ status: "error", message: "Unable to delete notification" });
     }
 };
+
+
+
+
 
 exports.getAllUsers = getAllUsers;
 exports.addUsers = addUsers;

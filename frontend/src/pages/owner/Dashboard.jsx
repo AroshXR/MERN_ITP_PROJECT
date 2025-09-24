@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { assets, dummyDashboardData } from '../../assets/assets'
+import axios from 'axios'
+import { assets } from '../../assets/assets'
 import Title from '../../Components/pasindu/owner/Title'
 
 const Dashboard = () => {
@@ -24,14 +25,40 @@ const Dashboard = () => {
     {title: "Confirmed", value: data.completedBookings, icon : assets.listIconColored}
   ]
 
+  const fetchDashboard = async ()=>{
+    try{
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+      const { data: resp } = await axios.get(`${BASE_URL}/api/owner/dashboard`)
+      if(resp?.success && resp.dashboardData){
+        const { totalOutfits, totalBookings, pendingBookings, confirmedBookings, cancelledBookings, monthlyRevenue } = resp.dashboardData
+        setData({
+          totalOutfits,
+          totalBookings,
+          pendingBookings: pendingBookings?.length || 0,
+          completedBookings: confirmedBookings || 0,
+          recentBookings: pendingBookings || [],
+          monthlyRevenue
+        })
+      }
+    }catch(err){ console.error(err) }
+  }
+
   useEffect(()=>{
-    setData(dummyDashboardData)
+    fetchDashboard()
   }, [])
 
 
   return (
     <div className='px-4 pt-10 md:px-10 flex-1'>
-      <Title title = "Admin Dashboard" subTitle ="Monitor overall platform performance including total outfits,bookings, revenue, and recent activities"/>
+      <div className='flex justify-between items-center'>
+        <Title title = "Admin Dashboard" subTitle ="Monitor overall platform performance including total outfits,bookings, revenue, and recent activities"/>
+        <button 
+          onClick={fetchDashboard}
+          className='px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dull transition-colors'
+        >
+          Refresh Data
+        </button>
+      </div>
 
       <div className='grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 my-8 max-w-3xl '>
         {dashboardCards.map((card,index)=>(

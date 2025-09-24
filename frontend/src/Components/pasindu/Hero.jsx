@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
 import { assets, cityList } from '../../assets/assets';
+import { useAuth } from '../../AuthGuard/AuthGuard';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const [pickupCategory, setPickupCategory] = useState('');
+  const { isAuthenticated, currentUser } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="h-screen flex flex-col items-center justify-center gap-14 bg-gray-100 text-center">
-      <h1 className="text-4xl md:text-5xl font-semibold mt-10">
-        Luxury Outfits for Rent
-      </h1>
+      <div className="flex flex-col items-center gap-4">
+        <h1 className="text-4xl md:text-5xl font-semibold mt-10">
+          Luxury Outfits for Rent
+        </h1>
+        {isAuthenticated() && (currentUser?.type === 'Customer' || currentUser?.type === 'Applicant') && (
+          <button 
+            onClick={() => navigate('/my-bookings')}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors"
+          >
+            My Bookings
+          </button>
+        )}
+      </div>
 
       <form className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 rounded-lg md:rounded-full w-full max-w-4xl bg-white shadow-[0px_8px_20px_rgba(0,0,0,0.1)]">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-14 md:ml-8">

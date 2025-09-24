@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import axios from 'axios'
 import { assets, dummyOutfitData } from '../../assets/assets'
 import Title from '../../Components/pasindu/owner/Title'
 import { useState } from 'react'
@@ -10,7 +11,15 @@ const ManageOutfits = () => {
   const [outfits,setOutfits] = useState([])
 
   const fetchOwnerOutfits = async ()=>{
-    setOutfits(dummyOutfitData)
+    try{
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+      const { data } = await axios.get(`${BASE_URL}/api/owner/outfits`)
+      if(data?.success){
+        setOutfits(data.outfits)
+      }
+    }catch(err){
+      console.error(err)
+    }
   }
 
   useEffect(()=>{
@@ -55,8 +64,26 @@ const ManageOutfits = () => {
 
                 </td>
                 <td className='flex items-center p-3'>
-                  <img src={outfit.isAvailable ? assets.eye_close_icon : assets.eye_icon} alt="" className='cursor-pointer'/>
-                  <img src={assets.delete_icon} alt="" className='cursor-pointer'/>
+                  <img src={outfit.isAvailable ? assets.eye_close_icon : assets.eye_icon} alt="" className='cursor-pointer' onClick={async()=>{
+                    try{
+                      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+                      const { data } = await axios.post(`${BASE_URL}/api/owner/toggle-outfit`, { outfitId: outfit._id })
+                      if(data?.success){
+                        fetchOwnerOutfits()
+                      }
+                    }catch(err){ console.error(err) }
+                  }}/>
+                  <img src={assets.delete_icon} alt="" className='cursor-pointer' onClick={async()=>{
+                    try{
+                      const ok = window.confirm('Remove this outfit?')
+                      if(!ok) return
+                      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+                      const { data } = await axios.post(`${BASE_URL}/api/owner/delete-outfit`, { outfitId: outfit._id })
+                      if(data?.success){
+                        fetchOwnerOutfits()
+                      }
+                    }catch(err){ console.error(err) }
+                  }}/>
 
                 </td>
               </tr>

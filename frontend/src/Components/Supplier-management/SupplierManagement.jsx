@@ -15,6 +15,7 @@ export default function SupplierManagement() {
   const [modalType, setModalType] = useState("")
   const [editingItem, setEditingItem] = useState(null)
   const [formData, setFormData] = useState({})
+  const [orderItems, setOrderItems] = useState([{ name: "", quantity: 1, unitPrice: 0 }])
   const [reportFilters, setReportFilters] = useState({
     dateFrom: "",
     dateTo: "",
@@ -25,6 +26,7 @@ export default function SupplierManagement() {
   const [viewingReport, setViewingReport] = useState(false)
   const [reportContent, setReportContent] = useState("")
   const [loading, setLoading] = useState(true)
+  const [generatingReport, setGeneratingReport] = useState(false)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState("")
 
@@ -150,8 +152,20 @@ export default function SupplierManagement() {
       })
       if (!response.ok) throw new Error('Failed to update order')
       const data = await response.json()
-      setOrders(orders.map(o => o._id === id ? data : o))
-      return data
+      
+      // Handle different response formats
+      const updatedOrder = data.order || data
+      const inventoryMessage = data.message || null
+      
+      setOrders(orders.map(o => o._id === id ? updatedOrder : o))
+      
+      // Show inventory message if items were added
+      if (inventoryMessage) {
+        setSuccessMessage(inventoryMessage)
+        setTimeout(() => setSuccessMessage(""), 5000)
+      }
+      
+      return updatedOrder
     } catch (error) {
       console.error('Error updating order:', error)
       throw error
@@ -204,19 +218,50 @@ export default function SupplierManagement() {
   // Search functionality
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
-      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (supplier.name && supplier.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (supplier.contact && supplier.contact.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (supplier.email && supplier.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (supplier.companyDetails?.registrationNumber &&
         supplier.companyDetails.registrationNumber.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
   const filteredOrders = orders.filter(
     (order) =>
-      order.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.items.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.status.toLowerCase().includes(searchTerm.toLowerCase()),
+      (order.supplierName && order.supplierName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.items && order.items.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase())),
   )
+
+  // Order items management
+  const addOrderItem = () => {
+    setOrderItems([...orderItems, { name: "", quantity: 1, unitPrice: 0 }])
+  }
+
+  const removeOrderItem = (index) => {
+    if (orderItems.length > 1) {
+      setOrderItems(orderItems.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateOrderItem = (index, field, value) => {
+    const updatedItems = orderItems.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    )
+    setOrderItems(updatedItems)
+  }
+
+  const formatItemsForBackend = (items) => {
+    return items
+      .filter(item => item.name.trim() && item.quantity > 0)
+      .map(item => `${item.name.trim()} x${item.quantity}`)
+      .join(", ")
+  }
+
+  const calculateTotalFromItems = (items) => {
+    return items.reduce((total, item) => {
+      return total + (parseFloat(item.unitPrice) || 0) * (parseInt(item.quantity) || 0)
+    }, 0)
+  }
 
   // Modal handlers
   const openModal = (type, item = null) => {
@@ -226,6 +271,17 @@ export default function SupplierManagement() {
     setSuccessMessage("") // Clear any existing success messages
     if (item) {
       setFormData(item)
+      // If editing an order, parse the items string back to array format
+      if (type === "order" && item.items) {
+        const parsedItems = item.items.split(", ").map(itemStr => {
+          const match = itemStr.match(/^(.+?)\s+x(\d+)$/)
+          if (match) {
+            return { name: match[1].trim(), quantity: parseInt(match[2]), unitPrice: 0 }
+          }
+          return { name: itemStr, quantity: 1, unitPrice: 0 }
+        })
+        setOrderItems(parsedItems.length > 0 ? parsedItems : [{ name: "", quantity: 1, unitPrice: 0 }])
+      }
     } else {
       setFormData(
         type === "supplier"
@@ -240,6 +296,10 @@ export default function SupplierManagement() {
             items: "",
           },
       )
+      // Reset order items for new orders
+      if (type === "order") {
+        setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
+      }
     }
     setShowModal(true)
   }
@@ -249,6 +309,7 @@ export default function SupplierManagement() {
     setModalType("")
     setEditingItem(null)
     setFormData({})
+    setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
   }
 
   const handleSubmit = async (e) => {
@@ -261,8 +322,9 @@ export default function SupplierManagement() {
         return
       }
     } else if (modalType === "order") {
-      if (!formData.supplierId || !formData.orderDate || !formData.deliveryDate || !formData.total || !formData.items) {
-        alert('Please fill in all required fields for order')
+      const hasValidItems = orderItems.some(item => item.name.trim() && item.quantity > 0)
+      if (!formData.supplierId || !formData.orderDate || !formData.deliveryDate || !hasValidItems) {
+        alert('Please fill in all required fields for order and add at least one valid item')
         return
       }
     }
@@ -285,23 +347,24 @@ export default function SupplierManagement() {
           await updateOrder(editingItem._id, formData)
         } else {
           const supplier = suppliers.find((s) => s._id === formData.supplierId)
+          const formattedItems = formatItemsForBackend(orderItems)
+          const calculatedTotal = calculateTotalFromItems(orderItems)
           const orderData = {
             ...formData,
             supplierId: formData.supplierId,
             supplierName: supplier ? supplier.name : "",
-            total: Number.parseFloat(formData.total),
+            total: calculatedTotal,
+            items: formattedItems,
           }
           await createOrder(orderData)
         }
       }
 
-      // Reset form data and close modal
-      setFormData({})
-      closeModal()
-
-      // Show success message
-      setSuccessMessage(`${modalType === "supplier" ? "Supplier" : "Order"} ${editingItem ? "updated" : "created"} successfully!`)
-      setTimeout(() => setSuccessMessage(""), 3000)
+      // Show success message only if not already set (e.g., by inventory update)
+      if (!successMessage) {
+        setSuccessMessage(`${modalType === "supplier" ? "Supplier" : "Order"} ${editingItem ? "updated" : "created"} successfully!`)
+        setTimeout(() => setSuccessMessage(""), 3000)
+      }
 
       // Refresh the data to ensure we have the latest state
       if (modalType === "supplier") {
@@ -309,9 +372,17 @@ export default function SupplierManagement() {
       } else if (modalType === "order") {
         await fetchOrders()
       }
+
+      console.log('Form submission completed successfully')
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert('Error saving data. Please try again.')
+      setError(`Error saving ${modalType}: ${error.message}`)
+      setTimeout(() => setError(null), 5000)
+    } finally {
+      // Always reset form data and close modal
+      setFormData({})
+      setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
+      closeModal()
     }
   }
 
@@ -331,10 +402,29 @@ export default function SupplierManagement() {
   }
 
   const generateReport = () => {
-    const filteredSuppliers =
-      reportFilters.supplierFilter === "all"
-        ? suppliers
-        : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
+    setGeneratingReport(true)
+    try {
+      console.log('Generating report with filters:', reportFilters)
+      console.log('Available suppliers:', suppliers.length)
+      console.log('Available orders:', orders.length)
+      
+      // Validate we have data
+      if (suppliers.length === 0) {
+        alert('No suppliers available. Please add suppliers first.')
+        setGeneratingReport(false)
+        return
+      }
+      
+      if (orders.length === 0) {
+        alert('No orders available. Please add orders first.')
+        setGeneratingReport(false)
+        return
+      }
+      
+      const filteredSuppliers =
+        reportFilters.supplierFilter === "all"
+          ? suppliers
+          : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
 
     const filteredOrders = orders.filter((order) => {
       const orderDate = new Date(order.orderDate)
@@ -343,11 +433,24 @@ export default function SupplierManagement() {
 
       const dateMatch = orderDate >= fromDate && orderDate <= toDate
       const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
+      
+      // Fix supplier matching - handle both object and string supplierId
+      const orderSupplierId = typeof order.supplierId === 'object' ? order.supplierId._id : order.supplierId
       const supplierMatch =
-        reportFilters.supplierFilter === "all" || order.supplierId === reportFilters.supplierFilter
+        reportFilters.supplierFilter === "all" || orderSupplierId === reportFilters.supplierFilter
 
       return dateMatch && statusMatch && supplierMatch
     })
+
+    console.log('Filtered suppliers:', filteredSuppliers.length)
+    console.log('Filtered orders:', filteredOrders.length)
+    
+    // Check if filters resulted in no data
+    if (filteredSuppliers.length === 0 && filteredOrders.length === 0) {
+      alert('No data matches your current filters. Please adjust your filters and try again.')
+      setGeneratingReport(false)
+      return
+    }
 
     const reportData = {
       totalSuppliers: filteredSuppliers.length,
@@ -381,18 +484,23 @@ Total Order Value: $${reportData.totalValue.toFixed(2)}
 Average Order Value: $${reportData.averageOrderValue.toFixed(2)}
 
 === SUPPLIER PERFORMANCE ===
-${filteredSuppliers
-          .map((s) => {
-            const supplierOrders = filteredOrders.filter((o) => o.supplierId === s._id)
-            const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
-            return `${s.name}:
+${filteredSuppliers.length > 0 
+  ? filteredSuppliers
+      .map((s) => {
+        const supplierOrders = filteredOrders.filter((o) => {
+          const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+          return orderSupplierId === s._id
+        })
+        const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
+        return `${s.name}:
   - Status: ${s.status.toUpperCase()}
   - Contact: ${s.contact} (${s.email})
   - Orders in Period: ${supplierOrders.length}
   - Total Value: $${supplierValue.toFixed(2)}
   - Average Order: $${supplierOrders.length > 0 ? (supplierValue / supplierOrders.length).toFixed(2) : "0.00"}`
-          })
-          .join("\n\n")}
+      })
+      .join("\n\n")
+  : "No suppliers found matching the current filters."}
 
 === ORDER ANALYSIS ===
 Orders by Status:
@@ -401,10 +509,12 @@ Orders by Status:
 - Completed: ${reportData.completedOrders} (${reportData.totalOrders > 0 ? ((reportData.completedOrders / reportData.totalOrders) * 100).toFixed(1) : 0}%)
 
 Recent Orders:
-${filteredOrders
-          .slice(-10)
-          .map((o) => `- Order #${o._id}: ${o.supplierName} - $${o.total.toFixed(2)} (${o.status}) - ${o.orderDate}`)
-          .join("\n")}`
+${filteredOrders.length > 0 
+  ? filteredOrders
+      .slice(-10)
+      .map((o) => `- Order #${o._id}: ${o.supplierName} - $${o.total.toFixed(2)} (${o.status}) - ${o.orderDate}`)
+      .join("\n")
+  : "No orders found in the selected period."}`
     } else if (reportFilters.reportType === "detailed") {
       content = `DETAILED SUPPLIER MANAGEMENT REPORT
 Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
@@ -413,7 +523,10 @@ Report Period: ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo
 === DETAILED SUPPLIER INFORMATION ===
 ${filteredSuppliers
           .map((s) => {
-            const supplierOrders = filteredOrders.filter((o) => o.supplierId === s._id)
+            const supplierOrders = filteredOrders.filter((o) => {
+              const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+              return orderSupplierId === s._id
+            })
             return `
 SUPPLIER: ${s.name}
 Contact Person: ${s.contact}
@@ -470,22 +583,27 @@ Total Order Value: $${reportData.totalValue.toFixed(2)}
 Average Order Value: $${reportData.averageOrderValue.toFixed(2)}
 Number of Orders: ${reportData.totalOrders}
 
-Highest Value Order: $${Math.max(...filteredOrders.map((o) => o.total)).toFixed(2)}
-Lowest Value Order: $${Math.min(...filteredOrders.map((o) => o.total)).toFixed(2)}
+Highest Value Order: $${filteredOrders.length > 0 ? Math.max(...filteredOrders.map((o) => o.total)).toFixed(2) : "0.00"}
+Lowest Value Order: $${filteredOrders.length > 0 ? Math.min(...filteredOrders.map((o) => o.total)).toFixed(2) : "0.00"}
 
 === MONTHLY BREAKDOWN ===
-${Object.entries(monthlyData)
-          .sort()
-          .map(
-            ([month, data]) =>
-              `${month}: ${data.orders} orders, $${data.value.toFixed(2)} total, $${(data.value / data.orders).toFixed(2)} average`,
-          )
-          .join("\n")}
+${Object.keys(monthlyData).length > 0 
+  ? Object.entries(monthlyData)
+      .sort()
+      .map(
+        ([month, data]) =>
+          `${month}: ${data.orders} orders, $${data.value.toFixed(2)} total, $${(data.value / data.orders).toFixed(2)} average`,
+      )
+      .join("\n")
+  : "No order data available for monthly breakdown."}
 
 === SUPPLIER FINANCIAL PERFORMANCE ===
 ${filteredSuppliers
           .map((s) => {
-            const supplierOrders = filteredOrders.filter((o) => o.supplierId === s._id)
+            const supplierOrders = filteredOrders.filter((o) => {
+              const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+              return orderSupplierId === s._id
+            })
             const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
             const percentage = reportData.totalValue > 0 ? ((supplierValue / reportData.totalValue) * 100).toFixed(1) : 0
             return `${s.name}: $${supplierValue.toFixed(2)} (${percentage}% of total)`
@@ -539,34 +657,372 @@ Items: ${o.items}
           .join("\n" + "-".repeat(50) + "\n")}`
     }
 
-    setReportContent(content)
-    setViewingReport(true)
+      setReportContent(content)
+      setViewingReport(true)
+    } catch (error) {
+      console.error('Error generating report:', error)
+      alert('Error generating report. Please check your filters and try again.')
+    } finally {
+      setGeneratingReport(false)
+    }
   }
 
-  const generateCSVReport = () => {
-    const csvData = []
-
-    if (reportFilters.reportType === "suppliers") {
-      csvData.push(["Supplier Name", "Contact Person", "Email", "Phone", "Status", "Total Orders", "Last Order"])
-      suppliers.forEach((s) => {
-        csvData.push([s.name, s.contact, s.email, s.phone, s.status, s.totalOrders, s.lastOrder])
-      })
-    } else {
-      csvData.push(["Order ID", "Supplier", "Order Date", "Delivery Date", "Status", "Total", "Items"])
-      orders.forEach((o) => {
-        csvData.push([o._id, o.supplierName, o.orderDate, o.deliveryDate, o.status, o.total, o.items])
-      })
+  // Enhanced download functions with headers and footers
+  const downloadReportAsTXT = () => {
+    if (!reportContent) {
+      alert('Please generate a report first before downloading.')
+      return
     }
 
-    const csvContent = csvData.map((row) => row.map((field) => `"${field}"`).join(",")).join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv" })
+    const header = `
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                            KLASSY T SHIRTS                                     ║
+║                        SUPPLIER MANAGEMENT SYSTEM                              ║
+║                             BUSINESS REPORT                                    ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Report Type: ${reportFilters.reportType.toUpperCase()}
+Generated On: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+Generated By: System Administrator
+Report Period: ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo || "Present"}
+Filters Applied:
+- Supplier: ${reportFilters.supplierFilter === "all" ? "All Suppliers" : suppliers.find(s => s._id === reportFilters.supplierFilter)?.name || "Unknown"}
+- Status: ${reportFilters.statusFilter === "all" ? "All Statuses" : reportFilters.statusFilter}
+
+${"=".repeat(80)}
+`
+
+    const footer = `
+${"=".repeat(80)}
+
+REPORT SUMMARY:
+- Total Data Points Analyzed: ${suppliers.length + orders.length}
+- Report Generation Time: ${new Date().toISOString()}
+- System Version: v1.0.0
+
+DISCLAIMER:
+This report contains confidential business information of Klassy T Shirts.
+Distribution of this report should be limited to authorized personnel only.
+
+For questions about this report, contact: admin@klassytshirts.com
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                     © 2025 Klassy T Shirts - All Rights Reserved              ║
+║                          End of Report Document                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+`
+
+    const fullContent = header + reportContent + footer
+    const blob = new Blob([fullContent], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `supplier-${reportFilters.reportType}-data-${new Date().toISOString().split("T")[0]}.csv`
+    a.download = `Klassy-T-Shirts-${reportFilters.reportType}-Report-${new Date().toISOString().split("T")[0]}.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  const downloadReportAsCSV = () => {
+    const csvData = []
+    const currentDate = new Date()
+    const reportId = `RPT-${currentDate.getTime()}`
+    
+    // Professional CSV Header with proper structure
+    csvData.push(["═══════════════════════════════════════════════════════════════════════════"])
+    csvData.push(["KLASSY T SHIRTS - SUPPLIER MANAGEMENT SYSTEM"])
+    csvData.push(["BUSINESS INTELLIGENCE REPORT"])
+    csvData.push(["═══════════════════════════════════════════════════════════════════════════"])
+    csvData.push([""])
+    
+    // Report Metadata Section
+    csvData.push(["REPORT INFORMATION"])
+    csvData.push(["Field", "Value"])
+    csvData.push(["Report Type", reportFilters.reportType.toUpperCase()])
+    csvData.push(["Generated Date", currentDate.toLocaleDateString()])
+    csvData.push(["Generated Time", currentDate.toLocaleTimeString()])
+    csvData.push(["Report Period From", reportFilters.dateFrom || "All time"])
+    csvData.push(["Report Period To", reportFilters.dateTo || "Present"])
+    csvData.push(["Supplier Filter", reportFilters.supplierFilter === "all" ? "All Suppliers" : suppliers.find(s => s._id === reportFilters.supplierFilter)?.name || "Unknown"])
+    csvData.push(["Status Filter", reportFilters.statusFilter === "all" ? "All Statuses" : reportFilters.statusFilter])
+    csvData.push(["Report ID", reportId])
+    csvData.push([""])
+
+    // Apply filters to get the actual data being reported
+    const filteredSuppliers = reportFilters.supplierFilter === "all" 
+      ? suppliers 
+      : suppliers.filter((s) => s._id === reportFilters.supplierFilter)
+
+    const filteredOrders = orders.filter((order) => {
+      const orderDate = new Date(order.orderDate)
+      const fromDate = reportFilters.dateFrom ? new Date(reportFilters.dateFrom) : new Date("2000-01-01")
+      const toDate = reportFilters.dateTo ? new Date(reportFilters.dateTo) : new Date("2030-12-31")
+      const dateMatch = orderDate >= fromDate && orderDate <= toDate
+      const statusMatch = reportFilters.statusFilter === "all" || order.status === reportFilters.statusFilter
+      const orderSupplierId = typeof order.supplierId === 'object' ? order.supplierId._id : order.supplierId
+      const supplierMatch = reportFilters.supplierFilter === "all" || orderSupplierId === reportFilters.supplierFilter
+      return dateMatch && statusMatch && supplierMatch
+    })
+
+    // Executive Summary Section
+    csvData.push(["EXECUTIVE SUMMARY"])
+    csvData.push(["Metric", "Value", "Percentage", "Notes"])
+    csvData.push(["Total Suppliers", filteredSuppliers.length, "100%", "Based on current filters"])
+    csvData.push(["Active Suppliers", filteredSuppliers.filter(s => s.status === "active").length, 
+      `${filteredSuppliers.length > 0 ? ((filteredSuppliers.filter(s => s.status === "active").length / filteredSuppliers.length) * 100).toFixed(1) : 0}%`, 
+      "Currently active suppliers"])
+    csvData.push(["Total Orders", filteredOrders.length, "100%", "Orders in selected period"])
+    csvData.push(["Pending Orders", filteredOrders.filter(o => o.status === "pending").length,
+      `${filteredOrders.length > 0 ? ((filteredOrders.filter(o => o.status === "pending").length / filteredOrders.length) * 100).toFixed(1) : 0}%`,
+      "Awaiting processing"])
+    csvData.push(["Completed Orders", filteredOrders.filter(o => o.status === "completed").length,
+      `${filteredOrders.length > 0 ? ((filteredOrders.filter(o => o.status === "completed").length / filteredOrders.length) * 100).toFixed(1) : 0}%`,
+      "Successfully completed"])
+    csvData.push(["Total Order Value", `$${filteredOrders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, "-", "Sum of all orders"])
+    csvData.push(["Average Order Value", `$${filteredOrders.length > 0 ? (filteredOrders.reduce((sum, o) => sum + o.total, 0) / filteredOrders.length).toFixed(2) : "0.00"}`, "-", "Mean order value"])
+    csvData.push([""])
+
+    if (reportFilters.reportType === "suppliers" || reportFilters.reportType === "detailed") {
+      // Detailed Supplier Information
+      csvData.push(["SUPPLIER DETAILS"])
+      csvData.push(["Supplier Name", "Contact Person", "Email", "Phone", "Status", "Total Orders", "Last Order Date", "Registration Number"])
+      filteredSuppliers.forEach((s) => {
+        csvData.push([
+          s.name, 
+          s.contact, 
+          s.email, 
+          s.phone, 
+          s.status.toUpperCase(), 
+          s.totalOrders || 0, 
+          s.lastOrder || "N/A",
+          s.companyDetails?.registrationNumber || "N/A"
+        ])
+      })
+      csvData.push([""])
+    }
+
+    if (reportFilters.reportType === "orders" || reportFilters.reportType === "detailed") {
+      // Detailed Order Information
+      csvData.push(["ORDER DETAILS"])
+      csvData.push(["Order ID", "Supplier Name", "Order Date", "Delivery Date", "Status", "Total Amount", "Items", "Days to Delivery"])
+      filteredOrders.forEach((o) => {
+        const orderDate = new Date(o.orderDate)
+        const deliveryDate = new Date(o.deliveryDate)
+        const daysDiff = Math.ceil((deliveryDate - orderDate) / (1000 * 60 * 60 * 24))
+        csvData.push([
+          o._id, 
+          o.supplierName, 
+          o.orderDate, 
+          o.deliveryDate, 
+          o.status.toUpperCase(), 
+          `$${o.total.toFixed(2)}`,
+          o.items || "N/A",
+          `${daysDiff} days`
+        ])
+      })
+      csvData.push([""])
+    }
+
+    if (reportFilters.reportType === "financial") {
+      // Financial Analysis
+      csvData.push(["FINANCIAL ANALYSIS"])
+      csvData.push(["Analysis Type", "Value", "Details"])
+      csvData.push(["Highest Order Value", `$${filteredOrders.length > 0 ? Math.max(...filteredOrders.map(o => o.total)).toFixed(2) : "0.00"}`, "Single largest order"])
+      csvData.push(["Lowest Order Value", `$${filteredOrders.length > 0 ? Math.min(...filteredOrders.map(o => o.total)).toFixed(2) : "0.00"}`, "Single smallest order"])
+      
+      // Monthly breakdown
+      const monthlyData = {}
+      filteredOrders.forEach((order) => {
+        const month = order.orderDate.substring(0, 7)
+        if (!monthlyData[month]) {
+          monthlyData[month] = { orders: 0, value: 0 }
+        }
+        monthlyData[month].orders++
+        monthlyData[month].value += order.total
+      })
+
+      csvData.push([""])
+      csvData.push(["MONTHLY BREAKDOWN"])
+      csvData.push(["Month", "Number of Orders", "Total Value", "Average Order Value"])
+      Object.entries(monthlyData)
+        .sort()
+        .forEach(([month, data]) => {
+          csvData.push([
+            month,
+            data.orders,
+            `$${data.value.toFixed(2)}`,
+            `$${(data.value / data.orders).toFixed(2)}`
+          ])
+        })
+      csvData.push([""])
+    }
+
+    // Supplier Performance Analysis
+    if (filteredSuppliers.length > 0) {
+      csvData.push(["SUPPLIER PERFORMANCE"])
+      csvData.push(["Supplier Name", "Orders in Period", "Total Value", "Average Order", "Performance Rating"])
+      filteredSuppliers.forEach((s) => {
+        const supplierOrders = filteredOrders.filter((o) => {
+          const orderSupplierId = typeof o.supplierId === 'object' ? o.supplierId._id : o.supplierId
+          return orderSupplierId === s._id
+        })
+        const supplierValue = supplierOrders.reduce((sum, order) => sum + order.total, 0)
+        const avgOrder = supplierOrders.length > 0 ? supplierValue / supplierOrders.length : 0
+        let rating = "New"
+        if (supplierOrders.length > 10) rating = "Excellent"
+        else if (supplierOrders.length > 5) rating = "Good"
+        else if (supplierOrders.length > 0) rating = "Active"
+
+        csvData.push([
+          s.name,
+          supplierOrders.length,
+          `$${supplierValue.toFixed(2)}`,
+          `$${avgOrder.toFixed(2)}`,
+          rating
+        ])
+      })
+      csvData.push([""])
+    }
+
+    // Report Footer
+    csvData.push(["═══════════════════════════════════════════════════════════════════════════"])
+    csvData.push(["REPORT FOOTER & METADATA"])
+    csvData.push(["═══════════════════════════════════════════════════════════════════════════"])
+    csvData.push(["Generated By", "Klassy T Shirts Management System v1.0.0"])
+    csvData.push(["Generation Timestamp", currentDate.toISOString()])
+    csvData.push(["Total Data Points", `${filteredSuppliers.length + filteredOrders.length} records analyzed`])
+    csvData.push(["Data Integrity", "Verified and validated"])
+    csvData.push(["Contact Information", "admin@klassytshirts.com"])
+    csvData.push([""])
+    csvData.push(["LEGAL DISCLAIMER"])
+    csvData.push(["Confidentiality", "This report contains confidential business information"])
+    csvData.push(["Distribution", "Authorized personnel only"])
+    csvData.push(["Copyright", "© 2025 Klassy T Shirts - All Rights Reserved"])
+    csvData.push(["Report ID", reportId])
+
+    const csvContent = csvData.map((row) => row.map((field) => `"${field}"`).join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `Klassy-T-Shirts-${reportFilters.reportType}-Professional-Report-${currentDate.toISOString().split("T")[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const downloadReportAsHTML = () => {
+    if (!reportContent) {
+      alert('Please generate a report first before downloading.')
+      return
+    }
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassy T Shirts - ${reportFilters.reportType.toUpperCase()} Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1e40af;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header h2 {
+            color: #64748b;
+            margin: 5px 0;
+            font-weight: normal;
+        }
+        .report-info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2563eb;
+        }
+        .report-content {
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>KLASSY T SHIRTS</h1>
+            <h2>Supplier Management System</h2>
+            <h3>${reportFilters.reportType.toUpperCase()} REPORT</h3>
+        </div>
+        
+        <div class="report-info">
+            <p><strong>Generated:</strong> ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            <p><strong>Report Period:</strong> ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo || "Present"}</p>
+            <p><strong>Filters Applied:</strong></p>
+            <ul>
+                <li>Supplier: ${reportFilters.supplierFilter === "all" ? "All Suppliers" : suppliers.find(s => s._id === reportFilters.supplierFilter)?.name || "Unknown"}</li>
+                <li>Status: ${reportFilters.statusFilter === "all" ? "All Statuses" : reportFilters.statusFilter}</li>
+            </ul>
+        </div>
+        
+        <div class="report-content">${reportContent}</div>
+        
+        <div class="footer">
+            <p><strong>Report Summary:</strong></p>
+            <p>Total Data Points Analyzed: ${suppliers.length + orders.length} | Generated: ${new Date().toISOString()}</p>
+            <p><strong>Disclaimer:</strong> This report contains confidential business information.</p>
+            <p>© 2025 Klassy T Shirts - All Rights Reserved</p>
+        </div>
+    </div>
+</body>
+</html>`
+
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `Klassy-T-Shirts-${reportFilters.reportType}-Report-${new Date().toISOString().split("T")[0]}.html`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const generateCSVReport = downloadReportAsCSV // Keep backward compatibility
 
 
 
@@ -770,19 +1226,20 @@ Items: ${o.items}
                     </td>
                     <td>{supplier.totalOrders}</td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        onClick={() => openModal("supplier", supplier)}
-                        style={{ marginRight: "5px" }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-destructive btn-small"
-                        onClick={() => handleDelete("supplier", supplier._id)}
-                      >
-                        Delete
-                      </button>
+                      <div className="action-buttons">
+                        <button
+                          className="btn btn-secondary btn-small"
+                          onClick={() => openModal("supplier", supplier)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-destructive btn-small"
+                          onClick={() => handleDelete("supplier", supplier._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -830,16 +1287,20 @@ Items: ${o.items}
                     </td>
                     <td>${order.total.toFixed(2)}</td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-small"
-                        onClick={() => openModal("order", order)}
-                        style={{ marginRight: "5px" }}
-                      >
-                        Edit
-                      </button>
-                      <button className="btn btn-destructive btn-small" onClick={() => handleDelete("order", order._id)}>
-                        Delete
-                      </button>
+                      <div className="action-buttons">
+                        <button
+                          className="btn btn-secondary btn-small"
+                          onClick={() => openModal("order", order)}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="btn btn-destructive btn-small" 
+                          onClick={() => handleDelete("order", order._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -926,17 +1387,43 @@ Items: ${o.items}
               </div>
 
               <div className="report-actions">
-                <button className="supbtn" onClick={generateReport}>
-                  View Report
+                <button className="supbtn" onClick={generateReport} disabled={generatingReport}>
+                  {generatingReport ? "Generating..." : "View Report"}
                 </button>
                 {viewingReport && (
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setViewingReport(false)}
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Hide Report
-                  </button>
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      onClick={downloadReportAsTXT}
+                      style={{ marginLeft: "10px" }}
+                      title="Download complete report with headers and footers"
+                    >
+                      📄 Download TXT
+                    </button>
+                    <button
+                      className="btn btn-success"
+                      onClick={downloadReportAsCSV}
+                      style={{ marginLeft: "10px" }}
+                      title="Download data in CSV format with headers"
+                    >
+                      📊 Download CSV
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={downloadReportAsHTML}
+                      style={{ marginLeft: "10px" }}
+                      title="Download formatted HTML report for web viewing"
+                    >
+                      🌐 Download HTML
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setViewingReport(false)}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Hide Report
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -1093,25 +1580,96 @@ Items: ${o.items}
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Total Amount</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-input"
-                        value={formData.total || ""}
-                        onChange={(e) => setFormData({ ...formData, total: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Items</label>
-                      <textarea
-                        className="form-textarea"
-                        value={formData.items || ""}
-                        onChange={(e) => setFormData({ ...formData, items: e.target.value })}
-                        placeholder="Describe the items in this order..."
-                        required
-                      />
+                      <label className="form-label">Order Items</label>
+                      {orderItems.map((item, index) => (
+                        <div key={index} style={{ 
+                          display: 'flex', 
+                          gap: '10px', 
+                          marginBottom: '10px', 
+                          alignItems: 'center',
+                          padding: '10px',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius)',
+                          backgroundColor: 'var(--muted)'
+                        }}>
+                          <div style={{ flex: 2 }}>
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Item name"
+                              value={item.name}
+                              onChange={(e) => updateOrderItem(index, 'name', e.target.value)}
+                              style={{ margin: 0 }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <input
+                              type="number"
+                              className="form-input"
+                              placeholder="Qty"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                              style={{ margin: 0 }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <input
+                              type="number"
+                              className="form-input"
+                              placeholder="Unit Price"
+                              min="0"
+                              step="0.01"
+                              value={item.unitPrice}
+                              onChange={(e) => updateOrderItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              style={{ margin: 0 }}
+                            />
+                          </div>
+                          <div style={{ flex: 0 }}>
+                            {orderItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeOrderItem(index)}
+                                style={{
+                                  background: 'var(--destructive)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '8px 12px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addOrderItem}
+                        style={{
+                          background: 'var(--primary)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '8px 16px',
+                          cursor: 'pointer',
+                          marginTop: '10px'
+                        }}
+                      >
+                        + Add Item
+                      </button>
+                      <div style={{ 
+                        marginTop: '10px', 
+                        padding: '10px', 
+                        backgroundColor: 'var(--muted)', 
+                        borderRadius: 'var(--radius)',
+                        fontSize: '0.9rem'
+                      }}>
+                        <strong>Calculated Total: ${calculateTotalFromItems(orderItems).toFixed(2)}</strong>
+                      </div>
                     </div>
                   </>
                 )}

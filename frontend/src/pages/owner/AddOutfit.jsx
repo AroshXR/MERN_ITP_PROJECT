@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
 import { assets } from '../../assets/assets'
+import "./RainbowButton.css";
 
 const AddOutfit = () => {
 
   const currency = process.env.REACT_APP_CURRENCY
 
-  const [image,setImage] = useState(null)
+  const [mainImage, setMainImage] = useState(null)
+  const [additionalImages, setAdditionalImages] = useState([])
 
   const [outfit , setOutfit] = useState({
     brand : '',
@@ -21,25 +24,101 @@ const AddOutfit = () => {
     description : '',
   })
 
+  const handleAdditionalImageChange = (index, file) => {
+    const newImages = [...additionalImages]
+    newImages[index] = file
+    setAdditionalImages(newImages)
+  }
+
   const onSubmitHandler = async (e)=> {
     e.preventDefault();
+    try{
+      if(!mainImage){
+        alert('Please select a main image')
+        return
+      }
 
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+      const form = new FormData()
+      
+      // Add main image
+      form.append('mainImage', mainImage)
+      
+      // Add additional images (up to 3)
+      additionalImages.forEach((image, index) => {
+        if (image) {
+          form.append('additionalImages', image)
+        }
+      })
+      
+      form.append('outfitData', JSON.stringify(outfit))
+
+      const { data } = await axios.post(`${BASE_URL}/api/owner/add-outfit`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      if(data?.success){
+        alert('Outfit Added')
+        // reset form
+        setMainImage(null)
+        setAdditionalImages([])
+        setOutfit({
+          brand:'', model:'', condition:'', pricePerDay:0, category:'', size:'', color:'', material:'', location:'', description:''
+        })
+      }else{
+        alert(data?.message || 'Failed to add outfit')
+      }
+    }catch(err){
+      console.error(err)
+      alert('Error adding outfit')
+    }
   }
 
   return (
-    <div className='px-4 py-10 md:px-10 flex-1'>
+    <div className='px-4 py-10 md:px-10 flex-1 '>
 
+      <div class="w-[800px] h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 ">
+
+        <div className="text-center mt-26">
       <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and car specifications." />
+      </div>
 
-      <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-6 max-w-xl'>
+      
+      <form onSubmit={onSubmitHandler} className='flex flex-col gap-5 text-gray-500 text-sm mt-10 max-w-xl ml-20 '>
 
-        {/* Outfit Image */}
-        <div className='flex items-center gap-2 w-full'>
-          <label htmlFor="outfit-image">
-            <img src={image ? URL.createObjectURL(image) : assets.upload_icon} alt=""  className='h-14 rounded cursor-pointer'/>
-            <input type="file"  id="outfit-image" accept="image/*" hidden onChange={e=>setImage(e.target.files[0])} />
+        
+        {/* Main Outfit Image (Required) */}
+        <div className='flex items-center gap-2 w-full '>
+          <label htmlFor="main-outfit-image">
+            <img src={mainImage ? URL.createObjectURL(mainImage) : assets.upload_icon} alt=""  className='h-14 rounded cursor-pointer'/>
+            <input type="file"  id="main-outfit-image" accept="image/*" hidden onChange={e=>setMainImage(e.target.files[0])} />
           </label>
-          <p className='text-sm text-gray-500'>Upload a picture of your Outfit</p>
+          <p className='text-sm text-gray-500'>Upload main picture of your Outfit (Required)</p>
+        </div>
+
+        {/* Additional Images (Optional) */}
+        <div className='flex flex-col gap-3'>
+          <p className='text-sm text-gray-500'>Additional Images (Optional - up to 3)</p>
+          <div className='grid grid-cols-3 gap-3'>
+            {[0, 1, 2].map((index) => (
+              <div key={index} className='flex items-center gap-2'>
+                <label htmlFor={`additional-image-${index}`}>
+                  <img 
+                    src={additionalImages[index] ? URL.createObjectURL(additionalImages[index]) : assets.upload_icon} 
+                    alt=""  
+                    className='h-12 rounded cursor-pointer'
+                  />
+                  <input 
+                    type="file"  
+                    id={`additional-image-${index}`} 
+                    accept="image/*" 
+                    hidden 
+                    onChange={e=>handleAdditionalImageChange(index, e.target.files[0])} 
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Outfit Brand and Model */}
@@ -151,14 +230,22 @@ const AddOutfit = () => {
             <textarea rows={5}  placeholder='e.g. Elegant gowns, Trendy cocktail dresses, Timeless evening wear  ' required className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none' value={outfit.description} onChange={e=> setOutfit({...outfit, description: e.target.value})} > </textarea>
           </div>
 
+           <div className="rainbow  w-[175px] mx-auto">
+      <button type="button">
+        List Your Outfit
+      </button>
+    </div>
 
-          <button className='flex items-center gap-2 px-4 py-2.5 mt-4 bg-primary text-white rounded-md font-medium w-max cursor-pointer'>
-            <img src={assets.tick_icon} alt="" />
-            List Your Car
-          </button>
+    
 
       </form>
-        
+
+      
+</div>
+
+      
+
+
     </div>
   )
 }

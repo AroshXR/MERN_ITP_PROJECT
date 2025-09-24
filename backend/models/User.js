@@ -34,6 +34,11 @@ const userSchema = new Schema({
         required: true,
         enum: ["Customer", "Admin", "Tailor", "Applicant"]
     },
+    role: {
+        type: String,
+        enum: ["customer", "owner", "admin"],
+        default: "customer"
+    },
     phoneNumber: {
         type: String,
         trim: true

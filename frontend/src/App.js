@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './AuthGuard/AuthGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
@@ -18,12 +18,14 @@ import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDet
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
+import InventoryManagement from './Components/Inventory-management/InventoryManagement';
 import SkinToneColorGuide from './Components/SkinToneColorGuide/SkinToneColorGuide';
 import Unauthorized from './Components/Unauthorized/Unauthorized';
 import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
+
 
 import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
@@ -34,10 +36,12 @@ import Dashboard from './pages/owner/Dashboard';
 import AddOutfit from './pages/owner/AddOutfit';
 import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
+//import { Toaster} from 'react-hot-toast'
 
 function App() {
   return (
     <AuthProvider>
+      
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
@@ -116,6 +120,16 @@ function App() {
           )}
         />
 
+        {/* Inventory management - restricted to admin by default */}
+        <Route
+          path="/inventoryManagement"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <InventoryManagement />
+            </ProtectedRoute>
+          )}
+        />
+
         {/* Admin routes */}
         <Route
           path="/admin"
@@ -162,8 +176,22 @@ function App() {
         <Route path='/rentalHome' element={<RentalHome />}/>
         <Route path='/outfit-details/:id' element = {<OutfitDetails/>}/>
         <Route path='/outfits' element = {<Outfits/>}/>
-        <Route path='/my-bookings' element = {<MyBookings/>}/>
-        <Route path='/owner' element={<Layout />}>
+        <Route 
+          path='/my-bookings' 
+          element={
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path='/owner' 
+          element={
+            <ProtectedRoute allowedUserTypes={["owner", "Admin"]}>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
             <Route index element={<Dashboard />} />
             <Route path='add-outfit' element={<AddOutfit />} />
             <Route path='manage-outfits' element={<ManageOutfits />} />

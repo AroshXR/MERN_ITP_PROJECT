@@ -64,9 +64,19 @@ const supplierRouter = require("./routes/SupplierRoutes");
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
+const inventoryRouter = require("./routes/InventoryRoutes");
+
+
+     //pasindu
+     //import oenerRouter from "./routes/ownerRoutes.js"
+     const ownerRouter = require("./routes/ownerRoutes");
+     const bookingRouter = require("./routes/bookingRoutes");
+
 
 // Import utilities
 const createToken = require('./utils/jwt');
+
+//const { default: ownerRouter } = require("./routes/ownerRoutes");
 
 // Create Express app
 const app = express();
@@ -97,6 +107,13 @@ app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
+app.use("/inventory", inventoryRouter);
+
+    //pasindu                                                         sdsdsdssdsdsdsdsd
+    app.use("/api/owner", ownerRouter);
+    app.use("/api/booking", bookingRouter);
+
+
 
 // Test endpoint to verify server is running
 app.get("/test", (req, res) => {
@@ -145,12 +162,21 @@ app.post("/register", async (req, res) => {
     
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // Set role based on type
+    let role = 'customer';
+    if (type === 'Admin') {
+      role = 'admin';
+    } else if (type === 'owner') {
+      role = 'owner';
+    }
+
     const newUser = await User.create({
       username,
       address,
       email,
       password: hashedPassword,
-      type
+      type,
+      role
     });
     
     res.status(201).json({
@@ -215,7 +241,8 @@ app.post("/login", async (req, res) => {
           id: user._id,
           username: user.username,
           email: user.email,
-          type: user.type
+          type: user.type,
+          role: user.role
         }
       }
     });
@@ -259,6 +286,12 @@ const connectToMongoDB = async () => {
     require("./models/ClothCustomizerModel");
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
+    
+    require("./models/Booking");
+    require("./models/Outfit");
+
+        //pasindu
+    require("./models/MaterialInventoryModel");
     
     console.log("📦 All models loaded successfully");
 

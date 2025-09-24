@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import { assets, menuLinks } from '../../assets/assets'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'; // Import the custom CSS
+import { useAuth } from '../../AuthGuard/AuthGuard'
 
-const Navbar = ({ setShowLogin }) => {
+const Navbar = () => {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const { isAuthenticated, currentUser, logout } = useAuth()
 
   return (
     <div className={`navbar-container ${location.pathname === "/" ? "bg-light" : "bg-white"}`}>
@@ -39,8 +41,19 @@ const Navbar = ({ setShowLogin }) => {
 
         {/* Buttons */}
         <div className="navbar-buttons">
-          <button onClick={() => navigate('/owner')}>Dashboard</button>
-          <button onClick={() => setShowLogin(true)}>Login</button>
+          {isAuthenticated() ? (
+            <>
+              {(currentUser?.type === 'owner' || currentUser?.type === 'Admin') && (
+                <button onClick={() => navigate('/owner')}>Dashboard</button>
+              )}
+              <button onClick={() => { logout(); navigate('/rentalHome'); }}>Logout</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => navigate('/owner')}>Dashboard</button>
+              <button onClick={() => navigate('/login')}>Login</button>
+            </>
+          )}
         </div>
       </div>
 
