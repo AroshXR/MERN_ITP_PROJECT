@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import { useAuth } from '../../AuthGuard/AuthGuard';
+import { useNavigate } from 'react-router-dom';
 import './AdminUserManagement.css';
 
 const statusLabels = {
@@ -21,6 +22,7 @@ const notificationLevels = [
 
 const AdminUserManagement = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -259,6 +261,15 @@ const AdminUserManagement = () => {
                     {currentUser && (
                         <span className="admin-badge">Admin: {currentUser.username}</span>
                     )}
+                    <div className="header-nav-actions">
+                        <button
+                            type="button"
+                            className="header-nav-btn secondary"
+                            onClick={() => navigate(-1)}
+                        >
+                            <i className="bx bx-arrow-back"></i> Back
+                        </button>
+                    </div>
                 </header>
 
                 <section className="admin-panel">
