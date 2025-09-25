@@ -21,6 +21,14 @@
     gap: 1rem;
 }
 
+/* Header action buttons */
+.header-nav-actions { display: flex; align-items: center; gap: .5rem; }
+.header-nav-btn { padding: 8px 14px; border-radius: 999px; border: 2px solid transparent; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease; }
+.header-nav-btn.primary { background: linear-gradient(135deg, #000, #2b2b2b); color: #fff; }
+.header-nav-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,.25); }
+.header-nav-btn.secondary { background: #fff; color: #111; border-color: #e5e5e5; }
+.header-nav-btn.secondary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,.15); }
+
 .admin-header h1 {
     margin: 0;
     font-size: 2rem;
