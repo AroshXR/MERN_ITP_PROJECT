@@ -23,6 +23,7 @@ const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [cartError, setCartError] = useState(null)
+  const [ignoreEmptyCart, setIgnoreEmptyCart] = useState(false) // avoids empty-cart error after order
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -60,6 +61,40 @@ const CheckoutPage = () => {
     { number: 2, title: "Payment", icon: "💳" },
     { number: 3, title: "Review", icon: "🛡️" },
   ]
+
+  // Clear all cart items for the authenticated user
+  const clearCart = async () => {
+    try {
+      const authToken = getToken()
+      if (!authToken) return
+
+      // Fetch latest items to ensure we have real Mongo _ids
+      const listRes = await axios.get('http://localhost:5001/cloth-customizer', {
+        headers: { Authorization: `Bearer ${authToken}` }
+      })
+
+      const items = Array.isArray(listRes.data?.data) ? listRes.data.data : []
+      if (!items.length) {
+        setCartItems([])
+        return
+      }
+
+      // Delete each item in parallel (best-effort)
+      await Promise.allSettled(
+        items.map((it) =>
+          axios.delete(`http://localhost:5001/cloth-customizer/${it._id}`, {
+            headers: { Authorization: `Bearer ${authToken}` }
+          })
+        )
+      )
+
+      // Update local state
+      setCartItems([])
+    } catch (err) {
+      console.error('Error clearing cart:', err)
+      // Fail silently to not block success flow
+    }
+  }
 
   // Fetch cart items on component mount
   useEffect(() => {
@@ -105,7 +140,12 @@ const CheckoutPage = () => {
         setCartItems(transformedItems)
 
         if (transformedItems.length === 0) {
-          setCartError('Your cart is empty. Please add items to your cart before proceeding to checkout.')
+          // Show empty-cart error only when not in post-payment cleanup flow
+          if (!ignoreEmptyCart) {
+            setCartError('Your cart is empty. Please add items to your cart before proceeding to checkout.')
+          } else {
+            setCartError(null)
+          }
         }
       } else {
         setCartError('Failed to fetch cart items')
@@ -270,12 +310,22 @@ const CheckoutPage = () => {
         }
         
         setSubmitMessage(successMessage)
-        
-        // Reset form or redirect to success page
-        setTimeout(() => {
-          // You can redirect to a success page or reset the form
-          window.location.reload()
-        }, 5000) // Increased timeout to allow reading order details
+
+        // Prevent showing empty-cart error during post-payment cleanup
+        setIgnoreEmptyCart(true)
+        setCartError(null)
+
+        // Clear the cart after successful payment
+        await clearCart()
+
+        // Optionally also reset form states
+        setGiftWrap(false)
+        setShippingMethod('standard')
+        setPaymentMethod('card')
+        setAgreeTerms(false)
+
+        // Navigate to launching home
+        navigate('/')
       } else {
         setSubmitMessage('Error saving payment details: ' + response.data.message)
       }

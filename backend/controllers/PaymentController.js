@@ -118,6 +118,7 @@ const createPaymentDetails = async (req, res) => {
             Price: item.totalPrice || item.price || 0,
             AdminID: userObjectId, // User who placed the order
             ItemID: item.id,
+            CustomerName: `${deliveryDetails.firstName || ''} ${deliveryDetails.lastName || ''}`.trim(),
             CreatedAt: new Date(),
             status: "pending" // Initial status matches payment status
           };
