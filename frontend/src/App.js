@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+﻿import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './AuthGuard/AuthGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
@@ -25,9 +25,13 @@ import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
+<<<<<<< HEAD
 import Outlet from './Components/Outlet/Outlet';
 import OutletDetail from './Components/Outlet/OutletDetail';
 import AdminOutlet from './Components/AdminOutlet/AdminOutlet';
+=======
+import OrderSummaryPage from './Components/OrderManagement/OrderSummaryPage';
+>>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
 
 
 import RentalHome from './pages/RentalHome';
@@ -40,6 +44,8 @@ import AddOutfit from './pages/owner/AddOutfit';
 import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
 //import { Toaster} from 'react-hot-toast'
+
+import AdminHub from './Components/AdminHub/AdminHub';
 
 function App() {
   return (
@@ -58,6 +64,7 @@ function App() {
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/orderSummary" element={<OrderSummaryPage />} />
 
         {/* Applicant and informational routes */}
         <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
@@ -91,7 +98,7 @@ function App() {
         <Route
           path="/paymentDetails"
           element={(
-            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+            <ProtectedRoute allowedUserTypes="Admin">
               <PaymentDetailsDisplay />
             </ProtectedRoute>
           )}
@@ -99,7 +106,7 @@ function App() {
         <Route
           path="/user/account"
           element={(
-            <ProtectedRoute allowedUserTypes={["Customer", "Applicant", "Tailor"]}>
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant", "Tailor", "Admin"]}>
               <UserAccount />
             </ProtectedRoute>
           )}
@@ -137,10 +144,17 @@ function App() {
 
         {/* Admin routes */}
         <Route
+<<<<<<< HEAD
           path="/admin-outlet"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <AdminOutlet />
+=======
+          path="/admin-hub"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminHub />
+>>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
             </ProtectedRoute>
           )}
         />
@@ -152,6 +166,7 @@ function App() {
             </ProtectedRoute>
           )}
         />
+
         <Route
           path="/admin-jobs"
           element={(

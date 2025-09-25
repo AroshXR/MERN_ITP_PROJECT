@@ -1,0 +1,222 @@
+/* Futuristic Sidebar Styles */
+.futuristic-sidebar {
+  background: linear-gradient(180deg, #000000 0%, #111111 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background overlay with subtle pattern */
+.sidebar-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Grid pattern for futuristic feel */
+.sidebar-grid-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+/* Profile Section */
+.profile-section {
+  z-index: 10;
+  position: relative;
+}
+
+.profile-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-image {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  filter: brightness(1.1);
+}
+
+.profile-image:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Animated ring around profile image */
+.profile-ring {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), transparent, rgba(255, 255, 255, 0.3));
+  background-size: 200% 200%;
+  animation: ringRotate 3s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile-section:hover .profile-ring {
+  opacity: 1;
+}
+
+@keyframes ringRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.edit-icon {
+  filter: brightness(1.5);
+  transition: transform 0.3s ease;
+}
+
+.profile-edit-overlay:hover .edit-icon {
+  transform: scale(1.1);
+}
+
+/* Save Button */
+.save-button {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.save-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* User Name */
+.user-name {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* Navigation Container */
+.navigation-container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Navigation Links */
+.nav-link {
+  position: relative;
+  backdrop-filter: blur(5px);
+  border-left: 2px solid transparent;
+  margin: 2px 0;
+}
+
+.nav-link:hover {
+  border-left-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(2px);
+}
+
+.nav-link-active {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-left-color: #ffffff;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Navigation Icon Container */
+.nav-icon-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.nav-link:hover .nav-icon-container img {
+  transform: scale(1.1);
+  filter: brightness(1.3);
+}
+
+/* Navigation Text */
+.nav-text {
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover .nav-text {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+/* Navigation Indicator */
+.nav-indicator {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover Glow Effect */
+.nav-glow {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+  border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .futuristic-sidebar {
+    max-width: 60px;
+  }
+
+  .nav-link {
+    justify-content: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .profile-image {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Subtle animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-link {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+.nav-link:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.nav-link:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.nav-link:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.nav-link:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.nav-link:nth-child(5) {
+  animation-delay: 0.5s;
+}

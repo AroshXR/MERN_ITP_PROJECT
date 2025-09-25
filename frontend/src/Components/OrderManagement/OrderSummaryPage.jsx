@@ -1,0 +1,385 @@
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { useAuth } from "../../AuthGuard/AuthGuard";
+import "./OrderSummaryPage.css";
+import { useNavigate } from "react-router-dom";
+
+const toNumber = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+};
+
+// Compute total for a single order as quantity * price with safe fallbacks
+const computeOrderTotal = (order) => {
+    // If there are explicit items, sum quantity * price-like fields
+    const items = order.items || order.orderItems || order.products || [];
+    if (Array.isArray(items) && items.length > 0) {
+        return items.reduce((sum, item) => {
+            const qty = toNumber(item.quantity || item.qty || 1);
+            const unit = toNumber(
+                item.price || item.unitPrice || (item.totalPrice && qty ? item.totalPrice / qty : 0)
+            );
+            return sum + qty * unit;
+        }, 0);
+    }
+
+    // Fall back to order-level quantity * price
+    const qty = toNumber(order.quantity || order.qty || order.Quantity);
+    const unit = toNumber(order.price || order.Price);
+    if (qty && unit) {
+        return qty * unit;
+    }
+
+    // As a last resort, use provided totals
+    return toNumber(
+        order.totalAmount || order.total || order.amount || (order.orderDetails && order.orderDetails.total)
+    );
+};
+
+const computeSummary = (orders) => {
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + computeOrderTotal(order), 0);
+    const completedOrders = orders.filter(
+        (o) => (o.status || "").toLowerCase() === "completed"
+    ).length;
+    const pendingOrders = orders.filter((o) =>
+        ["pending", "processing"].includes((o.status || "").toLowerCase())
+    ).length;
+    const cancelledOrders = orders.filter((o) =>
+        ["cancelled", "canceled", "failed"].includes(
+            (o.status || "").toLowerCase()
+        )
+    ).length;
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    return {
+        totalOrders,
+        totalRevenue,
+        averageOrderValue,
+        completedOrders,
+        pendingOrders,
+        cancelledOrders,
+    };
+};
+
+const formatCurrency = (value) =>
+    new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2,
+    }).format(value);
+
+const toDateOnly = (d) => {
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return null;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+};
+
+export default function OrderSummaryPage() {
+    const { getToken } = useAuth?.() || {};
+
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [reportGenerated, setReportGenerated] = useState(false);
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const token = typeof getToken === "function" ? getToken() : null;
+                const response = await axios.get("http://localhost:5001/orders", {
+                    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                });
+                const list = Array.isArray(response.data?.data)
+                    ? response.data.data
+                    : Array.isArray(response.data?.orders)
+                        ? response.data.orders
+                        : Array.isArray(response.data)
+                            ? response.data
+                            : [];
+                setOrders(list);
+            } catch (err) {
+                setError("Failed to load orders.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrders();
+    }, []);
+
+    const overall = useMemo(() => computeSummary(orders), [orders]);
+
+    const filteredOrders = useMemo(() => {
+        if (!startDate && !endDate) return orders;
+        const start = startDate ? toDateOnly(startDate) : null;
+        const end = endDate ? toDateOnly(endDate) : null;
+        return orders.filter((o) => {
+            const orderDate = toDateOnly(
+                o.createdAt || o.orderDate || o.date || o.created_on || o.CreatedAt
+            );
+            if (!orderDate) return false;
+            if (start && orderDate < start) return false;
+            if (end) {
+                const endInclusive = new Date(
+                    end.getFullYear(),
+                    end.getMonth(),
+                    end.getDate(),
+                    23,
+                    59,
+                    59,
+                    999
+                );
+                if (orderDate > endInclusive) return false;
+            }
+            return true;
+        });
+    }, [orders, startDate, endDate]);
+
+    const filteredSummary = useMemo(
+        () => computeSummary(filteredOrders),
+        [filteredOrders]
+    );
+
+    const handleGenerateReport = () => {
+        setReportGenerated(true);
+    };
+
+    const handleDownloadCSV = () => {
+        const header = [
+            "Report From",
+            "Report To",
+            "Total Orders",
+            "Total Revenue",
+            "Average Order Value",
+            "Completed",
+            "Pending",
+            "Cancelled",
+        ];
+        const summaryRow = [
+            startDate || "-",
+            endDate || "-",
+            filteredSummary.totalOrders,
+            filteredSummary.totalRevenue,
+            filteredSummary.averageOrderValue,
+            filteredSummary.completedOrders,
+            filteredSummary.pendingOrders,
+            filteredSummary.cancelledOrders,
+        ];
+
+        const orderHeader = ["Order ID", "Customer", "Status", "Total", "Date"];
+        const orderRows = filteredOrders.map((o) => [
+            o.id || o._id || o.OrderID || "",
+            o.customerName ||
+            o.customer ||
+            (o.userId &&
+                (o.userId.firstName && o.userId.lastName
+                    ? `${o.userId.firstName} ${o.userId.lastName}`
+                    : o.userId.email)) ||
+            o.user?.name ||
+            o.user?.email ||
+            "",
+            o.status || "",
+            computeOrderTotal(o),
+            o.createdAt || o.orderDate || o.date || o.CreatedAt || "",
+        ]);
+
+        const escapeCsv = (value) => {
+            if (value == null) return "";
+            const str = String(value);
+            if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        };
+
+        const csvParts = [];
+        csvParts.push(header.map(escapeCsv).join(","));
+        csvParts.push(summaryRow.map(escapeCsv).join(","));
+        csvParts.push("");
+        csvParts.push(orderHeader.map(escapeCsv).join(","));
+        orderRows.forEach((row) => csvParts.push(row.map(escapeCsv).join(",")));
+
+        const csvContent = csvParts.join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        const fileName = `order-summary-${startDate || "all"}-to-${endDate || "all"
+            }.csv`;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    return (
+        <div className="orderSummaryPage">
+            <header className="header">
+                <button
+                    className="back-button"
+                    onClick={() => navigate(-1)}
+                >
+                    ← Back
+                </button>
+                <div className="header-content">
+                    <h1>Order Summary</h1>
+                    <p>Generate a summary report of your orders</p>
+                </div>
+            </header>
+
+
+            {loading && <div className="state">Loading orders...</div>}
+            {!loading && error && <div className="state error">{error}</div>}
+
+            {!loading && !error && (
+                <>
+                    <section className="summaryGrid">
+                        <div className="card">
+                            <h3>Total Orders</h3>
+                            <p>{overall.totalOrders}</p>
+                        </div>
+                        <div className="card">
+                            <h3>Total Revenue</h3>
+                            <p>{formatCurrency(overall.totalRevenue)}</p>
+                        </div>
+                        <div className="card">
+                            <h3>Average Value</h3>
+                            <p>{formatCurrency(overall.averageOrderValue)}</p>
+                        </div>
+                        <div className="card">
+                            <h3>Completed</h3>
+                            <p>{overall.completedOrders}</p>
+                        </div>
+                        <div className="card">
+                            <h3>Pending</h3>
+                            <p>{overall.pendingOrders}</p>
+                        </div>
+                        <div className="card">
+                            <h3>Cancelled</h3>
+                            <p>{overall.cancelledOrders}</p>
+                        </div>
+                    </section>
+
+                    <section className="reportSection">
+                        <h2>Generate Report</h2>
+
+                        <div className="filters">
+                            <div className="field">
+                                <label htmlFor="startDate">From</label>
+                                <input
+                                    id="startDate"
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="field">
+                                <label htmlFor="endDate">To</label>
+                                <input
+                                    id="endDate"
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="actions">
+                                <button className="btn primary" onClick={handleGenerateReport}>
+                                    Generate
+                                </button>
+                                <button
+                                    className="btn"
+                                    onClick={handleDownloadCSV}
+                                    disabled={!filteredOrders.length}
+                                >
+                                    Download CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        {reportGenerated && (
+                            <div className="reportDetails">
+                                <div className="reportInfo">
+                                    <div>
+                                        <span>Period:</span>{" "}
+                                        <strong>
+                                            {startDate || "All"} - {endDate || "All"}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>Total Orders:</span>{" "}
+                                        <strong>{filteredSummary.totalOrders}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Total Revenue:</span>{" "}
+                                        <strong>{formatCurrency(filteredSummary.totalRevenue)}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Average Value:</span>{" "}
+                                        <strong>
+                                            {formatCurrency(filteredSummary.averageOrderValue)}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>Completed:</span>{" "}
+                                        <strong>{filteredSummary.completedOrders}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Pending:</span>{" "}
+                                        <strong>{filteredSummary.pendingOrders}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Cancelled:</span>{" "}
+                                        <strong>{filteredSummary.cancelledOrders}</strong>
+                                    </div>
+                                </div>
+
+                                <div className="tableWrapper">
+                                    <table className="orderTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Status</th>
+                                                <th>Total</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredOrders.map((o) => (
+                                                <tr key={o.id || o._id}>
+                                                    <td>{o.id || o._id}</td>
+                                                    <td>{o.customerName || "-"}</td>
+                                                    <td className={`status ${String(o.status || "").toLowerCase()}`}>
+                                                        {o.status || "-"}
+                                                    </td>
+                                                    <td>{formatCurrency(computeOrderTotal(o))}</td>
+                                                    <td>{o.createdAt || "-"}</td>
+                                                </tr>
+                                            ))}
+                                            {!filteredOrders.length && (
+                                                <tr>
+                                                    <td colSpan={5} className="empty">
+                                                        No orders for the selected period.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+                </>
+            )}
+        </div>
+    );
+}

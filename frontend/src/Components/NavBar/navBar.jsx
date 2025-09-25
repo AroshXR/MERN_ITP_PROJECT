@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthGuard/AuthGuard';
 import './navBar.css';
-
+ 
 function NavBar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,6 +31,8 @@ function NavBar() {
   const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = () => {
+    const confirmed = window.confirm('Are you sure you want to log out?');
+    if (!confirmed) return;
     logout();
     navigate('/login');
     closeMenu();
@@ -85,30 +87,14 @@ function NavBar() {
         )}
         {userType === 'Admin' && (
           <>
-            <Link to="/admin" onClick={closeMenu}>
+            <Link to="/admin-hub" onClick={closeMenu}>
               <button className="nav-btn">
                 <i className='bx bx-shield'></i> Admin
               </button>
             </Link>
-            <Link to="/admin-jobs" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-cog'></i> Manage Jobs
-              </button>
-            </Link>
-            <Link to="/admin/users" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-group'></i> Users
-              </button>
-            </Link>
           </>
         )}
-        {isCustomerOrApplicant && (
-          <Link to="/paymentDetails" onClick={closeMenu}>
-            <button className="nav-btn">
-              <i className='bx bx-credit-card'></i> Payment Details
-            </button>
-          </Link>
-        )}
+        
         <Link to="/contact" onClick={closeMenu}>
           <button className="nav-btn">
             <i className='bx bx-phone'></i> Contact Us

@@ -3,10 +3,12 @@ import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
 import { assets } from '../../assets/assets'
 import "./RainbowButton.css";
+import { useAuth } from '../../AuthGuard/AuthGuard'
 
 const AddOutfit = () => {
 
   const currency = process.env.REACT_APP_CURRENCY
+  const { getToken } = useAuth()
 
   const [mainImage, setMainImage] = useState(null)
   const [additionalImages, setAdditionalImages] = useState([])
@@ -53,8 +55,12 @@ const AddOutfit = () => {
       
       form.append('outfitData', JSON.stringify(outfit))
 
+      const token = getToken()
       const { data } = await axios.post(`${BASE_URL}/api/owner/add-outfit`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
       })
 
       if(data?.success){
@@ -77,10 +83,10 @@ const AddOutfit = () => {
   return (
     <div className='px-4 py-10 md:px-10 flex-1 '>
 
-      <div class="w-[800px] h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 ">
+      <div className="w-[800px] h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 ml-40 shadow-lg shadow-gray-400/30 relative overflow-hidden">
 
         <div className="text-center mt-26">
-      <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and car specifications." />
+      <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and outfit specifications." />
       </div>
 
       
@@ -230,11 +236,11 @@ const AddOutfit = () => {
             <textarea rows={5}  placeholder='e.g. Elegant gowns, Trendy cocktail dresses, Timeless evening wear  ' required className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none' value={outfit.description} onChange={e=> setOutfit({...outfit, description: e.target.value})} > </textarea>
           </div>
 
-           <div className="rainbow  w-[175px] mx-auto">
-      <button type="button">
-        List Your Outfit
-      </button>
-    </div>
+          <div className="rainbow  w-[175px] mx-auto">
+            <button type="submit">
+              List Your Outfit
+            </button>
+          </div>
 
     
 

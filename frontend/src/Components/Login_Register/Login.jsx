@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import './LoginPage.css';
 import loginImage from '../images/login-img.jpg';
 import NavBar from '../NavBar/navBar';
@@ -23,7 +23,7 @@ function LoginPage() {
   const getDefaultRoute = (userType) => {
     switch (userType) {
       case 'Admin':
-        return '/admin';
+        return '/admin-hub';
       case 'Tailor':
         return '/tailorHome';
       case 'Applicant':
@@ -153,8 +153,10 @@ function LoginPage() {
   };
 
   return (
-    <div className="container">
+    <div className="w-full min-h-screen flex flex-col">  {/* container w-full min-h-screen flex flex-col */}
+      
       <NavBar />
+      
       <div className="loginPage-container">
 
         <div className="login-header">
@@ -199,6 +201,8 @@ function LoginPage() {
           </form>
         </div>
       </div>
+
+      
       <Footer />
     </div>
   )

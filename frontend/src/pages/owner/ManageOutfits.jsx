@@ -75,14 +75,20 @@ const ManageOutfits = () => {
                   }}/>
                   <img src={assets.delete_icon} alt="" className='cursor-pointer' onClick={async()=>{
                     try{
-                      const ok = window.confirm('Remove this outfit?')
+                      const ok = window.confirm('Are you sure you want to delete this outfit? This will permanently remove the outfit and all related bookings.')
                       if(!ok) return
                       const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
                       const { data } = await axios.post(`${BASE_URL}/api/owner/delete-outfit`, { outfitId: outfit._id })
                       if(data?.success){
+                        alert(`${data.message}${data.deletedBookings ? ` (${data.deletedBookings} related bookings also deleted)` : ''}`)
                         fetchOwnerOutfits()
+                      } else {
+                        alert(data?.message || 'Failed to delete outfit')
                       }
-                    }catch(err){ console.error(err) }
+                    }catch(err){ 
+                      console.error(err)
+                      alert('Error deleting outfit')
+                    }
                   }}/>
 
                 </td>

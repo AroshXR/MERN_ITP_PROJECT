@@ -1,4 +1,4 @@
-﻿.admin-management-page {
+.admin-management-page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -138,6 +138,17 @@ button:disabled {
 .row-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+/* Make the first action button (Manage) black */
+.row-actions button:first-child {
+    background: #111 !important;
+    color: #fff !important;
+    border: 2px solid #111 !important;
+}
+.row-actions button:first-child:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0,0,0,.25);
 }
 
 .status-pill {

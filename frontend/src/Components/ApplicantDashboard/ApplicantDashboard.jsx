@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import './ApplicantDashboard.css';
 import EditApplicationForm from './EditApplicationForm';
 import NavBar from '../NavBar/navBar';
+import { useAuth } from '../../AuthGuard/AuthGuard';
 
 const API_BASE_URL = 'http://localhost:5001';
 
 const ApplicantDashboard = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,6 +17,7 @@ const ApplicantDashboard = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [searchEmail, setSearchEmail] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const statusSummary = useMemo(() => {
     if (!applications.length) {
@@ -52,15 +55,34 @@ const ApplicantDashboard = () => {
     setLoading(false);
   }, []);
 
-  const handleSearch = async () => {
-    if (!searchEmail.trim()) {
-      alert('Please enter an email address to search');
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        if (!currentUser?.id) return;
+        const res = await fetch(`${API_BASE_URL}/users/${currentUser.id}/notifications`);
+        const data = await res.json();
+        if (data?.status === 'ok' && Array.isArray(data.notifications)) {
+          const unread = data.notifications.filter(n => !n.read).length;
+          setUnreadCount(unread);
+        }
+      } catch (e) {
+        // ignore silently in dashboard
+      }
+    };
+    fetchNotifications();
+  }, [currentUser]);
+
+  // Helper to fetch applications by email (server-first, fallback to local storage)
+  const fetchApplicationsByEmail = async (email) => {
+    if (!email || !email.trim()) {
+      setError('');
+      setApplications([]);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${API_BASE_URL}/applicant?gmail=${encodeURIComponent(searchEmail)}`);
+      const res = await fetch(`${API_BASE_URL}/applicant?gmail=${encodeURIComponent(email)}`);
       if (!res.ok) {
         throw new Error('Failed to fetch applications');
       }
@@ -73,7 +95,7 @@ const ApplicantDashboard = () => {
       if (storedApplications) {
         const allApplications = JSON.parse(storedApplications);
         const userApplications = allApplications.filter((app) =>
-          app.gmail && app.gmail.toLowerCase() === searchEmail.toLowerCase()
+          app.gmail && app.gmail.toLowerCase() === email.toLowerCase()
         );
         setApplications(userApplications);
         setError('Showing locally saved applications (server unavailable)');
@@ -84,6 +106,24 @@ const ApplicantDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Auto-load the logged-in applicant's applications
+  useEffect(() => {
+    const email = currentUser?.email;
+    if (email) {
+      setSearchEmail(email);
+      fetchApplicationsByEmail(email);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.email]);
+
+  const handleSearch = async () => {
+    if (!searchEmail.trim()) {
+      alert('Please enter an email address to search');
+      return;
+    }
+    fetchApplicationsByEmail(searchEmail);
   };
 
   const handleEdit = (application, index) => {
@@ -213,6 +253,13 @@ const ApplicantDashboard = () => {
             onClick={() => navigate(-1)}
           >
             <i className="bx bx-arrow-back"></i> Back
+          </button>
+          <button
+            type="button"
+            className="header-nav-btn secondary"
+            onClick={() => navigate('/user/account')}
+          >
+            Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}
           </button>
           <button
             type="button"

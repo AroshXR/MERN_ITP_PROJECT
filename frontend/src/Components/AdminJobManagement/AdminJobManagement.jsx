@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminJobManagement.css';
-import NavBar from '../NavBar/navBar';
 import { useNavigate } from 'react-router-dom';
 
 const AdminJobManagement = () => {
@@ -30,6 +29,57 @@ const AdminJobManagement = () => {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  const downloadApplicantReport = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/applicant/reports`);
+      const rows = res.data?.data || [];
+      if (!rows.length) {
+        alert('No applicant data to download');
+        return;
+      }
+      const titleRow = ['Klassy T Shirts'];
+      const sectionRow = ['Applicant Details'];
+      const blankRow = [''];
+      const headers = ['ID','Name','Email','Position','Department','Status','Applied At'];
+
+      const csvRows = [
+        titleRow,
+        sectionRow,
+        blankRow,
+        headers,
+        ...rows.map(r => [
+          r.id,
+          r.name || '',
+          r.email || '',
+          r.position || '',
+          r.department || '',
+          r.status || '',
+          r.appliedAt ? new Date(r.appliedAt).toLocaleString() : ''
+        ])
+      ];
+
+      const csv = csvRows
+        .map(row => row.map(val => {
+          const str = val ?? '';
+          const escaped = String(str).replace(/"/g, '""');
+          return `"${escaped}"`;
+        }).join(','))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `applicant_report_${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to download report:', e);
+      alert('Failed to download applicant report');
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -247,9 +297,8 @@ const AdminJobManagement = () => {
 
   return (
     <div>
-      <NavBar />
       <div className="admin-header">
-        <h1>Job Management Dashboard</h1>
+        <h1>Job Management</h1>
         <p>Post and manage job openings</p>
         <div className="header-nav-actions">
           <button
@@ -267,16 +316,9 @@ const AdminJobManagement = () => {
             Next <i className="bx bx-arrow-forward"></i>
           </button>
         </div>
-        <button
-          className="add-job-btn"
-          onClick={() => setShowJobForm(true)}
-        >
-          <i className="bx bx-plus"></i> Post New Job
-        </button>
       </div>
       <div className='main'>
         <div className="admin-job-management">
-
 
           <div className="jobs-list">
             <h2>Current Jobs ({jobs.length})</h2>
@@ -339,6 +381,11 @@ const AdminJobManagement = () => {
                 ))}
               </div>
             )}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+              <button className="add-job-btn" onClick={() => { setShowJobForm(true); }}>
+                <i className="bx bx-plus"></i> Post New Job
+              </button>
+            </div>
           </div>
 
           {showJobForm && (

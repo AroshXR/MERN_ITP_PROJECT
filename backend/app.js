@@ -65,8 +65,12 @@ const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
 const inventoryRouter = require("./routes/InventoryRoutes");
+<<<<<<< HEAD
 const clothingRouter = require("./routes/ClothingRoutes");
 const analyticsRouter = require("./routes/AnalyticsRoutes");
+=======
+const orderRouter = require("./routes/OrderRoutes");
+>>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
 
 
      //pasindu
@@ -89,7 +93,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DBNAME = process.env.MONGODB_DBNAME;
 
 if (!MONGODB_URI) {
-  console.error("❌ Missing MONGODB_URI in .env file");
+  console.error("Missing MONGODB_URI in .env file");
   console.error("Please create backend/.env with: MONGODB_URI=your_mongodb_connection_string");
   process.exit(1);
 }
@@ -110,8 +114,12 @@ app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
 app.use("/inventory", inventoryRouter);
+<<<<<<< HEAD
 app.use("/clothing", clothingRouter);
 app.use("/analytics", analyticsRouter);
+=======
+app.use("/orders", orderRouter);
+>>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
 
     //pasindu                                                         sdsdsdssdsdsdsdsd
     app.use("/api/owner", ownerRouter);
@@ -126,6 +134,25 @@ app.get("/test", (req, res) => {
         message: "Backend server is running", 
         timestamp: new Date().toISOString() 
     });
+});
+
+// Debug endpoint to check orders collection
+app.get("/debug/orders", async (req, res) => {
+    try {
+        const Order = require("./models/OrderModel");
+        const orders = await Order.find().limit(10).sort({ CreatedAt: -1 });
+        res.json({
+            status: "ok",
+            message: "Orders from database",
+            count: orders.length,
+            data: orders
+        });
+    } catch (error) {
+        res.json({
+            status: "error",
+            message: "Error fetching orders: " + error.message
+        });
+    }
 });
 
 // Test email configuration endpoint
@@ -261,8 +288,8 @@ app.post("/login", async (req, res) => {
 
 // Universal MongoDB connection with cross-platform DNS resolution
 const connectToMongoDB = async () => {
-  console.log("🚀 Starting backend server...");
-  console.log(`📍 Platform: ${process.platform} | Node: ${process.version}`);
+  console.log("Starting backend server...");
+  console.log(`Platform: ${process.platform} | Node: ${process.version}`);
   
   try {
     // Connect with universal settings that work on any OS/network
@@ -297,16 +324,16 @@ const connectToMongoDB = async () => {
         //pasindu
     require("./models/MaterialInventoryModel");
     
-    console.log("📦 All models loaded successfully");
+    console.log("All models loaded successfully");
 
     // Start the server
     app.listen(PORT, () => {
-      console.log(`🌐 Server running on http://localhost:${PORT}`);
-      console.log("🎯 Ready to accept connections!");
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log("Ready to accept connections!");
     });
 
   } catch (error) {
-    console.error("❌ MongoDB connection failed:");
+    console.error("MongoDB connection failed:");
     console.error(`   Error: ${error.message}`);
     
     // Provide helpful troubleshooting info

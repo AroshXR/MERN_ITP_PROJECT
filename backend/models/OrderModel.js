@@ -35,7 +35,7 @@ const orderSchema = new Schema({
     AdminID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false // Made optional in case user is not logged in
     },
     ItemID: {
         type: String,

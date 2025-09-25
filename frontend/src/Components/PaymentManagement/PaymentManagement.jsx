@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 const CheckoutPage = () => {
   const navigate = useNavigate()
   const { isAuthenticated, getToken, logout } = useAuth()
-  
+
   const [currentStep, setCurrentStep] = useState(1)
   const [shippingMethod, setShippingMethod] = useState("standard")
   const [paymentMethod, setPaymentMethod] = useState("card")
@@ -18,7 +18,7 @@ const CheckoutPage = () => {
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState("")
-  
+
   // Cart and pricing state
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -36,14 +36,14 @@ const CheckoutPage = () => {
     state: "",
     zipCode: "",
     country: "Sri Lanka",
-    
+
     // Card Details (only when payment method is card)
     cardNumber: "",
     expiryDate: "",
     cvv: "",
     cardName: "",
     saveCard: false,
-    
+
     // Gift message
     giftMessage: ""
   })
@@ -103,7 +103,7 @@ const CheckoutPage = () => {
         }))
 
         setCartItems(transformedItems)
-        
+
         if (transformedItems.length === 0) {
           setCartError('Your cart is empty. Please add items to your cart before proceeding to checkout.')
         }
@@ -112,14 +112,14 @@ const CheckoutPage = () => {
       }
     } catch (error) {
       console.error('Error fetching cart items:', error)
-      
+
       if (error.response?.status === 401) {
         logout()
         setCartError('Your session has expired. Please log in again.')
         navigate('/login')
         return
       }
-      
+
       setCartError('Failed to load cart items. Please try again.')
     } finally {
       setLoading(false)
@@ -138,7 +138,7 @@ const CheckoutPage = () => {
   // Validate form data
   const validateForm = () => {
     const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zipCode']
-    
+
     for (const field of requiredFields) {
       if (!formData[field].trim()) {
         alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`)
@@ -257,14 +257,25 @@ const CheckoutPage = () => {
           Authorization: `Bearer ${getToken()}`
         }
       })
-      
+
       if (response.data.status === 'ok') {
-        setSubmitMessage(`Payment details saved successfully! Payment ID: ${response.data.data.paymentId}`)
+        const { paymentId, orders, totalOrders } = response.data.data
+        let successMessage = `Payment successful! Payment ID: ${paymentId}`
+        
+        if (orders && totalOrders > 0) {
+          successMessage += `\n${totalOrders} order(s) created:`
+          orders.forEach(order => {
+            successMessage += `\n• ${order.itemName} (Qty: ${order.quantity}) - Order ID: ${order.orderId}`
+          })
+        }
+        
+        setSubmitMessage(successMessage)
+        
         // Reset form or redirect to success page
         setTimeout(() => {
           // You can redirect to a success page or reset the form
           window.location.reload()
-        }, 3000)
+        }, 5000) // Increased timeout to allow reading order details
       } else {
         setSubmitMessage('Error saving payment details: ' + response.data.message)
       }
@@ -327,8 +338,8 @@ const CheckoutPage = () => {
             <h3>⚠️ Checkout Error</h3>
             <p>{cartError}</p>
             <div style={{ marginTop: '20px', gap: '10px', display: 'flex', justifyContent: 'center' }}>
-              <button 
-                onClick={() => navigate('/orderManagement')} 
+              <button
+                onClick={() => navigate('/orderManagement')}
                 className="btn btn-outline"
                 style={{
                   padding: '10px 20px',
@@ -341,8 +352,8 @@ const CheckoutPage = () => {
               >
                 Go to Cart
               </button>
-              <button 
-                onClick={fetchCartItems} 
+              <button
+                onClick={fetchCartItems}
                 className="btn btn-primary"
                 style={{
                   padding: '10px 20px',
@@ -397,11 +408,11 @@ const CheckoutPage = () => {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="firstName">First Name</label>
-                      <input 
-                        id="firstName" 
+                      <input
+                        id="firstName"
                         name="firstName"
-                        type="text" 
-                        placeholder="John" 
+                        type="text"
+                        placeholder="John"
                         value={formData.firstName}
                         onChange={handleInputChange}
                         required
@@ -409,11 +420,11 @@ const CheckoutPage = () => {
                     </div>
                     <div className="form-group">
                       <label htmlFor="lastName">Last Name</label>
-                      <input 
-                        id="lastName" 
+                      <input
+                        id="lastName"
                         name="lastName"
-                        type="text" 
-                        placeholder="Doe" 
+                        type="text"
+                        placeholder="Doe"
                         value={formData.lastName}
                         onChange={handleInputChange}
                         required
@@ -423,11 +434,11 @@ const CheckoutPage = () => {
 
                   <div className="form-group">
                     <label htmlFor="email">📧 Email Address</label>
-                    <input 
-                      id="email" 
+                    <input
+                      id="email"
                       name="email"
-                      type="email" 
-                      placeholder="john@example.com" 
+                      type="email"
+                      placeholder="john@example.com"
                       value={formData.email}
                       onChange={handleInputChange}
                       required
@@ -436,11 +447,11 @@ const CheckoutPage = () => {
 
                   <div className="form-group">
                     <label htmlFor="phone">📞 Phone Number</label>
-                    <input 
-                      id="phone" 
+                    <input
+                      id="phone"
                       name="phone"
-                      type="tel" 
-                      placeholder="+94 77 123 4567" 
+                      type="tel"
+                      placeholder="+94 77 123 4567"
                       value={formData.phone}
                       onChange={handleInputChange}
                       required
@@ -449,11 +460,11 @@ const CheckoutPage = () => {
 
                   <div className="form-group">
                     <label htmlFor="address">📍 Street Address</label>
-                    <input 
-                      id="address" 
+                    <input
+                      id="address"
                       name="address"
-                      type="text" 
-                      placeholder="123 Main Street" 
+                      type="text"
+                      placeholder="123 Main Street"
                       value={formData.address}
                       onChange={handleInputChange}
                       required
@@ -463,11 +474,11 @@ const CheckoutPage = () => {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="city">City</label>
-                      <input 
-                        id="city" 
+                      <input
+                        id="city"
                         name="city"
-                        type="text" 
-                        placeholder="Kandy" 
+                        type="text"
+                        placeholder="Kandy"
                         value={formData.city}
                         onChange={handleInputChange}
                         required
@@ -475,8 +486,8 @@ const CheckoutPage = () => {
                     </div>
                     <div className="form-group">
                       <label htmlFor="state">Province</label>
-                      <select 
-                        id="state" 
+                      <select
+                        id="state"
                         name="state"
                         value={formData.state}
                         onChange={handleInputChange}
@@ -499,11 +510,11 @@ const CheckoutPage = () => {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="zipCode">ZIP Code</label>
-                      <input 
-                        id="zipCode" 
+                      <input
+                        id="zipCode"
                         name="zipCode"
-                        type="text" 
-                        placeholder="20000" 
+                        type="text"
+                        placeholder="20000"
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         required
@@ -511,8 +522,8 @@ const CheckoutPage = () => {
                     </div>
                     <div className="form-group">
                       <label htmlFor="country">Country</label>
-                      <select 
-                        id="country" 
+                      <select
+                        id="country"
                         name="country"
                         value={formData.country}
                         onChange={handleInputChange}
@@ -639,11 +650,11 @@ const CheckoutPage = () => {
                     <div className="card-details">
                       <div className="form-group">
                         <label htmlFor="cardNumber">Card Number</label>
-                        <input 
-                          id="cardNumber" 
+                        <input
+                          id="cardNumber"
                           name="cardNumber"
-                          type="text" 
-                          placeholder="1234 5678 9012 3456" 
+                          type="text"
+                          placeholder="1234 5678 9012 3456"
                           value={formData.cardNumber}
                           onChange={handleInputChange}
                           required
@@ -652,11 +663,11 @@ const CheckoutPage = () => {
                       <div className="form-row">
                         <div className="form-group">
                           <label htmlFor="expiryDate">Expiry Date</label>
-                          <input 
-                            id="expiryDate" 
+                          <input
+                            id="expiryDate"
                             name="expiryDate"
-                            type="text" 
-                            placeholder="MM/YY" 
+                            type="text"
+                            placeholder="MM/YY"
                             value={formData.expiryDate}
                             onChange={handleInputChange}
                             required
@@ -664,11 +675,11 @@ const CheckoutPage = () => {
                         </div>
                         <div className="form-group">
                           <label htmlFor="cvv">CVV</label>
-                          <input 
-                            id="cvv" 
+                          <input
+                            id="cvv"
                             name="cvv"
-                            type="text" 
-                            placeholder="123" 
+                            type="text"
+                            placeholder="123"
                             value={formData.cvv}
                             onChange={handleInputChange}
                             required
@@ -677,20 +688,20 @@ const CheckoutPage = () => {
                       </div>
                       <div className="form-group">
                         <label htmlFor="cardName">Name on Card</label>
-                        <input 
-                          id="cardName" 
+                        <input
+                          id="cardName"
                           name="cardName"
-                          type="text" 
-                          placeholder="John Doe" 
+                          type="text"
+                          placeholder="John Doe"
                           value={formData.cardName}
                           onChange={handleInputChange}
                           required
                         />
                       </div>
                       <div className="checkbox-group">
-                        <input 
-                          type="checkbox" 
-                          id="saveCard" 
+                        <input
+                          type="checkbox"
+                          id="saveCard"
                           name="saveCard"
                           checked={formData.saveCard}
                           onChange={handleInputChange}
@@ -718,7 +729,18 @@ const CheckoutPage = () => {
                       {cartItems.map((item) => (
                         <div key={item.id} className="order-item">
                           <span>
-                            {item.name} - {item.size} ({item.color}) ({item.quantity}x)
+                            {item.name} - {item.size}
+                             <div
+                              className="color-palette"
+                              style={{
+                                backgroundColor: item.color,
+                                width: "24px",
+                                height: "24px",
+                                borderRadius: "50%",
+                                border: "1px solid #ccc",
+                              }}
+                              title={item.color}
+                            /> ({item.quantity}x)
                           </span>
                           <span>${item.totalPrice.toFixed(2)}</span>
                         </div>
@@ -792,8 +814,8 @@ const CheckoutPage = () => {
                   Continue
                 </button>
               ) : (
-                <button 
-                  className="supbtn" 
+                <button
+                  className="supbtn"
                   disabled={!agreeTerms || isSubmitting}
                   onClick={handleSubmitPayment}
                 >
@@ -818,10 +840,10 @@ const CheckoutPage = () => {
                 {giftWrap && (
                   <div className="form-group">
                     <label htmlFor="giftMessage">Gift Message (Optional)</label>
-                    <textarea 
-                      id="giftMessage" 
+                    <textarea
+                      id="giftMessage"
                       name="giftMessage"
-                      placeholder="Write your gift message here..." 
+                      placeholder="Write your gift message here..."
                       rows="3"
                       value={formData.giftMessage}
                       onChange={handleInputChange}
@@ -869,7 +891,7 @@ const CheckoutPage = () => {
                   <p className="guarantee">30-day money-back guarantee</p>
                 </div>
 
- 
+
               </div>
             </div>
           </div>
@@ -884,12 +906,15 @@ const CheckoutPage = () => {
           right: '20px',
           padding: '15px 20px',
           borderRadius: '8px',
-          backgroundColor: submitMessage.includes('successfully') ? '#d4edda' : '#f8d7da',
-          color: submitMessage.includes('successfully') ? '#155724' : '#721c24',
-          border: `1px solid ${submitMessage.includes('successfully') ? '#c3e6cb' : '#f5c6cb'}`,
+          backgroundColor: submitMessage.includes('successful') ? '#d4edda' : '#f8d7da',
+          color: submitMessage.includes('successful') ? '#155724' : '#721c24',
+          border: `1px solid ${submitMessage.includes('successful') ? '#c3e6cb' : '#f5c6cb'}`,
           zIndex: 1000,
-          maxWidth: '400px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          maxWidth: '500px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          whiteSpace: 'pre-line',
+          fontSize: '14px',
+          lineHeight: '1.4'
         }}>
           {submitMessage}
         </div>

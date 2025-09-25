@@ -5,6 +5,8 @@ import Loader from '../Components/pasindu/Loader';
 import './OutfitDetails.css';
 import axios from 'axios';
 import { useAuth } from '../AuthGuard/AuthGuard';
+import Navbar from '../Components/pasindu/Navbar';
+import Footer from '../Components/Footer/Footer';
 
 const OutfitDetails = () => {
   const { id } = useParams();
@@ -14,8 +16,12 @@ const OutfitDetails = () => {
   const [reservationDate, setReservationDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [isBooking, setIsBooking] = useState(false);
-  const currency = process.env.REACT_APP_CURRENCY || 'USD';
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [document, setDocument] = useState(null);
+  const currency = process.env.REACT_APP_CURRENCY || 'LKR';
   const { isAuthenticated, getToken } = useAuth();
+  
 
   const fetchOutfit = async () => {
     try {
@@ -48,17 +54,42 @@ const OutfitDetails = () => {
         return;
       }
 
+      if (!phone || !email || !document) {
+        alert('Please fill in all required fields: phone, email, and upload a document');
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+
+      // Basic phone validation
+      const phoneRegex = /^[0-9]{10,}$/;
+      if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+        alert('Please enter a valid phone number (at least 10 digits)');
+        return;
+      }
+
       setIsBooking(true);
       const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
       const token = getToken();
       
-      const { data } = await axios.post(`${BASE_URL}/api/booking/create`, {
-        outfit: outfit._id,
-        reservationDate,
-        returnDate
-      }, {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('outfit', outfit._id);
+      formData.append('reservationDate', reservationDate);
+      formData.append('returnDate', returnDate);
+      formData.append('phone', phone);
+      formData.append('email', email);
+      formData.append('document', document);
+      
+      const { data } = await axios.post(`${BASE_URL}/api/booking/create`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
 
@@ -93,14 +124,28 @@ const OutfitDetails = () => {
     setCurrentSlide((prevSlide) => (prevSlide - 1 + totalSlides) % totalSlides);
   };
 
+  // 👇 Paste your auto-slide useEffect here
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 3000); // 3 seconds per slide
+
+    return () => clearInterval(interval); // cleanup on unmount
+  }, [currentSlide, outfit]);
+
   if (!outfit) return <Loader />;
 
   const allImages = [outfit.image, ...(outfit.images || [])].filter(Boolean);
   const totalSlides = allImages.length;
 
+  
+
   return (
-    <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
-      <button onClick={() => navigate(-1)} className="back-button">
+    <div>
+      <Navbar/>
+      <div className=" ">
+    <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16 ">
+      <button onClick={() => navigate(-1)} className="back-button ">
         <img src={assets.arrow_icon} alt="Back" />
         Back to all Outfits
       </button>
@@ -108,8 +153,9 @@ const OutfitDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
         {/* Left: Outfit Image and Details */}
         <div className="lg:col-span-2">
+          <div className="shadow-xl/30 bg-white rounded-xl p-6 mb-6 -ml-6 md:-ml-6 lg:-ml-16 xl:-ml-24">
           {/* Image Slider */}
-          <div className="flex items-center">
+          <div className="flex items-center -ml-4 mr-4 ">
             <button onClick={prevSlide} className="md:p-2 p-1 bg-black/30 md:mr-6 mr-2 rounded-full hover:bg-black/50">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -129,14 +175,14 @@ const OutfitDetails = () => {
               </div>
             </div>
 
-            <button onClick={nextSlide} className="p-1 md:p-2 bg-black/30 md:ml-6 ml-2 rounded-full hover:bg-black/50">
+            <button onClick={nextSlide} className="p-1 md:p-2 bg-black/30 md:ml-1 ml-1 rounded-full hover:bg-black/50">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 pt-6">
             <div>
               <h1 className="text-3xl font-bold">{outfit.brand} {outfit.model}</h1>
               <p className="text-gray-500 text-lg">{outfit.category} • {outfit.condition}</p>
@@ -152,6 +198,8 @@ const OutfitDetails = () => {
                   {text}
                 </div>
               ))}
+            </div>
+
             </div>
 
             {/* Description */}
@@ -182,30 +230,83 @@ const OutfitDetails = () => {
           <p className="flex items-center justify-between text-2xl text-gray-800 font-semibold">{currency}{outfit.pricePerDay} <span className="text-base text-gray-400 font-normal">per day</span> </p>
 
           <hr className="border-borderColor my-6" />
-          <div className="flex flex-col gap-2">
-            <label htmlFor="reservation-date">Reservation Date</label>
-            <input 
-              type="date" 
-              className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" 
-              required 
-              id="reservation-date" 
-              min={new Date().toISOString().split('T')[0]} 
-              value={reservationDate}
-              onChange={(e) => setReservationDate(e.target.value)}
-            />
+          
+          {/* Contact Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-800">Contact Information</h3>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="phone">Phone Number *</label>
+              <input 
+                type="tel" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                required 
+                id="phone" 
+                placeholder="e.g., 0771234567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="email">Email Address *</label>
+              <input 
+                type="email" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                required 
+                id="email" 
+                placeholder="e.g., john@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="document">Upload ID Document *</label>
+              <input 
+                type="file" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                required 
+                id="document" 
+                accept="image/*,.pdf"
+                onChange={(e) => setDocument(e.target.files[0])}
+              />
+              <p className="text-xs text-gray-400">Upload your NIC, Passport, or Driver's License</p>
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="return-date">Return Date</label>
-            <input 
-              type="date" 
-              className="border border-solid border-borderColor px-3 py-2 rounded-lg" 
-              required 
-              id="return-date" 
-              min={reservationDate || new Date().toISOString().split('T')[0]} 
-              value={returnDate}
-              onChange={(e) => setReturnDate(e.target.value)}
-            />
+
+          <hr className="border-borderColor my-6" />
+          
+          {/* Booking Dates */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-800">Booking Dates</h3>
+            
+            <div className="flex flex-col gap-2">
+              <label htmlFor="reservation-date">Reservation Date</label>
+              <input 
+                type="date" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" 
+                required 
+                id="reservation-date" 
+                min={new Date().toISOString().split('T')[0]} 
+                value={reservationDate}
+                onChange={(e) => setReservationDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="return-date">Return Date</label>
+              <input 
+                type="date" 
+                className="border border-solid border-borderColor px-3 py-2 rounded-lg" 
+                required 
+                id="return-date" 
+                min={reservationDate || new Date().toISOString().split('T')[0]} 
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+              />
+            </div>
           </div>
+          
           <button 
             type="submit"
             disabled={isBooking}
@@ -216,6 +317,9 @@ const OutfitDetails = () => {
           <p className="text-center text-sm">No credit card required to reserve</p>
         </form>
       </div>
+    </div>
+    </div>
+    <Footer/>
     </div>
   );
 }

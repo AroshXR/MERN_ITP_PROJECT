@@ -1,47 +1,81 @@
-/* Navbar.css */
-
-/* Preserve custom base styles */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-}
-
-/* Navbar container - flex setup for large screens */
-.navbar-container {
+/* Navbar container */
+.navbar {
   display: flex;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  text-align: gray;
-  border-bottom: 1px solid #e0e0e0;
+  align-items: center;
+  background: linear-gradient(to right, #000000, #1a1a1a);
+  padding: 10px 15px;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
   position: relative;
+  z-index: 2;
+}
+
+/* Logo styling */
+.logo {
+  margin: 0;
+  font-size: 26px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #ffffff;
+  text-shadow: 0 0 10px #666666;
   transition: all 0.3s ease;
 }
 
-.navbar-container.bg-light {
-  background-color: #f4f4f9; /* light background */
+.logo:hover {
+  color: #f0f0f0;
+  text-shadow: 0 0 15px #999999;
+  transform: scale(1.05);
 }
 
-.navbar-links-container {
+/* Nav content container */
+.nav-content {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 1rem;
 }
 
-.navbar-links-container a {
-  color: #4a4a4a;
-  text-decoration: none;
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.navbar-links-container a:hover {
-  color: #071829ff; /* primary color on hover */
+/* Nav buttons */
+.nav-btn {
+  padding: 8px 18px;
+  border: 2px solid #666666;
+  border-radius: 20px;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #333333;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
+.nav-btn:hover {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Special buttons (Home, Outfit, My Bookings) */
+.special-btn {
+  background-color: #555555;
+  border-color: #999999;
+  box-shadow: 0 4px 20px rgba(200, 200, 200, 0.3);
+}
+
+.special-btn:hover {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+/* Search bar */
 .search-bar {
   display: flex;
   gap: 0.5rem;
@@ -49,24 +83,27 @@ code {
   padding: 0.5rem 1rem;
   border-radius: 1.5rem;
   max-width: 250px;
+  background-color: #1a1a1a;
 }
 
 .search-bar input {
-  padding: 0.5rem;
   border: none;
   background: transparent;
   outline: none;
+  color: #fff;
   font-size: 1rem;
 }
 
 .search-bar img {
   width: 20px;
   height: 20px;
+  filter: invert(1);
 }
 
+/* Extra buttons (Dashboard, Login, Logout) */
 .navbar-buttons {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .navbar-buttons button {
@@ -80,43 +117,63 @@ code {
 }
 
 .navbar-buttons button:hover {
-  background-color: #3a5160; /* primary-dull */
+  background-color: #3a5160;
 }
 
 .navbar-buttons button:focus {
   outline: none;
 }
 
-.mobile-menu-btn {
+/* Mobile */
+.menu-icon {
   display: none;
+  font-size: 28px;
+  cursor: pointer;
 }
 
-/* Mobile View - responsive styling */
-@media (max-width: 767px) {
-  .navbar-container {
-    flex-direction: column;
-    align-items: flex-start;
+@media screen and (max-width: 768px) {
+  .menu-icon {
+    display: block;
   }
 
-  .navbar-links-container {
-    display: none;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    position: fixed;
+  .nav-content {
+    position: absolute;
     top: 60px;
     right: 0;
-    background-color: #fff;
-    width: 100%;
-    height: 100%;
+    background-color: #111;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    width: 200px;
+    display: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.8);
   }
 
-  .navbar-links-container.show {
+  .nav-content.active {
     display: flex;
   }
 
-  .mobile-menu-btn {
-    display: block;
-    cursor: pointer;
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-btn {
+    width: 100%;
+    text-align: left;
+    margin: 5px 0;
+  }
+
+  .search-bar {
+    width: 100%;
+  }
+
+  .navbar-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .navbar-buttons button {
+    width: 100%;
   }
 }

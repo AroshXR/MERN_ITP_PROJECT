@@ -1,18 +1,49 @@
-import React from 'react'
-import { assets, dummyUserData } from '../../../assets/assets'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import './navBarOwner.css'; // reuse the same CSS
 
 const NavbarOwner = () => {
-    const user = dummyUserData;
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
+  const handleLogoClick = () => {
+    navigate('/');
+    setMenuOpen(false);
+  };
 
   return (
-    <div className='flex items-center justify-between px-6 md:px-10 py-4 text-gray-500 border-solid border-b-[1px] border-b-black border-t-0 border-l-0 border-r-0 relative transition-all'>
-        <Link to='/' >
-        <img src={assets.logo} alt="" className='h-7' /> </Link>
-        <p>Welcome, {user.name || "Owner"} </p>
-        
-    </div>
-  )
-}
+    <nav className="navbar">
+      {/* Logo */}
+      <h2 className="logo" onClick={handleLogoClick}>
+        Klassy T-Shirts
+      </h2>
 
-export default NavbarOwner
+      {/* Hamburger menu (mobile) */}
+      <div className="menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
+        <i className={menuOpen ? 'bx bx-x' : 'bx bx-menu'}></i>
+      </div>
+
+      {/* Right-side nav with only "Home" */}
+      <div className={`nav-buttons ${menuOpen ? 'active' : ''}`}>
+        <Link to="/rentalHome" onClick={() => setMenuOpen(false)}>
+          <button className="nav-btn">
+            <i className="bx bx-home"></i> Home
+          </button>
+        </Link>
+      </div>
+    </nav>
+  );
+};
+
+export default NavbarOwner;
