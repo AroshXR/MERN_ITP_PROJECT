@@ -35,10 +35,10 @@
 }
 
 .admin-badge {
-    background: linear-gradient(135deg, #312e81, #2563eb);
-    color: #fff;
+    background: white;
+    color:black;
     padding: 0.4rem 1rem;
-    border-radius: 999px;
+    border-radius: 400px;
     font-weight: 600;
 }
 
@@ -85,7 +85,7 @@
 .vertical-form select:focus,
 .vertical-form textarea:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #00050e;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
@@ -101,7 +101,7 @@
     padding: 0.6rem 1.3rem;
     border-radius: 8px;
     border: none;
-    background: linear-gradient(135deg, #2563eb, #60a5fa);
+    background: linear-gradient(135deg, black, #515152);
     color: #ffffff;
     font-weight: 600;
     cursor: pointer;
@@ -109,7 +109,7 @@
 }
 
 button.danger {
-    background: linear-gradient(135deg, #dc2626, #f97316);
+    background: linear-gradient(135deg, #a61111, #ab140e);
 }
 
 button:disabled {
