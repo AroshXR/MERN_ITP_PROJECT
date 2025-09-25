@@ -8,22 +8,7 @@ const toNumber = (value) => {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
 };
-
-// Compute total for a single order as quantity * price with safe fallbacks
 const computeOrderTotal = (order) => {
-    // If there are explicit items, sum quantity * price-like fields
-    const items = order.items || order.orderItems || order.products || [];
-    if (Array.isArray(items) && items.length > 0) {
-        return items.reduce((sum, item) => {
-            const qty = toNumber(item.quantity || item.qty || 1);
-            const unit = toNumber(
-                item.price || item.unitPrice || (item.totalPrice && qty ? item.totalPrice / qty : 0)
-            );
-            return qty * unit;
-        }, 0);
-    }
-
-    // Fall back to order-level quantity * price
     const qty = toNumber(order.quantity || order.qty || order.Quantity);
     const unit = toNumber(order.price || order.Price);
     if (qty && unit) {
@@ -358,7 +343,7 @@ export default function OrderSummaryPage() {
                                                 <tr key={o.id || o._id}>
                                                     <td>{o.id || o._id}</td>
                                                     <td>{o.customerName || "-"}</td>
-                                                    <td className={`status ${String(o.status || "").toLowerCase()}`}>
+                                                    <td className={`orderStatus ${String(o.status || "").toLowerCase()}`}>
                                                         {o.status || "-"}
                                                     </td>
                                                     <td>{formatCurrency(computeOrderTotal(o))}</td>

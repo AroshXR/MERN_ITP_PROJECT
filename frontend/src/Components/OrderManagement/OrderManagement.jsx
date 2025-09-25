@@ -252,9 +252,7 @@ export default function OrderManagement() {
 
 
     const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-    const shipping = cartItems.length > 0 ? 9.99 : 0;
-    const tax = subtotal * 0.08;
-    const total = subtotal + shipping + tax;
+    const total = subtotal;
 
     const handlePlaceOrder = () => {
         console.log('Placing order...', { cartItems, total });
