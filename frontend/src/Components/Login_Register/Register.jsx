@@ -100,6 +100,14 @@ function RegisterPage() {
             passwordsMatch
         });
 
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(user.password)) {
+            setError(
+                'Password must have at least 8 characters, including 1 uppercase letter, 1 lowercase letter, and 1 number.'
+            );
+            return;
+        }
+
         if (!passwordsMatch) {
             setError('Passwords do not match');
             return;
