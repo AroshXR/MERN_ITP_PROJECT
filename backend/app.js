@@ -300,7 +300,7 @@ const connectToMongoDB = async () => {
       dbName: MONGODB_DBNAME,
     });
 
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
     
     // Load all models after successful connection
     require("./models/User");

@@ -13,6 +13,13 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  border-radius: 15px;
+}
+
+.reports__subtitle {
+  margin: -6px 0 4px 0;
+  color: #e0e0e0;
+  font-size: 14px;
 }
 
 .reports__actions { display: flex; gap: 8px; }
@@ -32,6 +39,21 @@
   text-align: center; 
 }
 
+.summary-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 22px;
+}
+.summary-card__icon.total { background: #e3f2fd; color: #1565c0; }
+.summary-card__icon.pending { background: #fff3e0; color: #ef6c00; }
+.summary-card__icon.approved { background: #e8f5e9; color: #2e7d32; }
+.summary-card__icon.rejected { background: #ffebee; color: #c62828; }
+
 .summary-card h3 { 
   margin: 0 0 8px 0; 
   color: #666; 
@@ -44,6 +66,21 @@
   font-weight: bold; 
   color: #1976d2; 
 }
+
+.progress {
+  width: 100%;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress__bar {
+  height: 100%;
+  transition: width .3s ease;
+}
+.progress__bar.approved { background: #4caf50; }
+.progress__bar.rejected { background: #f44336; }
 
 .reports__section { 
   margin-bottom: 32px; 
@@ -66,7 +103,7 @@
 }
 
 .position-table { 
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr; 
+  grid-template-columns: 2fr 1fr 2fr 1fr 1fr 1fr; 
 }
 
 .interview-table { 
@@ -82,10 +119,12 @@
 }
 
 .position-table__head > div, .interview-table__head > div, .pending-table__head > div { 
-  background: #f5f5f5; 
+  background: #000000; 
+  color: white;
   padding: 8px 12px; 
   font-weight: 600; 
   border-bottom: 1px solid #ddd; 
+  border-radius: 8px;
 }
 
 .position-table__row, .interview-table__row, .pending-table__row { 
@@ -98,6 +137,31 @@
   display: flex; 
   align-items: center; 
 }
+
+.position-bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  background: #f5f5f5;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+.position-bar__segment { display: inline-block; height: 100%; }
+.position-bar__segment.pending { background: #ffb74d; }
+.position-bar__segment.approved { background: #81c784; }
+.position-bar__segment.rejected { background: #e57373; }
+
+.pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+.pill--pending { background: #fff3e0; color: #ef6c00; }
+.pill--approved { background: #e8f5e9; color: #2e7d32; }
+.pill--rejected { background: #ffebee; color: #c62828; }
 
 .interview-table__row:last-child > div, 
 .pending-table__row:last-child > div { 

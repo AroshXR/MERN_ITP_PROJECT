@@ -140,6 +140,12 @@ const ApplicantDashboard = () => {
   };
 
   const handleEdit = (application, index) => {
+    // Prevent editing once application is approved
+    if ((application.status || '').toLowerCase() === 'approved') {
+      setError('You cannot edit an application after it has been approved.');
+      setSuccess('');
+      return;
+    }
     setSelectedApplication(application);
     setSelectedIndex(index);
     setShowEditForm(true);
@@ -160,6 +166,13 @@ const ApplicantDashboard = () => {
   };
 
   const handleDelete = (applicationId) => {
+    // Find target application to check status
+    const target = applications.find(app => (app._id || app.id) === applicationId);
+    if (target && (target.status || '').toLowerCase() === 'approved') {
+      setError('You cannot delete an application after it has been approved.');
+      setSuccess('');
+      return;
+    }
     if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
       const currentSelectedId =
         selectedIndex !== null && applications[selectedIndex]
@@ -351,6 +364,7 @@ const ApplicantDashboard = () => {
                 const skills = Array.isArray(application.skills)
                   ? application.skills.join(', ')
                   : application.skills;
+                const isApproved = (application.status || '').toLowerCase() === 'approved';
 
                 return (
                   <div key={cardKey} className="application-card">
@@ -400,12 +414,16 @@ const ApplicantDashboard = () => {
                       <button
                         onClick={() => handleEdit(application, index)}
                         className="edit-btn"
+                        disabled={isApproved}
+                        title={isApproved ? 'Editing is disabled after approval' : 'Edit this application'}
                       >
                         <i className="bx bx-edit"></i> Edit
                       </button>
                       <button
                         onClick={() => handleDelete(application._id || application.id)}
                         className="delete-btn"
+                        disabled={isApproved}
+                        title={isApproved ? 'Deletion is disabled after approval' : 'Delete this application'}
                       >
                         <i className="bx bx-trash"></i> Delete
                       </button>

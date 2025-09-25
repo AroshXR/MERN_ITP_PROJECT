@@ -211,7 +211,18 @@ const updateApplicant = async (req, res, next) => {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid applicant ID format" });
     }
-    
+    // Fetch current applicant to enforce business rules
+    const currentApplicant = await Applicant.findById(id).select('status');
+    if (!currentApplicant) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
+    // Do not allow editing details once approved. Admins should use the status endpoint for status changes.
+    if (currentApplicant.status === 'approved') {
+      return res.status(400).json({ 
+        message: "Cannot modify an application after it has been approved" 
+      });
+    }
+
     // Validate input if provided
     if (name || gmail || age || address) {
       const validationErrors = validateApplicantInput({ 
@@ -291,7 +302,15 @@ const deleteApplicant = async (req, res, next) => {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid applicant ID format" });
     }
-    
+    // Do not allow deleting if the application is already approved
+    const existing = await Applicant.findById(id).select('status');
+    if (!existing) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
+    if (existing.status === 'approved') {
+      return res.status(400).json({ message: "Cannot delete an approved application" });
+    }
+
     const deletedApplicant = await Applicant.findByIdAndDelete(id);
     if (!deletedApplicant) {
       return res.status(404).json({ message: "Applicant not found" });

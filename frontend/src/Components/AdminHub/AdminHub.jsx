@@ -59,17 +59,6 @@ export default function AdminHub() {
             <p>Manage rental listings, bookings, and dashboards.</p>
           </button>
 
-          <button className="hub-card" onClick={() => navigate('/admin-jobs')}>
-            <i className='bx bx-cog'></i>
-            <h3>Job Management</h3>
-            <p>Create and manage job postings.</p>
-          </button>
-
-          <button className="hub-card" onClick={() => navigate('/admin-applicants')}>
-            <i className='bx bx-id-card'></i>
-            <h3>Applicants</h3>
-            <p>Review, shortlist, and schedule interviews.</p>
-          </button>
         </section>
       </main>
       <Footer />

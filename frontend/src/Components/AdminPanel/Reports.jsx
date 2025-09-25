@@ -35,6 +35,23 @@ export default function Reports() {
     fetchAnalytics();
   }, []);
 
+  // Helpers for visuals
+  const ratioToNumber = (ratioStr) => {
+    if (!ratioStr) return 0;
+    const n = parseFloat(String(ratioStr).replace('%', ''));
+    return isNaN(n) ? 0 : Math.max(0, Math.min(100, n));
+  };
+
+  const getPositionSegments = (data) => {
+    const total = data?.total || 0;
+    if (total <= 0) return { pending: 0, approved: 0, rejected: 0 };
+    return {
+      pending: Math.round((data.pending || 0) / total * 100),
+      approved: Math.round((data.approved || 0) / total * 100),
+      rejected: Math.round((data.rejected || 0) / total * 100)
+    };
+  };
+
   const downloadReport = () => {
     if (!analytics) {
       alert('No analytics data available. Please refresh the page and try again.');
@@ -234,6 +251,7 @@ export default function Reports() {
     <div className="reports">
       <div className="reports__header">
         <h2>Recruitment Reports</h2>
+        <p className="reports__subtitle">Insights and exports for your hiring pipeline</p>
         <div className="reports__actions">
           <button onClick={downloadReport} className="btn btn--primary">Download JSON Report</button>
           <button onClick={downloadCSV} className="btn btn--secondary">Download CSV</button>
@@ -244,28 +262,44 @@ export default function Reports() {
       {/* Summary Cards */}
       <div className="reports__summary">
         <div className="summary-card">
+          <div className="summary-card__icon total"><i className="bx bx-user-pin"></i></div>
           <h3>Total Applicants</h3>
           <div className="summary-number">{analytics.summary.totalApplicants}</div>
         </div>
         <div className="summary-card">
+          <div className="summary-card__icon pending"><i className="bx bx-time-five"></i></div>
           <h3>Pending</h3>
           <div className="summary-number">{analytics.summary.pending}</div>
         </div>
         <div className="summary-card">
+          <div className="summary-card__icon approved"><i className="bx bx-check-circle"></i></div>
           <h3>Approved</h3>
           <div className="summary-number">{analytics.summary.approved}</div>
         </div>
         <div className="summary-card">
+          <div className="summary-card__icon rejected"><i className="bx bx-block"></i></div>
           <h3>Rejected</h3>
           <div className="summary-number">{analytics.summary.rejected}</div>
         </div>
         <div className="summary-card">
           <h3>Shortlisted Ratio</h3>
           <div className="summary-number">{analytics.summary.shortlistedRatio}</div>
+          <div className="progress">
+            <div
+              className="progress__bar approved"
+              style={{ width: `${ratioToNumber(analytics.summary.shortlistedRatio)}%` }}
+            />
+          </div>
         </div>
         <div className="summary-card">
           <h3>Rejected Ratio</h3>
           <div className="summary-number">{analytics.summary.rejectedRatio}</div>
+          <div className="progress">
+            <div
+              className="progress__bar rejected"
+              style={{ width: `${ratioToNumber(analytics.summary.rejectedRatio)}%` }}
+            />
+          </div>
         </div>
       </div>
 
@@ -310,19 +344,30 @@ export default function Reports() {
           <div className="position-table__head">
             <div>Position</div>
             <div>Total</div>
+            <div>Breakdown</div>
             <div>Pending</div>
             <div>Approved</div>
             <div>Rejected</div>
           </div>
-          {Object.entries(analytics.applicantsByPosition).map(([position, data]) => (
-            <div key={position} className="position-table__row">
-              <div>{position}</div>
-              <div>{data.total}</div>
-              <div>{data.pending}</div>
-              <div>{data.approved}</div>
-              <div>{data.rejected}</div>
-            </div>
-          ))}
+          {Object.entries(analytics.applicantsByPosition).map(([position, data]) => {
+            const seg = getPositionSegments(data);
+            return (
+              <div key={position} className="position-table__row">
+                <div>{position}</div>
+                <div>{data.total}</div>
+                <div>
+                  <div className="position-bar" title={`Pending ${seg.pending}%, Approved ${seg.approved}%, Rejected ${seg.rejected}%`}>
+                    <span className="position-bar__segment pending" style={{ width: `${seg.pending}%` }} />
+                    <span className="position-bar__segment approved" style={{ width: `${seg.approved}%` }} />
+                    <span className="position-bar__segment rejected" style={{ width: `${seg.rejected}%` }} />
+                  </div>
+                </div>
+                <div><span className="pill pill--pending">{data.pending}</span></div>
+                <div><span className="pill pill--approved">{data.approved}</span></div>
+                <div><span className="pill pill--rejected">{data.rejected}</span></div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
