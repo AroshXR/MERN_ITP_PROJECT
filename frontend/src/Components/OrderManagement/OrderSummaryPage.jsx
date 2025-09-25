@@ -374,7 +374,7 @@ export default function OrderSummaryPage() {
                                                         o.user?.email ||
                                                         "-"}
                                                     </td>
-                                                    <td className={`status ${String(o.status || "").toLowerCase()}`}>
+                                                    <td className={`orderStatus ${String(o.status || "").toLowerCase()}`}>
                                                         {o.status || "-"}
                                                     </td>
                                                     <td>{formatCurrency(computeOrderTotal(o))}</td>
