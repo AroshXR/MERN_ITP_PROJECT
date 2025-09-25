@@ -323,12 +323,12 @@ export default function OrderManagement() {
                     <div className="order-main">
                         {/* Cart Section */}
                         <div className="cart-section">
-                            <div className="order-card">
-                                <div className="card-header">
-                                    <h2 className="card-title">
-                                        Shopping Cart ({cartItems.length} items)
-                                    </h2>
-                                </div>
+                                <div className="order-card">
+                                    <div className="card-header">
+                                        <h2 className="card-title">
+                                            Shopping Cart ({cartItems.length} items)
+                                        </h2>
+                                    </div>
                                 <div className="card-content">
                                     {cartItems.length === 0 ? (
                                         <div className="empty-cart">
@@ -442,27 +442,27 @@ export default function OrderManagement() {
                             </div>
                         </div>
 
-                        {/* Order Summary Section */}
-                        <div className="summary-section">
-                            <div className="order-card sticky-card">
-                                <div className="card-header">
-                                    <h2 className="card-title">Order Summary</h2>
-                                </div>
-                                <div className="card-content">
-                                    <div className="summary-details">
-                                        <div className="summary-row">
-                                            <span>Subtotal:</span>
-                                            <span>${subtotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="divider"></div>
-                                        <div className="summary-row total-row">
-                                            <span>Total:</span>
-                                            <span>${total.toFixed(2)}</span>
+                            {/* Order Summary Section */}
+                            <div className="summary-section">
+                                <div className="order-card sticky-card">
+                                    <div className="card-header">
+                                        <h2 className="card-title">Order Summary</h2>
+                                    </div>
+                                    <div className="card-content">
+                                        <div className="summary-details">
+                                            <div className="summary-row">
+                                                <span>Subtotal:</span>
+                                                <span>${subtotal.toFixed(2)}</span>
+                                            </div>
+                                            <div className="divider"></div>
+                                            <div className="summary-row total-row">
+                                                <span>Total:</span>
+                                                <span>${total.toFixed(2)}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>

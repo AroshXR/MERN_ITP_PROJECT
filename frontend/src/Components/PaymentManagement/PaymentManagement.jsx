@@ -375,6 +375,40 @@ const CheckoutPage = () => {
 
   return (
     <div className="checkout-container">
+      {/* Back Button */}
+      <div className="back-button-container">
+        <button 
+          className="back-button"
+          onClick={() => navigate(-1)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            background: 'transparent',
+            border: '2px solid #333',
+            borderRadius: '8px',
+            color: '#333',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            marginBottom: '20px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#333';
+            e.target.style.color = '#fff';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = '#333';
+          }}
+        >
+          <span>←</span>
+          <span>Back</span>
+        </button>
+      </div>
+
       {/* Progress Indicator */}
       <div className="progress-header">
         <div className="progress-content">
@@ -758,7 +792,7 @@ const CheckoutPage = () => {
 
                   <div className="review-section">
                     <h3>Shipping Address</h3>
-                    <p className="address">
+                    <p className="address" style={{fontSize:"12px"}}>
                       {formData.firstName} {formData.lastName}
                       <br />
                       {formData.address}
@@ -777,7 +811,7 @@ const CheckoutPage = () => {
 
                   <div className="review-section">
                     <h3>Payment Method</h3>
-                    <p className="payment-info">
+                    <p className="payment-info" style={{fontSize:"12px"}}>
                       {paymentMethod === "card" && "Credit Card ending in 3456"}
                       {paymentMethod === "paypal" && "PayPal"}
                       {paymentMethod === "apple" && "Apple Pay"}
@@ -829,7 +863,7 @@ const CheckoutPage = () => {
           <div className="sidebar">
             <div className="card sticky">
               <div className="card-header">
-                <h2 className="card-title">Order Summary</h2>
+                <h2 className="card-title" style={{color:"ash"}}>Order Summary</h2>
               </div>
               <div className="card-content">
                 <div className="checkbox-group">

@@ -19,7 +19,7 @@ const computeOrderTotal = (order) => {
             const unit = toNumber(
                 item.price || item.unitPrice || (item.totalPrice && qty ? item.totalPrice / qty : 0)
             );
-            return sum + qty * unit;
+            return qty * unit;
         }, 0);
     }
 
