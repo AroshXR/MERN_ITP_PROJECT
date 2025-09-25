@@ -583,10 +583,6 @@ const UserAccount = () => {
                     )}
                     <p className="panel-description">Admin status updates, interview schedules, and account alerts appear here.</p>
                 </section>
-                <section className="panel">
-                    <h2>Your Order History</h2>
-                    
-                </section>
             </main>
             <Footer />
         </div>
