@@ -15,14 +15,14 @@ const Hero = () => {
         <h1 className="text-4xl md:text-5xl font-semibold mt-10">
           Luxury Outfits for Rent
         </h1>
-        {isAuthenticated() && (currentUser?.type === 'Customer' || currentUser?.type === 'Applicant') && (
+        {/*{isAuthenticated() && (currentUser?.type === 'Customer' || currentUser?.type === 'Applicant') && (
           <button 
             onClick={() => navigate('/my-bookings')}
             className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors"
           >
             My Bookings
-          </button>
-        )}
+          </button> 
+        )}*/}
       </div>
 
       <form className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 rounded-lg md:rounded-full w-full max-w-4xl classic-form">
