@@ -247,10 +247,11 @@
 
 .stat-card.total {
   background: linear-gradient(145deg, #000000 0%, #222222 100%);
+  color: white;
 }
 
 .stat-card.status-pending {
-  background: linear-gradient(145deg, #fff3cd 0%, #fce8a3 100%);
+  background: linear-gradient(145deg, #ffffad 0%, #fce8a3 100%);
   color: #744d04;
 }
 
