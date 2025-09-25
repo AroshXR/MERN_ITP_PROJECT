@@ -51,117 +51,119 @@ const Reports = () => {
     
     const htmlContent = `
     <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Booking Report</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solidrgb(35, 39, 43)49, 85); padding-bottom: 20px; }
-            .header h1 { color:rgb(36, 35, 44); margin: 0; }
-            .header p { margin: 5px 0; color: #666; }
-            .summary { background: #F8FAFC; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-            .summary h2 { color:rgb(32, 31, 54); margin-top: 0; }
-            .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-            .summary-item { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #4F46E5; }
-            .summary-item h3 { margin: 0 0 5px 0; color: #4F46E5; }
-            .summary-item p { margin: 0; font-size: 18px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #E5E7EB; }
-            th { background: #4F46E5; color: white; font-weight: bold; }
-            tr:nth-child(even) { background: #F9FAFB; }
-            .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-            .status.pending { background: #FEF3C7; color: #92400E; }
-            .status.confirmed { background: #D1FAE5; color: #065F46; }
-            .status.cancelled { background: #FEE2E2; color: #991B1B; }
-            .outfit-info { display: flex; align-items: center; gap: 10px; }
-            .outfit-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
-            @media print { body { margin: 0; } }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>🎯 Booking Report</h1>
-            <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
-            <p><strong>Owner:</strong> ${currentUser?.username || 'Owner'}</p>
-            <p><strong>Report Period:</strong> ${summary.reportPeriod.startDate} to ${summary.reportPeriod.endDate}</p>
-        </div>
+<html>
+<head>
+    <title>Booking Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #000; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .header h1 { color: #000; margin: 0; }
+        .header p { margin: 5px 0; color: #333; }
+        .summary { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ccc; }
+        .summary h2 { color: #000; margin-top: 0; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .summary-item { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #000; border: 1px solid #ddd; }
+        .summary-item h3 { margin: 0 0 5px 0; color: #000; }
+        .summary-item p { margin: 0; font-size: 18px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ccc; }
+        th { background: #000; color: white; font-weight: bold; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:nth-child(odd) { background: white; }
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #000; }
+        .status.pending { background: #e6e6e6; color: #000; }
+        .status.confirmed { background: #d4d4d4; color: #000; }
+        .status.cancelled { background: #b8b8b8; color: #000; }
+        .outfit-info { display: flex; align-items: center; gap: 10px; }
+        .outfit-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+        @media print { body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1> Booking Report</h1>
+        <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
+        <p><strong>Owner:</strong> ${currentUser?.username || 'Owner'}</p>
+        <p><strong>Report Period:</strong> ${summary.reportPeriod.startDate} to ${summary.reportPeriod.endDate}</p>
+    </div>
 
-        <div class="summary">
-            <h2>📊 Summary & Analytics</h2>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <h3>Total Bookings</h3>
-                    <p>${summary.totalBookings}</p>
-                </div>
-                <div class="summary-item">
-                    <h3>Total Revenue</h3>
-                    <p>${currency}${summary.totalRevenue.toFixed(2)}</p>
-                </div>
-                <div class="summary-item">
-                    <h3>Confirmed Bookings</h3>
-                    <p>${summary.statusCounts.confirmed || 0}</p>
-                </div>
-                <div class="summary-item">
-                    <h3>Pending Bookings</h3>
-                    <p>${summary.statusCounts.pending || 0}</p>
-                </div>
+    <div class="summary">
+        <h2> Summary & Analytics</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <h3>Total Bookings</h3>
+                <p>${summary.totalBookings}</p>
+            </div>
+            <div class="summary-item">
+                <h3>Total Revenue</h3>
+                <p>${currency}${summary.totalRevenue.toFixed(2)}</p>
+            </div>
+            <div class="summary-item">
+                <h3>Confirmed Bookings</h3>
+                <p>${summary.statusCounts.confirmed || 0}</p>
+            </div>
+            <div class="summary-item">
+                <h3>Pending Bookings</h3>
+                <p>${summary.statusCounts.pending || 0}</p>
             </div>
         </div>
+    </div>
 
-        <h2>📋 Detailed Booking Information</h2>
-        <table>
-            <thead>
+    <h2>📋 Detailed Booking Information</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Booking ID</th>
+                <th>Outfit Details</th>
+                <th>Customer</th>
+                <th>Booking Period</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Total Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${bookings.map(booking => {
+                const startDate = new Date(booking.reservationDate).toLocaleDateString()
+                const endDate = new Date(booking.returnDate).toLocaleDateString()
+                const duration = Math.ceil((new Date(booking.returnDate) - new Date(booking.reservationDate)) / (1000 * 60 * 60 * 24))
+                
+                return `
                 <tr>
-                    <th>Booking ID</th>
-                    <th>Outfit Details</th>
-                    <th>Customer</th>
-                    <th>Booking Period</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                    <th>Total Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${bookings.map(booking => {
-                    const startDate = new Date(booking.reservationDate).toLocaleDateString()
-                    const endDate = new Date(booking.returnDate).toLocaleDateString()
-                    const duration = Math.ceil((new Date(booking.returnDate) - new Date(booking.reservationDate)) / (1000 * 60 * 60 * 24))
-                    
-                    return `
-                    <tr>
-                        <td>#${booking._id.slice(-6)}</td>
-                        <td>
-                            <div class="outfit-info">
-                                <img src="${booking.outfit?.image || ''}" alt="Outfit" class="outfit-img" onerror="this.style.display='none'">
-                                <div>
-                                    <strong>${booking.outfit?.brand || 'N/A'} - ${booking.outfit?.model || 'N/A'}</strong><br>
-                                    <small>${booking.outfit?.category || 'N/A'} | ${booking.outfit?.location || 'N/A'}</small>
-                                </div>
+                    <td>#${booking._id.slice(-6)}</td>
+                    <td>
+                        <div class="outfit-info">
+                            <img src="${booking.outfit?.image || ''}" alt="Outfit" class="outfit-img" onerror="this.style.display='none'">
+                            <div>
+                                <strong>${booking.outfit?.brand || 'N/A'} - ${booking.outfit?.model || 'N/A'}</strong><br>
+                                <small>${booking.outfit?.category || 'N/A'} | ${booking.outfit?.location || 'N/A'}</small>
                             </div>
-                        </td>
-                        <td>
-                            <strong>${booking.user?.username || 'N/A'}</strong><br>
-                            <small>${booking.user?.email || 'N/A'}</small>
-                        </td>
-                        <td>
-                            <strong>Start:</strong> ${startDate}<br>
-                            <strong>End:</strong> ${endDate}
-                        </td>
-                        <td>${duration} day${duration !== 1 ? 's' : ''}</td>
-                        <td><span class="status ${booking.status}">${booking.status.toUpperCase()}</span></td>
-                        <td><strong>${currency}${booking.price.toFixed(2)}</strong></td>
-                    </tr>
-                    `
-                }).join('')}
-            </tbody>
-        </table>
+                        </div>
+                    </td>
+                    <td>
+                        <strong>${booking.user?.username || 'N/A'}</strong><br>
+                        <small>${booking.user?.email || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <strong>Start:</strong> ${startDate}<br>
+                        <strong>End:</strong> ${endDate}
+                    </td>
+                    <td>${duration} day${duration !== 1 ? 's' : ''}</td>
+                    <td><span class="status ${booking.status}">${booking.status.toUpperCase()}</span></td>
+                    <td><strong>${currency}${booking.price.toFixed(2)}</strong></td>
+                </tr>
+                `
+            }).join('')}
+        </tbody>
+    </table>
 
-        <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
-            <p>This report was generated automatically by the Outfit Rental Management System</p>
-            <p>© ${new Date().getFullYear()} - All rights reserved</p>
-        </div>
-    </body>
-    </html>
+    <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+        <p>This report was generated automatically by the Outfit Rental Management System</p>
+        <p>© ${new Date().getFullYear()} - All rights reserved</p>
+    </div>
+</body>
+</html>
+
     `
 
     const newWindow = window.open('', '_blank')
@@ -174,7 +176,7 @@ const Reports = () => {
       <div className="w-full h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 shadow-lg shadow-gray-400/30 relative overflow-hidden">
         
         <div className="text-center mb-8">
-          <Title title="📊 Booking Reports" subTitle="Generate comprehensive booking reports with detailed analytics and insights for your rental business." />
+          <Title title=" Booking Reports" subTitle="Generate comprehensive booking reports with detailed analytics and insights for your rental business." />
         </div>
 
         {/* Filters Section */}
@@ -252,7 +254,7 @@ const Reports = () => {
         {/* Report Preview */}
         {reportData && (
           <div className="bg-white/30 backdrop-blur-sm rounded-2xl p-6 border border-white/40">
-            <h2 className="text-xl font-bold mb-6 text-gray-800">📊 Report Preview</h2>
+            <h2 className="text-xl font-bold mb-6 text-gray-800"> Report Preview</h2>
             
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
