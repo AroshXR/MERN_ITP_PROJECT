@@ -8,7 +8,7 @@ function Unauthorized() {
     const navigate = useNavigate();
 
     return (
-        <div className="container">
+        <div className="w-full min-h-screen flex flex-col">
             <NavBar />
             <div className="unauthorized-container">
                 <div className="unauthorized-content">
@@ -18,13 +18,13 @@ function Unauthorized() {
                     <p>Please contact an administrator if you believe this is an error.</p>
                     <div className="unauthorized-actions">
                         <button 
-                            className="btn-primary"
-                            onClick={() => navigate('/userHome')}
+                            className="supbtn"
+                            onClick={() => navigate('/')}
                         >
                             Go to Home
                         </button>
                         <button 
-                            className="btn-secondary"
+                            className="supbtn"
                             onClick={() => navigate(-1)}
                         >
                             Go Back
