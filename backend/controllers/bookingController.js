@@ -204,6 +204,88 @@ const getBookingById = async (req, res) => {
     }
 };
 
+//API to generate booking report for admin
+const generateBookingReport = async (req, res) => {
+    try {
+        const { role, type } = req.user;
+        
+        // Only admin can generate reports
+        if (role !== 'admin' && type !== 'Admin') {
+            return res.json({ success: false, message: "Unauthorized - Admin access required" });
+        }
+
+        const { startDate, endDate, status, location } = req.query;
+        
+        // Build query based on filters
+        let query = {};
+        
+        // Date filter
+        if (startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate + 'T23:59:59.999Z')
+            };
+        }
+        
+        // Status filter
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        // Get all bookings with populated data
+        let bookings = await Booking.find(query)
+            .populate({
+                path: 'outfit',
+                select: 'brand model category pricePerDay location image'
+            })
+            .populate({
+                path: 'user',
+                select: 'username email'
+            })
+            .populate({
+                path: 'owner',
+                select: 'username email'
+            })
+            .sort({ createdAt: -1 });
+
+        // Location filter (after population)
+        if (location && location !== 'all') {
+            bookings = bookings.filter(booking => 
+                booking.outfit && booking.outfit.location === location
+            );
+        }
+
+        // Calculate summary statistics
+        const totalBookings = bookings.length;
+        const totalRevenue = bookings
+            .filter(booking => booking.status === 'confirmed')
+            .reduce((sum, booking) => sum + booking.price, 0);
+        
+        const statusCounts = bookings.reduce((acc, booking) => {
+            acc[booking.status] = (acc[booking.status] || 0) + 1;
+            return acc;
+        }, {});
+
+        const reportData = {
+            bookings,
+            summary: {
+                totalBookings,
+                totalRevenue,
+                statusCounts,
+                reportPeriod: {
+                    startDate: startDate || 'All time',
+                    endDate: endDate || 'Present'
+                }
+            }
+        };
+
+        res.json({ success: true, reportData });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 //API to update booking details
 const updateBooking = async (req, res) => {
     try {
@@ -299,5 +381,6 @@ module.exports = {
     changeBookingStatus,
     deleteBooking,
     getBookingById,
-    updateBooking
+    updateBooking,
+    generateBookingReport
 };

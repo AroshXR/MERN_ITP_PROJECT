@@ -7,7 +7,8 @@ const {
     getUserBooking,
     deleteBooking,
     getBookingById,
-    updateBooking
+    updateBooking,
+    generateBookingReport
 } = require("../controllers/bookingController");  // Replaced import with require
 const { protect } = require("../middleware/auth");  // Replaced import with require
 const upload = require("../middleware/multer");
@@ -20,6 +21,9 @@ bookingRouter.get('/user', protect, getUserBooking);
 bookingRouter.get('/owner', protect, getOwnerBooking);
 bookingRouter.post('/change-status', protect, changeBookingStatus);
 bookingRouter.delete('/:bookingId', protect, deleteBooking);
+
+// Admin route for booking reports
+bookingRouter.get('/admin/report', protect, generateBookingReport);
 
 // Routes for editing bookings
 bookingRouter.get('/:bookingId', protect, getBookingById);

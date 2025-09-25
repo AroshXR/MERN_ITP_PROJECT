@@ -42,9 +42,11 @@ import AddOutfit from './pages/owner/AddOutfit';
 import EditOutfit from './pages/owner/EditOutfit';
 import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
+import Reports from './pages/owner/Reports';
 //import { Toaster} from 'react-hot-toast'
 
 import AdminHub from './Components/AdminHub/AdminHub';
+import BookingReport from './pages/admin/BookingReport';
 
 function App() {
   return (
@@ -199,6 +201,14 @@ function App() {
             </ProtectedRoute>
           )}
         />
+        <Route
+          path="/admin/booking-reports"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <BookingReport />
+            </ProtectedRoute>
+          )}
+        />
 
 
         <Route path='/rentalHome' element={<RentalHome />}/>
@@ -233,6 +243,7 @@ function App() {
             <Route path='edit-outfit/:outfitId' element={<EditOutfit />} />
             <Route path='manage-outfits' element={<ManageOutfits />} />
             <Route path='manage-bookings' element={<ManageBookings />} />
+            <Route path='reports' element={<Reports />} />
         </Route>
 
 

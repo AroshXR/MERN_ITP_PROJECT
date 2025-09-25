@@ -116,6 +116,7 @@ export const ownerMenuLinks = [
     { name: "Add Outfit", path: "/owner/add-outfit", icon: addIcon, coloredIcon: addIconColored },
     { name: "Manage Outfits", path: "/owner/manage-outfits", icon: shirt_icon, coloredIcon: shirtIconColored },
     { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Reports", path: "/owner/reports", icon: cautionIconColored, coloredIcon: cautionIconColored },
 ]
 
 export const dummyUserData = {
