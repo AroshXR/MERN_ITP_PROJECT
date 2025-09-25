@@ -45,3 +45,112 @@ textarea { min-height: 80px; }
 .detail__row p { margin: 0; white-space: pre-wrap; }
 
 
+.admin-applicants__feedback {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+  border: 1px solid #e5e5e5;
+  background: #f7f7f7;
+  color: #111;
+}
+.admin-applicants__feedback.success {
+  background: #ecfdf5;
+  border-color: #34d399;
+  color: #047857;
+}
+.admin-applicants__feedback.error {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+.admin-applicants__feedback .icon-btn {
+  color: inherit;
+}
+
+/* Notifications Section */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.notification-item.unread {
+  border-left: 4px solid #007bff;
+  background: #f8f9ff;
+}
+
+.notification-item.read {
+  opacity: 0.7;
+  background: #f9f9f9;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-message {
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  color: #111;
+}
+
+.notification-time {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.notification-level {
+  margin-left: 12px;
+}
+
+.level-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.level-badge.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.level-badge.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.level-badge.info {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.level-badge.warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.empty-state {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}

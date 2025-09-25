@@ -34,6 +34,7 @@ const UserAccount = () => {
     const [notifications, setNotifications] = useState([]);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [notificationsError, setNotificationsError] = useState('');
+    const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
     const [identityForm, setIdentityForm] = useState({ evidence: '', notes: '' });
     const [identityError, setIdentityError] = useState('');
@@ -67,6 +68,29 @@ const UserAccount = () => {
         });
     };
 
+    // Reusable notifications loader
+    const fetchNotifications = async () => {
+        if (!userId) return;
+        setNotificationsLoading(true);
+        setNotificationsError('');
+        try {
+            const response = await axios.get(`http://localhost:5001/users/${userId}/notifications`);
+            if (response.data?.status === 'ok') {
+                const list = Array.isArray(response.data.notifications) ? response.data.notifications : [];
+                // Sort newest first for clarity
+                list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setNotifications(list);
+            } else {
+                setNotificationsError(response.data?.message || 'Unable to load notifications');
+            }
+        } catch (error) {
+            console.error('Failed to load notifications:', error);
+            setNotificationsError('Unable to load notifications.');
+        } finally {
+            setNotificationsLoading(false);
+        }
+    };
+
     useEffect(() => {
         const loadProfile = async () => {
             if (!userId) {
@@ -92,31 +116,11 @@ const UserAccount = () => {
             }
         };
 
-        const loadNotifications = async () => {
-            if (!userId) {
-                return;
-            }
-
-            setNotificationsLoading(true);
-            setNotificationsError('');
-
-            try {
-                const response = await axios.get(`http://localhost:5001/users/${userId}/notifications`);
-                if (response.data?.status === 'ok') {
-                    setNotifications(response.data.notifications || []);
-                } else {
-                    setNotificationsError(response.data?.message || 'Unable to load notifications');
-                }
-            } catch (error) {
-                console.error('Failed to load notifications:', error);
-                setNotificationsError('Unable to load notifications.');
-            } finally {
-                setNotificationsLoading(false);
-            }
-        };
-
         loadProfile();
-        loadNotifications();
+        fetchNotifications();
+        // Poll every 30s while on this page to reflect new notifications automatically
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId]);
 
@@ -274,10 +278,7 @@ const UserAccount = () => {
 
         try {
             await axios.patch(`http://localhost:5001/users/${userId}/notifications/${notificationId}`, { read });
-            const updated = await axios.get(`http://localhost:5001/users/${userId}/notifications`);
-            if (updated.data?.status === 'ok') {
-                setNotifications(updated.data.notifications || []);
-            }
+            await fetchNotifications();
         } catch (error) {
             console.error('Failed to update notification:', error);
         }
@@ -290,7 +291,7 @@ const UserAccount = () => {
 
         try {
             await axios.delete(`http://localhost:5001/users/${userId}/notifications/${notificationId}`);
-            setNotifications((prev) => prev.filter((notification) => notification._id !== notificationId));
+            await fetchNotifications();
         } catch (error) {
             console.error('Failed to delete notification:', error);
         }
@@ -455,7 +456,17 @@ const UserAccount = () => {
                 <section className="panel">
                     <div className="panel-header">
                         <h2>Notifications</h2>
-                        <span>{notifications.length} notifications</span>
+                        <div className="panel-header__right">
+                            <span>{unreadCount} unread | {notifications.length} total</span>
+                            <button
+                              type="button"
+                              className="header-nav-btn secondary"
+                              onClick={fetchNotifications}
+                              disabled={notificationsLoading}
+                            >
+                              {notificationsLoading ? 'Refreshing...' : 'Refresh'}
+                            </button>
+                        </div>
                     </div>
                     {notificationsLoading ? (
                         <p>Loading notifications...</p>
@@ -490,6 +501,7 @@ const UserAccount = () => {
                             ))}
                         </ul>
                     )}
+                    <p className="panel-description">Admin status updates, interview schedules, and account alerts appear here.</p>
                 </section>
             </main>
             <Footer />
@@ -498,3 +510,4 @@ const UserAccount = () => {
 };
 
 export default UserAccount;
+

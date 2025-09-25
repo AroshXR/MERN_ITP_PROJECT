@@ -10,9 +10,18 @@ export default function AdminApplicantManagement() {
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [messageById, setMessageById] = useState({});
-  const [interviewForm, setInterviewForm] = useState({ open: false, id: '', scheduledAt: '', mode: 'in-person', location: '', meetingLink: '', notes: '' });
+  const [interviewForm, setInterviewForm] = useState({
+    open: false,
+    id: '',
+    scheduledAt: '',
+    mode: 'in-person',
+    location: '',
+    meetingLink: '',
+    notes: ''
+  });
 
   const fetchApplicants = async () => {
     try {
@@ -23,7 +32,12 @@ export default function AdminApplicantManagement() {
       const res = await axios.get(`${API_BASE_URL}/applicant`, { params });
       setApplicants(res.data?.data || []);
     } catch (e) {
+      console.error('Failed to load applicants:', e);
       setError('Failed to load applicants');
+      setFeedback({
+        type: 'error',
+        message: 'Unable to load applicants. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -36,13 +50,23 @@ export default function AdminApplicantManagement() {
 
   const onApproveReject = async (id, status) => {
     try {
+      setFeedback(null);
       const statusMessage = messageById[id] || '';
       await axios.patch(`${API_BASE_URL}/applicant/${id}/status`, { status, statusMessage });
       await fetchApplicants();
       setMessageById(prev => ({ ...prev, [id]: '' }));
-      alert(`Applicant ${status}`);
+      const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      const hasMessage = statusMessage.trim().length > 0;
+      setFeedback({
+        type: 'success',
+        message: `${statusLabel} status saved.${hasMessage ? ' Your note was delivered as part of the notification.' : ''} The applicant now sees this in their account notifications.`
+      });
     } catch (e) {
-      alert('Failed to update status');
+      console.error('Failed to update applicant status:', e);
+      setFeedback({
+        type: 'error',
+        message: 'Failed to update status. Please try again.'
+      });
     }
   };
 
@@ -61,6 +85,7 @@ export default function AdminApplicantManagement() {
 
   const submitInterview = async () => {
     try {
+      setFeedback(null);
       const payload = {
         scheduledAt: interviewForm.scheduledAt ? new Date(interviewForm.scheduledAt).toISOString() : '',
         mode: interviewForm.mode,
@@ -71,9 +96,16 @@ export default function AdminApplicantManagement() {
       await axios.post(`${API_BASE_URL}/applicant/${interviewForm.id}/schedule-interview`, payload);
       setInterviewForm(prev => ({ ...prev, open: false }));
       await fetchApplicants();
-      alert('Interview scheduled');
+      setFeedback({
+        type: 'success',
+        message: 'Interview schedule saved. The applicant was notified in their account.'
+      });
     } catch (e) {
-      alert('Failed to schedule interview');
+      console.error('Failed to schedule interview:', e);
+      setFeedback({
+        type: 'error',
+        message: 'Failed to schedule interview. Please try again.'
+      });
     }
   };
 
@@ -111,6 +143,20 @@ export default function AdminApplicantManagement() {
         </div>
       </div>
 
+      {feedback && (
+        <div className={`admin-applicants__feedback ${feedback.type}`}>
+          <span>{feedback.message}</span>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setFeedback(null)}
+            aria-label="Dismiss message"
+          >
+            <i className="bx bx-x"></i>
+          </button>
+        </div>
+      )}
+
       {loading && <div className="admin-applicants__info">Loading...</div>}
       {error && <div className="admin-applicants__error">{error}</div>}
 
@@ -118,7 +164,7 @@ export default function AdminApplicantManagement() {
         <section className="inline-scheduler">
           <div className="inline-scheduler__header">
             <h3>Schedule Interview</h3>
-            <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>✕</button>
+            <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>X</button>
           </div>
           <div className="inline-scheduler__body">
             <label>Date & Time</label>

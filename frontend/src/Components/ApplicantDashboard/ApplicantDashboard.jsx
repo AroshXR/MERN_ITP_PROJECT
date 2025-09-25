@@ -13,6 +13,7 @@ const ApplicantDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState('');
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -118,11 +119,23 @@ const ApplicantDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.email]);
 
+  // Auto-dismiss success messages after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const handleSearch = async () => {
     if (!searchEmail.trim()) {
-      alert('Please enter an email address to search');
+      setError('Please enter an email address to search');
       return;
     }
+    setError(null); // Clear any previous errors
+    setSuccess(''); // Clear any previous success messages
     fetchApplicationsByEmail(searchEmail);
   };
 
@@ -193,7 +206,8 @@ const ApplicantDashboard = () => {
         }
       }
 
-      alert('Application deleted successfully');
+      setError(null); // Clear any previous errors
+      setSuccess('Application deleted successfully');
     }
   };
 
@@ -227,7 +241,8 @@ const ApplicantDashboard = () => {
     setShowEditForm(false);
     setSelectedApplication(null);
     setSelectedIndex(null);
-    alert('Application updated successfully');
+    setError(null); // Clear any previous errors
+    setSuccess('Application updated successfully');
   };
 
   const handleCloseEditForm = () => {
@@ -288,6 +303,12 @@ const ApplicantDashboard = () => {
         {error && (
           <div className="error-message">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="success-message">
+            {success}
           </div>
         )}
 
