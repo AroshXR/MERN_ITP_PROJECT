@@ -27,7 +27,7 @@ import delete_icon from "./delete_icon.svg"
 import eye_icon from "./eye_icon.svg"
 import eye_close_icon from "./eye_close_icon.svg"
 import filter_icon from "./filter_icon.svg"
-import edit_icon from "./edit_icon.svg"
+import edit_icon from "./edit_icon.webp"
 import calendar_icon_colored from "./calendar_icon_colored.svg"
 import location_icon_colored from "./location_icon_colored.svg"
 import testimonial_image_1 from "./testimonial_image_1.png"
@@ -44,7 +44,18 @@ import dress1_2 from "./dress1_2.jpg"
 import dress1_3 from "./dress1_3.jpg"
 import dress1_4 from "./dress1_4.webp"
 
-export const cityList = ['All Ctegories','Party Dresses & Suits', 'Evening Gowns', 'Cocktail Dresses', 'Wedding & Bridal Wear','Men’s Tuxedos & Suits']
+export const cityList = [
+  'All Categories',
+  'Party Dresses & Suits', 
+  'Evening Gowns', 
+  'Cocktail Dresses', 
+  'Wedding & Bridal Wear',
+  'Men\'s Tuxedos & Suits', 
+  'Mini Dresses', 
+  'Maxi Dresses', 
+  'Top', 
+  'Skirt & Top'
+]
 
 export const assets = {
     logo,

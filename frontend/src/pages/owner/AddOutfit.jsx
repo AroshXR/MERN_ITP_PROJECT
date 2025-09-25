@@ -165,14 +165,17 @@ const AddOutfit = () => {
               <option value="Party Dresses & Suits">Party Dresses & Suits</option>
               <option value="Evening Gowns">Evening Gowns</option>
               <option value="Cocktail Dresses">Cocktail Dresses</option>
-              <option value="'Wedding & Bridal Wear">P'Wedding & Bridal Wear</option>
-              <option value="Men’s Tuxedos & Suits">Men’s Tuxedos & Suits</option>
+              <option value="Wedding & Bridal Wear">Wedding & Bridal Wear</option>
+              <option value="Men's Tuxedos & Suits">Men's Tuxedos & Suits</option>
+              <option value="Mini Dresses">Mini Dresses</option>
+              <option value="Maxi Dresses">Maxi Dresses</option>
+              <option value="Top">Top</option>
+              <option value="Skirt & Top">Skirt & Top</option>
             </select>
           </div>
         </div>
 
         {/* Outfit Size , Color  and material */}
-
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'>
           <div className='flex flex-col w-full'>
             <label >Size  </label>

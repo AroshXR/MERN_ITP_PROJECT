@@ -38,6 +38,7 @@ import MyBookings from './pages/MyBookings';
 import Layout from './pages/owner/Layout';
 import Dashboard from './pages/owner/Dashboard';
 import AddOutfit from './pages/owner/AddOutfit';
+import EditOutfit from './pages/owner/EditOutfit';
 import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
 //import { Toaster} from 'react-hot-toast'
@@ -220,6 +221,7 @@ function App() {
         >
             <Route index element={<Dashboard />} />
             <Route path='add-outfit' element={<AddOutfit />} />
+            <Route path='edit-outfit/:outfitId' element={<EditOutfit />} />
             <Route path='manage-outfits' element={<ManageOutfits />} />
             <Route path='manage-bookings' element={<ManageBookings />} />
         </Route>

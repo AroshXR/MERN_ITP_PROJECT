@@ -95,6 +95,10 @@ const Outfits = () => {
           <option value="Cocktail Dresses">Cocktail Dresses</option>
           <option value="Wedding & Bridal Wear">Wedding & Bridal Wear</option>
           <option value="Men's Tuxedos & Suits">Men's Tuxedos & Suits</option>
+          <option value="Mini Dresses">Mini Dresses</option>
+          <option value="Maxi Dresses">Maxi Dresses</option>
+          <option value="Top">Top</option>
+          <option value="Skirt & Top">Skirt & Top</option>
         </select>
 
         <select value={selectedLocation} onChange={handleLocationChange} className="filter-select">
