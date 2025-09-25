@@ -118,7 +118,8 @@ const createPaymentDetails = async (req, res) => {
             Price: item.totalPrice || item.price || 0,
             AdminID: userObjectId, // User who placed the order
             ItemID: item.id,
-            CreatedAt: new Date()
+            CreatedAt: new Date(),
+            status: "pending" // Initial status matches payment status
           };
 
           console.log("Creating order with data:", orderData);
@@ -317,13 +318,22 @@ const updatePaymentStatus = async (req, res) => {
 
     console.log("Payment status updated successfully:", updatedPayment._id);
 
+    // Update all related orders with the same status
+    const updatedOrders = await Order.updateMany(
+      { PaymentID: id },
+      { status: status }
+    );
+
+    console.log(`Updated ${updatedOrders.modifiedCount} related orders with status: ${status}`);
+
     res.status(200).json({
       status: "ok",
-      message: "Payment status updated successfully",
+      message: "Payment and order statuses updated successfully",
       data: {
         paymentId: updatedPayment._id,
         status: updatedPayment.status,
-        updatedAt: updatedPayment.updatedAt
+        updatedAt: updatedPayment.updatedAt,
+        ordersUpdated: updatedOrders.modifiedCount
       }
     });
 
@@ -430,16 +440,16 @@ const getPaymentStatistics = async (req, res) => {
     console.error("Error fetching payment statistics:", error);
     res.status(500).json({
       status: "error",
-      message: "Internal server error while fetching payment statistics"
     });
   }
 };
+
 
 module.exports = {
   createPaymentDetails,
   getAllPaymentDetails,
   getPaymentDetailsById,
-  updatePaymentStatus,
   deletePaymentDetails,
+  updatePaymentStatus,
   getPaymentStatistics
 };

@@ -83,10 +83,10 @@ const AddOutfit = () => {
   return (
     <div className='px-4 py-10 md:px-10 flex-1 '>
 
-      <div class="w-[800px] h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 ">
+      <div className="w-[800px] h-full bg-gradient-to-br from-[#e6e5e5] to-[#858585] rounded-[50px] p-10 ml-40 shadow-lg shadow-gray-400/30 relative overflow-hidden">
 
         <div className="text-center mt-26">
-      <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and car specifications." />
+      <Title title="Add new Outfit" subTitle= "Fill in the details to list a new outfit for booking, including pricing, availability, and outfit specifications." />
       </div>
 
       

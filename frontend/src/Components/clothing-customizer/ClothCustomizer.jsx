@@ -440,17 +440,12 @@ function ClothCustomizer() {
                   <span>Guest User - Login to save designs</span>
                   <div className="guest-actions">
                     <button
-                      className="login-btn"
+                      className="register-btn"
                       onClick={() => navigate('/login')}
                     >
                       Login
                     </button>
-                    <button
-                      className="register-btn"
-                      onClick={() => navigate('/register')}
-                    >
-                      Register
-                    </button>
+
                   </div>
                 </div>
               )}

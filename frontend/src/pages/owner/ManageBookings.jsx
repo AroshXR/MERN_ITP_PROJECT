@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Title from '../../Components/pasindu/owner/Title'
+import { useAuth } from '../../AuthGuard/AuthGuard'
 
 const ManageBookings = () => {
   const currency = process.env.REACT_APP_CURRENCY
+  const { getToken } = useAuth()
 
   const [bookings, setBookings] = useState([]) 
 
   const fetchOwnerBookings = async( )=>{
     try{
       const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
-      const { data } = await axios.get(`${BASE_URL}/api/booking/owner`)
+      const token = getToken()
+      const { data } = await axios.get(`${BASE_URL}/api/booking/owner`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       if(data?.success){
         setBookings(data.bookings)
       }
@@ -64,20 +69,33 @@ const ManageBookings = () => {
                 </td>
 
                 <td className='p-3 '> 
-                  <select value={booking.status} className='px-2 py-1.5 mt-1 text-gray-500 border border-borderColor rounded-md outline-none' onChange={async (e)=>{
-                    try{
-                      const status = e.target.value
-                      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
-                      const { data } = await axios.post(`${BASE_URL}/api/booking/change-status`, { bookingId: booking._id, status })
-                      if(data?.success){
-                        fetchOwnerBookings()
-                      }
-                    }catch(err){ console.error(err) }
-                  }}>
-                    <option value="pending">Pending</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="confirmed">Confirmed</option>
-                  </select>
+                  {booking.status === 'confirmed' ? (
+                    <span className='bg-green-400/15 text-green-600 px-3 py-1 text-xs rounded-full'>
+                      Confirmed
+                    </span>
+                  ) : booking.status === 'cancelled' ? (
+                    <span className='bg-red-400/15 text-red-600 px-3 py-1 text-xs rounded-full'>
+                      Cancelled
+                    </span>
+                  ) : (
+                    <select value={booking.status} className='px-2 py-1.5 mt-1 text-gray-500 border border-borderColor rounded-md outline-none' onChange={async (e)=>{
+                      try{
+                        const status = e.target.value
+                        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+                        const token = getToken()
+                        const { data } = await axios.post(`${BASE_URL}/api/booking/change-status`, { bookingId: booking._id, status }, {
+                          headers: { Authorization: `Bearer ${token}` }
+                        })
+                        if(data?.success){
+                          fetchOwnerBookings()
+                        }
+                      }catch(err){ console.error(err) }
+                    }}>
+                      <option value="pending">Pending</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="confirmed">Confirmed</option>
+                    </select>
+                  )}
                 </td>
 
                 

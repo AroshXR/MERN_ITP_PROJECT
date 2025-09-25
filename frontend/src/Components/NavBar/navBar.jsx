@@ -107,6 +107,13 @@ function NavBar() {
             </button>
           </Link>
         )}
+        {isLoggedIn && userType === 'Customer' && (
+          <Link to="/orderManagement" onClick={closeMenu}>
+            <button className="nav-btn">
+              <i className='bx bx-cart'></i> Cart
+            </button>
+          </Link>
+        )}
         {showAuthLinks && (
           <>
             <Link to="/login" onClick={closeMenu}>

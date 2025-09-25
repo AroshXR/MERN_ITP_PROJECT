@@ -116,7 +116,7 @@ const MyBookings = () => {
             {/* Outfit Image + Info */}
             <div className='md:col-span-1'>
               <div className='rounded-md overflow-hidden mb-3'>
-                <img src={booking.outfit.image} alt="" className='w-60 h-60 aspect-video object-cover object-top'  />  {/* You can customize the image here */}
+                <img src={booking.outfit.image} alt="" className='w-60 h-60 aspect-video object-cover object-top'  />  
               </div>
 
               <p className='text-lg font-medium mt-2'>{booking.outfit.brand} {booking.outfit.model} </p>
@@ -151,6 +151,16 @@ const MyBookings = () => {
                   <p>{booking.outfit.location} </p> 
                 </div>
               </div>
+
+              {/* Contact Information */}
+              <div className='flex items-start gap-2 mt-3'>
+                <img src={assets.phone_icon || assets.location_icon} alt="" className='w-4 h-4 mt-1' />
+                <div>
+                  <p className='text-gray-500'>Contact</p>
+                  <p className='text-sm'>{booking.phone}</p>
+                  <p className='text-sm text-gray-400'>{booking.email}</p>
+                </div>
+              </div>
             </div>
 
             {/* Price */}
@@ -160,6 +170,37 @@ const MyBookings = () => {
                 <h1 className='text-2xl font-semibold text-primary'>{currency}{booking.price}</h1>
                 <p>Booked On {booking.createdAt.split('T')[0]} </p>
               </div>
+              
+              {/* Remove Booking Button */}
+              <button
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to remove this booking?')) {
+                    try {
+                      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+                      const token = getToken();
+                      
+                      const { data } = await axios.delete(`${BASE_URL}/api/booking/${booking._id}`, {
+                        headers: {
+                          Authorization: `Bearer ${token}`
+                        }
+                      });
+                      
+                      if (data?.success) {
+                        alert('Booking removed successfully');
+                        fetchMyBookings(); // Refresh the bookings list
+                      } else {
+                        alert(data?.message || 'Failed to remove booking');
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      alert('Error removing booking');
+                    }
+                  }
+                }}
+                className="w-full bg-red-500 hover:bg-red-600 hover:shadow-lg transition-all py-2 px-4 font-medium text-white rounded-lg"
+              >
+                Remove Booking
+              </button>
             </div>
 
           </div>
