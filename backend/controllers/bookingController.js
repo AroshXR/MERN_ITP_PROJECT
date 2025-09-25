@@ -5,7 +5,7 @@ const Outfit = require("../models/Outfit");
 const checkAvailability = async (outfit, reservationDate, returnDate) => {
     const bookings = await Booking.find({
         outfit,
-        status: "confirmed", // Only check confirmed bookings
+        status: { $in: ["pending", "confirmed"] }, // Check both pending and confirmed bookings
         reservationDate: { $lte: returnDate },
         returnDate: { $gte: reservationDate },
     });

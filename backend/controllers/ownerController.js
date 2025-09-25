@@ -126,17 +126,17 @@ const getAllOutfits = async (req, res) => {
         // Get all outfits matching the query
         let outfits = await Outfit.find(query).populate('owner', 'username email');
         
-        // Filter out outfits with confirmed bookings
+        // Filter out outfits with pending or confirmed bookings
         const availableOutfits = [];
         
         for (const outfit of outfits) {
-            const confirmedBookings = await Booking.find({
+            const activeBookings = await Booking.find({
                 outfit: outfit._id,
-                status: 'confirmed'
+                status: { $in: ['pending', 'confirmed'] }
             });
             
-            // Only include outfit if no confirmed bookings exist
-            if (confirmedBookings.length === 0) {
+            // Only include outfit if no pending or confirmed bookings exist
+            if (activeBookings.length === 0) {
                 availableOutfits.push(outfit);
             }
         }
