@@ -72,7 +72,8 @@
 }
 
 .tone-card {
-  background: #000000;
+  background: #020024;
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(39, 39, 41, 1) 68%, rgb(61, 61, 61) 100%);
   border-radius: 18px;
   padding: 28px;
   box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);

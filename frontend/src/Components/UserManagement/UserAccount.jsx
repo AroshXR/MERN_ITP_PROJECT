@@ -407,6 +407,18 @@ const UserAccount = () => {
                                 <span>Account Type</span>
                                 <input type="text" value={profile?.type || ''} disabled />
                             </label>
+                            {profile?.identitySubmittedAt && (
+                                <label>
+                                    <span>Identity Submitted</span>
+                                    <input
+                                        type="text"
+                                        value={new Date(profile.identitySubmittedAt).toLocaleString()}
+                                        disabled
+                                    />
+                                </label>
+                            )}
+                            {profileMessage && <p className="form-feedback success">{profileMessage}</p>}
+                            {profileError && <p className="form-feedback error">{profileError}</p>}
                             <div className="form-actions">
                                 <button type="submit" className="primary-btn" disabled={saveInProgress}>
                                     {saveInProgress ? 'Saving...' : 'Save Changes'}
@@ -420,18 +432,6 @@ const UserAccount = () => {
                                     {deleteInProgress ? 'Deleting...' : 'Delete Account'}
                                 </button>
                             </div>
-                            {profile?.identitySubmittedAt && (
-                                <label>
-                                    <span>Identity Submitted</span>
-                                    <input
-                                        type="text"
-                                        value={new Date(profile.identitySubmittedAt).toLocaleString()}
-                                        disabled
-                                    />
-                                </label>
-                            )}
-                            {profileMessage && <p className="form-feedback success">{profileMessage}</p>}
-                            {profileError && <p className="form-feedback error">{profileError}</p>}
                         </form>
                     </section>
                 )}
