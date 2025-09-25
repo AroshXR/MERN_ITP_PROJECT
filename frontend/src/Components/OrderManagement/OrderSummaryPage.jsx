@@ -9,31 +9,51 @@ const toNumber = (value) => {
     return Number.isFinite(n) ? n : 0;
 };
 
-// Compute total for a single order as quantity * price with safe fallbacks
-const computeOrderTotal = (order) => {
-    // If there are explicit items, sum quantity * price-like fields
-    const items = order.items || order.orderItems || order.products || [];
-    if (Array.isArray(items) && items.length > 0) {
-        return items.reduce((sum, item) => {
-            const qty = toNumber(item.quantity || item.qty || 1);
-            const unit = toNumber(
-                item.price || item.unitPrice || (item.totalPrice && qty ? item.totalPrice / qty : 0)
-            );
-            return qty * unit;
-        }, 0);
+// Compute total for a single payment/order - prioritize PaymentDetails orderDetails.total
+const computeOrderTotal = (paymentRecord) => {
+    // First priority: Use orderDetails.total from PaymentDetails (complete checkout total)
+    if (paymentRecord.orderDetails && paymentRecord.orderDetails.total !== undefined && paymentRecord.orderDetails.total !== null) {
+        return toNumber(paymentRecord.orderDetails.total);
     }
 
-    // Fall back to order-level quantity * price
-    const qty = toNumber(order.quantity || order.qty || order.Quantity);
-    const unit = toNumber(order.price || order.Price);
-    if (qty && unit) {
-        return qty * unit;
+    // Second priority: Direct total field
+    if (paymentRecord.total !== undefined && paymentRecord.total !== null) {
+        return toNumber(paymentRecord.total);
     }
 
-    // As a last resort, use provided totals
-    return toNumber(
-        order.totalAmount || order.total || order.amount || (order.orderDetails && order.orderDetails.total)
-    );
+    // Third priority: Use the 'Price' field from individual orders (capital P)
+    if (paymentRecord.Price !== undefined && paymentRecord.Price !== null) {
+        return toNumber(paymentRecord.Price);
+    }
+
+    // Fourth priority: Use lowercase 'price' field
+    if (paymentRecord.price !== undefined && paymentRecord.price !== null) {
+        return toNumber(paymentRecord.price);
+    }
+
+    // Fifth priority: Other common total field names
+    if (paymentRecord.totalAmount !== undefined && paymentRecord.totalAmount !== null) {
+        return toNumber(paymentRecord.totalAmount);
+    }
+
+    if (paymentRecord.amount !== undefined && paymentRecord.amount !== null) {
+        return toNumber(paymentRecord.amount);
+    }
+
+    // Sixth priority: Calculate from orderDetails components
+    if (paymentRecord.orderDetails) {
+        const subtotal = toNumber(paymentRecord.orderDetails.subtotal || 0);
+        const tax = toNumber(paymentRecord.orderDetails.tax || 0);
+        const giftWrapFee = toNumber(paymentRecord.orderDetails.giftWrapFee || 0);
+        const shippingCost = toNumber(paymentRecord.shippingDetails?.cost || 0);
+        
+        if (subtotal > 0) {
+            return subtotal + tax + giftWrapFee + shippingCost;
+        }
+    }
+
+    // Last resort: return 0 if no total can be computed
+    return 0;
 };
 
 const computeSummary = (orders) => {
@@ -94,7 +114,7 @@ export default function OrderSummaryPage() {
             setError("");
             try {
                 const token = typeof getToken === "function" ? getToken() : null;
-                const response = await axios.get("http://localhost:5001/orders", {
+                const response = await axios.get("http://localhost:5001/payment", {
                     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                 });
                 const list = Array.isArray(response.data?.data)
@@ -179,6 +199,14 @@ export default function OrderSummaryPage() {
             o.id || o._id || o.OrderID || "",
             o.customerName ||
             o.customer ||
+            (o.deliveryDetails && 
+                (o.deliveryDetails.firstName && o.deliveryDetails.lastName
+                    ? `${o.deliveryDetails.firstName} ${o.deliveryDetails.lastName}`
+                    : o.deliveryDetails.email)) ||
+            (o.AdminID && typeof o.AdminID === 'object' &&
+                (o.AdminID.firstName && o.AdminID.lastName
+                    ? `${o.AdminID.firstName} ${o.AdminID.lastName}`
+                    : o.AdminID.email)) ||
             (o.userId &&
                 (o.userId.firstName && o.userId.lastName
                     ? `${o.userId.firstName} ${o.userId.lastName}`
@@ -355,14 +383,32 @@ export default function OrderSummaryPage() {
                                         </thead>
                                         <tbody>
                                             {filteredOrders.map((o) => (
-                                                <tr key={o.id || o._id}>
-                                                    <td>{o.id || o._id}</td>
-                                                    <td>{o.customerName || "-"}</td>
+                                                <tr key={o.id || o._id || o.OrderID}>
+                                                    <td>{o.id || o._id || o.OrderID}</td>
+                                                    <td>
+                                                        {o.customerName ||
+                                                        o.customer ||
+                                                        (o.deliveryDetails && 
+                                                            (o.deliveryDetails.firstName && o.deliveryDetails.lastName
+                                                                ? `${o.deliveryDetails.firstName} ${o.deliveryDetails.lastName}`
+                                                                : o.deliveryDetails.email)) ||
+                                                        (o.AdminID && typeof o.AdminID === 'object' &&
+                                                            (o.AdminID.firstName && o.AdminID.lastName
+                                                                ? `${o.AdminID.firstName} ${o.AdminID.lastName}`
+                                                                : o.AdminID.email)) ||
+                                                        (o.userId &&
+                                                            (o.userId.firstName && o.userId.lastName
+                                                                ? `${o.userId.firstName} ${o.userId.lastName}`
+                                                                : o.userId.email)) ||
+                                                        o.user?.name ||
+                                                        o.user?.email ||
+                                                        "-"}
+                                                    </td>
                                                     <td className={`status ${String(o.status || "").toLowerCase()}`}>
                                                         {o.status || "-"}
                                                     </td>
                                                     <td>{formatCurrency(computeOrderTotal(o))}</td>
-                                                    <td>{o.createdAt || "-"}</td>
+                                                    <td>{o.createdAt || o.orderDate || o.date || o.CreatedAt || "-"}</td>
                                                 </tr>
                                             ))}
                                             {!filteredOrders.length && (

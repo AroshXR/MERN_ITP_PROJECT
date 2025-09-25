@@ -5,6 +5,9 @@ const SupplierController = require('../controllers/SupplierController');
 // Dashboard stats
 router.get('/dashboard-stats', SupplierController.getDashboardStats);
 
+// Fix supplier order counts
+router.post('/fix-supplier-counts', SupplierController.fixSupplierOrderCounts);
+
 // Supplier routes
 router.get('/suppliers', SupplierController.getAllSuppliers);
 router.get('/suppliers/:id', SupplierController.getSupplier);

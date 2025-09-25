@@ -31,9 +31,168 @@ export default function SupplierManagement() {
   const [generatingReport, setGeneratingReport] = useState(false)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState("")
+  const [validationErrors, setValidationErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // API base URL
   const API_BASE_URL = "http://localhost:5001/supplier"
+
+  // Validation functions
+  const validateSupplierForm = (data) => {
+    const errors = {}
+
+    // Company Name validation
+    if (!data.name || !data.name.trim()) {
+      errors.name = "Company name is required"
+    } else if (data.name.trim().length < 2) {
+      errors.name = "Company name must be at least 2 characters long"
+    } else if (data.name.trim().length > 100) {
+      errors.name = "Company name must be less than 100 characters"
+    } else if (!/^[a-zA-Z0-9\s&.,'-]+$/.test(data.name.trim())) {
+      errors.name = "Company name contains invalid characters"
+    }
+
+    // Contact Person validation
+    if (!data.contact || !data.contact.trim()) {
+      errors.contact = "Contact person name is required"
+    } else if (data.contact.trim().length < 2) {
+      errors.contact = "Contact person name must be at least 2 characters long"
+    } else if (data.contact.trim().length > 50) {
+      errors.contact = "Contact person name must be less than 50 characters"
+    } else if (!/^[a-zA-Z\s.'-]+$/.test(data.contact.trim())) {
+      errors.contact = "Contact person name can only contain letters, spaces, dots, apostrophes, and hyphens"
+    }
+
+    // Email validation
+    if (!data.email || !data.email.trim()) {
+      errors.email = "Email address is required"
+    } else {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      if (!emailRegex.test(data.email.trim())) {
+        errors.email = "Please enter a valid email address"
+      } else if (data.email.trim().length > 100) {
+        errors.email = "Email address must be less than 100 characters"
+      }
+    }
+
+    // Phone validation
+    if (!data.phone || !data.phone.trim()) {
+      errors.phone = "Phone number is required"
+    } else {
+      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,10}$/
+      if (!phoneRegex.test(data.phone.trim())) {
+        errors.phone = "Please enter a valid phone number (10 digits, may include )"
+      }
+    }
+
+    // Registration number is auto-generated, no validation needed
+
+    return errors
+  }
+
+  const validateOrderForm = (data, items) => {
+    const errors = {}
+
+    // Supplier validation
+    if (!data.supplierId || !data.supplierId.trim()) {
+      errors.supplierId = "Please select a supplier"
+    }
+
+    // Order Date validation
+    if (!data.orderDate) {
+      errors.orderDate = "Order date is required"
+    } else {
+      const orderDate = new Date(data.orderDate)
+      const today = new Date()
+      const oneYearAgo = new Date()
+      oneYearAgo.setFullYear(today.getFullYear() - 1)
+      const oneYearFromNow = new Date()
+      oneYearFromNow.setFullYear(today.getFullYear() + 1)
+
+      if (orderDate < oneYearAgo) {
+        errors.orderDate = "Order date cannot be more than 1 year in the past"
+      } else if (orderDate > oneYearFromNow) {
+        errors.orderDate = "Order date cannot be more than 1 year in the future"
+      }
+    }
+
+    // Delivery Date validation
+    if (!data.deliveryDate) {
+      errors.deliveryDate = "Delivery date is required"
+    } else if (data.orderDate) {
+      const orderDate = new Date(data.orderDate)
+      const deliveryDate = new Date(data.deliveryDate)
+      
+      if (deliveryDate < orderDate) {
+        errors.deliveryDate = "Delivery date cannot be before order date"
+      }
+      
+      const maxDeliveryDate = new Date(orderDate)
+      maxDeliveryDate.setFullYear(orderDate.getFullYear() + 1)
+      
+      if (deliveryDate > maxDeliveryDate) {
+        errors.deliveryDate = "Delivery date cannot be more than 1 year after order date"
+      }
+    }
+
+    // Order Items validation
+    if (!items || items.length === 0) {
+      errors.items = "At least one order item is required"
+    } else {
+      const validItems = items.filter(item => item.name && item.name.trim() && item.quantity > 0)
+      if (validItems.length === 0) {
+        errors.items = "At least one valid item with name and quantity is required"
+      } else {
+        // Validate each item
+        items.forEach((item, index) => {
+          if (item.name && item.name.trim()) {
+            if (item.name.trim().length < 2) {
+              errors[`item_${index}_name`] = "Item name must be at least 2 characters long"
+            } else if (item.name.trim().length > 100) {
+              errors[`item_${index}_name`] = "Item name must be less than 100 characters"
+            } else if (!/^[a-zA-Z0-9\s&.,'-]+$/.test(item.name.trim())) {
+              errors[`item_${index}_name`] = "Item name contains invalid characters"
+            }
+
+            if (!item.quantity || item.quantity < 1) {
+              errors[`item_${index}_quantity`] = "Quantity must be at least 1"
+            } else if (item.quantity > 10000) {
+              errors[`item_${index}_quantity`] = "Quantity cannot exceed 10,000"
+            }
+
+            if (item.unitPrice < 0) {
+              errors[`item_${index}_unitPrice`] = "Unit price cannot be negative"
+            } else if (item.unitPrice > 1000000) {
+              errors[`item_${index}_unitPrice`] = "Unit price cannot exceed $1,000,000"
+            }
+          }
+        })
+
+        // Check for duplicate item names
+        const itemNames = validItems.map(item => item.name.trim().toLowerCase())
+        const duplicateNames = itemNames.filter((name, index) => itemNames.indexOf(name) !== index)
+        if (duplicateNames.length > 0) {
+          errors.items = "Duplicate item names are not allowed"
+        }
+      }
+    }
+
+    return errors
+  }
+
+  const validateEmailUniqueness = async (email, currentSupplierId = null) => {
+    try {
+      const existingSupplier = suppliers.find(supplier => 
+        supplier.email.toLowerCase() === email.toLowerCase() && 
+        supplier._id !== currentSupplierId
+      )
+      return !existingSupplier
+    } catch (error) {
+      console.error('Error checking email uniqueness:', error)
+      return true // Allow if check fails
+    }
+  }
+
 
   // API functions
   const fetchSuppliers = async () => {
@@ -187,6 +346,7 @@ export default function SupplierManagement() {
     }
   }
 
+
   // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
@@ -209,6 +369,13 @@ export default function SupplierManagement() {
     }
     loadData()
   }, [])
+
+  // Refresh suppliers when orders change to ensure counts are up to date
+  useEffect(() => {
+    if (suppliers.length > 0 && orders.length >= 0) {
+      fetchSuppliers()
+    }
+  }, [orders.length]) // Only when the number of orders changes
 
   // Dashboard metrics
   const totalSuppliers = suppliers.length
@@ -271,18 +438,36 @@ export default function SupplierManagement() {
     setEditingItem(item)
     setError(null) // Clear any existing errors
     setSuccessMessage("") // Clear any existing success messages
+    setValidationErrors({}) // Clear validation errors
+    setIsSubmitting(false) // Reset submitting state
     if (item) {
-      setFormData(item)
-      // If editing an order, parse the items string back to array format
-      if (type === "order" && item.items) {
-        const parsedItems = item.items.split(", ").map(itemStr => {
-          const match = itemStr.match(/^(.+?)\s+x(\d+)$/)
-          if (match) {
-            return { name: match[1].trim(), quantity: parseInt(match[2]), unitPrice: 0 }
-          }
-          return { name: itemStr, quantity: 1, unitPrice: 0 }
+      // Handle order editing with proper supplier pre-selection
+      if (type === "order") {
+        // Extract supplier ID from the order item
+        const supplierId = typeof item.supplierId === 'object' ? item.supplierId._id : item.supplierId
+        const supplierName = typeof item.supplierId === 'object' ? item.supplierId.name : item.supplierName
+        
+        // Set form data with proper supplier information
+        setFormData({
+          ...item,
+          supplierId: supplierId,
+          supplierName: supplierName
         })
-        setOrderItems(parsedItems.length > 0 ? parsedItems : [{ name: "", quantity: 1, unitPrice: 0 }])
+        
+        // Parse the items string back to array format
+        if (item.items) {
+          const parsedItems = item.items.split(", ").map(itemStr => {
+            const match = itemStr.match(/^(.+?)\s+x(\d+)$/)
+            if (match) {
+              return { name: match[1].trim(), quantity: parseInt(match[2]), unitPrice: 0 }
+            }
+            return { name: itemStr, quantity: 1, unitPrice: 0 }
+          })
+          setOrderItems(parsedItems.length > 0 ? parsedItems : [{ name: "", quantity: 1, unitPrice: 0 }])
+        }
+      } else {
+        // For supplier editing, use item as is
+        setFormData(item)
       }
     } else {
       setFormData(
@@ -312,36 +497,70 @@ export default function SupplierManagement() {
     setEditingItem(null)
     setFormData({})
     setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
+    setValidationErrors({})
+    setIsSubmitting(false)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    // Validate form data
-    if (modalType === "supplier") {
-      if (!formData.name || !formData.contact || !formData.email || !formData.phone) {
-        alert('Please fill in all required fields for supplier')
-        return
-      }
-    } else if (modalType === "order") {
-      const hasValidItems = orderItems.some(item => item.name.trim() && item.quantity > 0)
-      if (!formData.supplierId || !formData.orderDate || !formData.deliveryDate || !hasValidItems) {
-        alert('Please fill in all required fields for order and add at least one valid item')
-        return
-      }
-    }
+    setIsSubmitting(true)
+    setValidationErrors({})
 
     try {
+      let errors = {}
+
+      // Validate based on form type
+      if (modalType === "supplier") {
+        errors = validateSupplierForm(formData)
+        
+        // Check email uniqueness
+        if (!errors.email && formData.email) {
+          const isEmailUnique = await validateEmailUniqueness(formData.email, editingItem?._id)
+          if (!isEmailUnique) {
+            errors.email = "This email address is already registered with another supplier"
+          }
+        }
+
+        // Registration number is auto-generated, no uniqueness check needed
+      } else if (modalType === "order") {
+        errors = validateOrderForm(formData, orderItems)
+      }
+
+      // If there are validation errors, show them and stop submission
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors)
+        setIsSubmitting(false)
+        
+        // Scroll to first error
+        setTimeout(() => {
+          const firstErrorElement = document.querySelector('.form-error')
+          if (firstErrorElement) {
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 100)
+        
+        return
+      }
+
       console.log('Form submission started for:', modalType)
       console.log('Form data:', formData)
 
       if (modalType === "supplier") {
+        // Clean form data before submission (registration number will be auto-generated)
+        const cleanedData = {
+          ...formData,
+          name: formData.name.trim(),
+          contact: formData.contact.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim()
+        }
+
         if (editingItem) {
           console.log('Updating existing supplier:', editingItem._id)
-          await updateSupplier(editingItem._id, formData)
+          await updateSupplier(editingItem._id, cleanedData)
         } else {
           console.log('Creating new supplier')
-          const newSupplier = await createSupplier(formData)
+          const newSupplier = await createSupplier(cleanedData)
           console.log('Supplier created successfully:', newSupplier)
         }
       } else if (modalType === "order") {
@@ -376,15 +595,13 @@ export default function SupplierManagement() {
       }
 
       console.log('Form submission completed successfully')
+      closeModal()
     } catch (error) {
       console.error('Error submitting form:', error)
       setError(`Error saving ${modalType}: ${error.message}`)
       setTimeout(() => setError(null), 5000)
     } finally {
-      // Always reset form data and close modal
-      setFormData({})
-      setOrderItems([{ name: "", quantity: 1, unitPrice: 0 }])
-      closeModal()
+      setIsSubmitting(false)
     }
   }
 
@@ -1652,62 +1869,119 @@ For questions about this report, contact: admin@klassytshirts.com
               <form onSubmit={handleSubmit}>
                 {modalType === "supplier" ? (
                   <>
+                    {!editingItem && (
+                      <div style={{
+                        background: '#f0f9ff',
+                        border: '1px solid #0ea5e9',
+                        borderRadius: '0.5rem',
+                        padding: '0.75rem',
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <span style={{ color: '#0ea5e9', fontSize: '1rem' }}>ℹ️</span>
+                        <span style={{ color: '#0c4a6e', fontSize: '0.9rem' }}>
+                          A unique registration number will be automatically generated for this supplier.
+                        </span>
+                      </div>
+                    )}
                     <div className="form-group">
-                      <label className="form-label">Company Name</label>
+                      <label className="form-label">Company Name *</label>
                       <input
                         type="text"
-                        className="form-input"
+                        className={`form-input ${validationErrors.name ? 'form-input-error' : ''}`}
                         value={formData.name || ""}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value })
+                          // Clear error when user starts typing
+                          if (validationErrors.name) {
+                            setValidationErrors({ ...validationErrors, name: undefined })
+                          }
+                        }}
+                        placeholder="Enter company name"
+                        maxLength="100"
                       />
+                      {validationErrors.name && (
+                        <div className="form-error">{validationErrors.name}</div>
+                      )}
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Contact Person</label>
+                      <label className="form-label">Contact Person *</label>
                       <input
                         type="text"
-                        className="form-input"
+                        className={`form-input ${validationErrors.contact ? 'form-input-error' : ''}`}
                         value={formData.contact || ""}
-                        onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                        required
+                        onChange={(e) => {
+                          setFormData({ ...formData, contact: e.target.value })
+                          if (validationErrors.contact) {
+                            setValidationErrors({ ...validationErrors, contact: undefined })
+                          }
+                        }}
+                        placeholder="Enter contact person name"
+                        maxLength="50"
                       />
+                      {validationErrors.contact && (
+                        <div className="form-error">{validationErrors.contact}</div>
+                      )}
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Email</label>
+                      <label className="form-label">Email Address *</label>
                       <input
                         type="email"
-                        className="form-input"
+                        className={`form-input ${validationErrors.email ? 'form-input-error' : ''}`}
                         value={formData.email || ""}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value })
+                          if (validationErrors.email) {
+                            setValidationErrors({ ...validationErrors, email: undefined })
+                          }
+                        }}
+                        placeholder="Enter email address"
+                        maxLength="100"
                       />
+                      {validationErrors.email && (
+                        <div className="form-error">{validationErrors.email}</div>
+                      )}
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Phone</label>
+                      <label className="form-label">Phone Number *</label>
                       <input
                         type="tel"
-                        className="form-input"
+                        className={`form-input ${validationErrors.phone ? 'form-input-error' : ''}`}
                         value={formData.phone || ""}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Registration Number</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={formData.companyDetails?.registrationNumber || ""}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          companyDetails: {
-                            ...formData.companyDetails,
-                            registrationNumber: e.target.value
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone: e.target.value })
+                          if (validationErrors.phone) {
+                            setValidationErrors({ ...validationErrors, phone: undefined })
                           }
-                        })}
-                        placeholder="Enter registration number (optional)"
+                        }}
+                        placeholder="Enter phone number (e.g., +1234567890)"
+                        maxLength="20"
                       />
+                      {validationErrors.phone && (
+                        <div className="form-error">{validationErrors.phone}</div>
+                      )}
                     </div>
+                    {editingItem && editingItem.companyDetails?.registrationNumber && (
+                      <div className="form-group">
+                        <label className="form-label">Registration Number</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={editingItem.companyDetails.registrationNumber}
+                          disabled
+                          style={{ 
+                            backgroundColor: '#f3f4f6', 
+                            cursor: 'not-allowed',
+                            color: '#6b7280'
+                          }}
+                        />
+                        <small style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                          Registration number is automatically generated and cannot be modified
+                        </small>
+                      </div>
+                    )}
                     <div className="form-group">
                       <label className="form-label">Status</label>
                       <select
@@ -1723,9 +1997,9 @@ For questions about this report, contact: admin@klassytshirts.com
                 ) : (
                   <>
                     <div className="form-group">
-                      <label className="form-label">Supplier</label>
+                      <label className="form-label">Supplier *</label>
                       <select
-                        className="form-select"
+                        className={`form-select ${validationErrors.supplierId ? 'form-input-error' : ''}`}
                         value={formData.supplierId || ""}
                         onChange={(e) => {
                           const supplier = suppliers.find((s) => s._id === e.target.value)
@@ -1734,8 +2008,10 @@ For questions about this report, contact: admin@klassytshirts.com
                             supplierId: e.target.value,
                             supplierName: supplier ? supplier.name : "",
                           })
+                          if (validationErrors.supplierId) {
+                            setValidationErrors({ ...validationErrors, supplierId: undefined })
+                          }
                         }}
-                        required
                       >
                         <option value="">Select Supplier</option>
                         {suppliers
@@ -1746,26 +2022,43 @@ For questions about this report, contact: admin@klassytshirts.com
                             </option>
                           ))}
                       </select>
+                      {validationErrors.supplierId && (
+                        <div className="form-error">{validationErrors.supplierId}</div>
+                      )}
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Order Date</label>
+                      <label className="form-label">Order Date *</label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={`form-input ${validationErrors.orderDate ? 'form-input-error' : ''}`}
                         value={formData.orderDate || ""}
-                        onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
-                        required
+                        onChange={(e) => {
+                          setFormData({ ...formData, orderDate: e.target.value })
+                          if (validationErrors.orderDate) {
+                            setValidationErrors({ ...validationErrors, orderDate: undefined })
+                          }
+                        }}
                       />
+                      {validationErrors.orderDate && (
+                        <div className="form-error">{validationErrors.orderDate}</div>
+                      )}
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Delivery Date</label>
+                      <label className="form-label">Delivery Date *</label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={`form-input ${validationErrors.deliveryDate ? 'form-input-error' : ''}`}
                         value={formData.deliveryDate || ""}
-                        onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                        required
+                        onChange={(e) => {
+                          setFormData({ ...formData, deliveryDate: e.target.value })
+                          if (validationErrors.deliveryDate) {
+                            setValidationErrors({ ...validationErrors, deliveryDate: undefined })
+                          }
+                        }}
                       />
+                      {validationErrors.deliveryDate && (
+                        <div className="form-error">{validationErrors.deliveryDate}</div>
+                      )}
                     </div>
                     <div className="form-group">
                       <label className="form-label">Status</label>
@@ -1780,13 +2073,16 @@ For questions about this report, contact: admin@klassytshirts.com
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Order Items</label>
+                      <label className="form-label">Order Items *</label>
+                      {validationErrors.items && (
+                        <div className="form-error" style={{ marginBottom: '10px' }}>{validationErrors.items}</div>
+                      )}
                       {orderItems.map((item, index) => (
                         <div key={index} style={{
                           display: 'flex',
                           gap: '10px',
                           marginBottom: '10px',
-                          alignItems: 'center',
+                          alignItems: 'flex-start',
                           padding: '10px',
                           border: '1px solid var(--border)',
                           borderRadius: 'var(--radius)',
@@ -1795,35 +2091,68 @@ For questions about this report, contact: admin@klassytshirts.com
                           <div style={{ flex: 2 }}>
                             <input
                               type="text"
-                              className="form-input"
+                              className={`form-input ${validationErrors[`item_${index}_name`] ? 'form-input-error' : ''}`}
                               placeholder="Item name"
                               value={item.name}
-                              onChange={(e) => updateOrderItem(index, 'name', e.target.value)}
+                              onChange={(e) => {
+                                updateOrderItem(index, 'name', e.target.value)
+                                if (validationErrors[`item_${index}_name`]) {
+                                  setValidationErrors({ ...validationErrors, [`item_${index}_name`]: undefined })
+                                }
+                              }}
                               style={{ margin: 0 }}
+                              maxLength="100"
                             />
+                            {validationErrors[`item_${index}_name`] && (
+                              <div className="form-error" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                                {validationErrors[`item_${index}_name`]}
+                              </div>
+                            )}
                           </div>
                           <div style={{ flex: 1 }}>
                             <input
                               type="number"
-                              className="form-input"
+                              className={`form-input ${validationErrors[`item_${index}_quantity`] ? 'form-input-error' : ''}`}
                               placeholder="Qty"
                               min="1"
+                              max="10000"
                               value={item.quantity}
-                              onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                              onChange={(e) => {
+                                updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)
+                                if (validationErrors[`item_${index}_quantity`]) {
+                                  setValidationErrors({ ...validationErrors, [`item_${index}_quantity`]: undefined })
+                                }
+                              }}
                               style={{ margin: 0 }}
                             />
+                            {validationErrors[`item_${index}_quantity`] && (
+                              <div className="form-error" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                                {validationErrors[`item_${index}_quantity`]}
+                              </div>
+                            )}
                           </div>
                           <div style={{ flex: 1 }}>
                             <input
                               type="number"
-                              className="form-input"
+                              className={`form-input ${validationErrors[`item_${index}_unitPrice`] ? 'form-input-error' : ''}`}
                               placeholder="Unit Price"
                               min="0"
+                              max="1000000"
                               step="0.01"
                               value={item.unitPrice}
-                              onChange={(e) => updateOrderItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => {
+                                updateOrderItem(index, 'unitPrice', parseFloat(e.target.value) || 0)
+                                if (validationErrors[`item_${index}_unitPrice`]) {
+                                  setValidationErrors({ ...validationErrors, [`item_${index}_unitPrice`]: undefined })
+                                }
+                              }}
                               style={{ margin: 0 }}
                             />
+                            {validationErrors[`item_${index}_unitPrice`] && (
+                              <div className="form-error" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                                {validationErrors[`item_${index}_unitPrice`]}
+                              </div>
+                            )}
                           </div>
                           <div style={{ flex: 0 }}>
                             {orderItems.length > 1 && (
@@ -1875,11 +2204,23 @@ For questions about this report, contact: admin@klassytshirts.com
                 )}
 
                 <div className="form-actions">
-                  <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingItem ? "Update" : "Create"}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting 
+                      ? (editingItem ? "Updating..." : "Creating...") 
+                      : (editingItem ? "Update" : "Create")
+                    }
                   </button>
                 </div>
               </form>
