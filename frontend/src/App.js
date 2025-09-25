@@ -25,6 +25,9 @@ import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
+import Outlet from './Components/Outlet/Outlet';
+import OutletDetail from './Components/Outlet/OutletDetail';
+import AdminOutlet from './Components/AdminOutlet/AdminOutlet';
 
 
 import RentalHome from './pages/RentalHome';
@@ -50,6 +53,8 @@ function App() {
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/career" element={<Career />} />
         <Route path="/customizer" element={<ClothCustomizer />} />
+        <Route path="/outlet" element={<Outlet />} />
+        <Route path="/outlet/:id" element={<OutletDetail />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
@@ -131,6 +136,14 @@ function App() {
         />
 
         {/* Admin routes */}
+        <Route
+          path="/admin-outlet"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminOutlet />
+            </ProtectedRoute>
+          )}
+        />
         <Route
           path="/admin"
           element={(

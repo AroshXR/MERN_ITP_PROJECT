@@ -65,6 +65,8 @@ const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
 const inventoryRouter = require("./routes/InventoryRoutes");
+const clothingRouter = require("./routes/ClothingRoutes");
+const analyticsRouter = require("./routes/AnalyticsRoutes");
 
 
      //pasindu
@@ -108,6 +110,8 @@ app.use("/cloth-customizer", clothCustomizerRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
 app.use("/inventory", inventoryRouter);
+app.use("/clothing", clothingRouter);
+app.use("/analytics", analyticsRouter);
 
     //pasindu                                                         sdsdsdssdsdsdsdsd
     app.use("/api/owner", ownerRouter);
