@@ -32,7 +32,7 @@
 }
 
 .about-section {
-    background: #ffffff;
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
     padding: 40px 32px;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -65,7 +65,7 @@
 .about-section h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #000000;
+    color: #ffffff;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
@@ -84,7 +84,7 @@
 .about-section p {
     font-size: 1rem;
     line-height: 1.7;
-    color: #666666;
+    color: #b9b9b9;
     margin-bottom: 16px;
 }
 
@@ -97,10 +97,10 @@
 .about-section li {
     font-size: 1rem;
     line-height: 1.7;
-    color: #666666;
+    color: #b9b9b9;
     margin-bottom: 12px;
     padding-left: 24px;
-    position: relative;
+    text-align: left;
 }
 
 .about-section li::before {
@@ -112,13 +112,13 @@
 }
 
 .about-section li strong {
-    color: #000000;
+    color: #ffffff;
     font-weight: 600;
 }
 
 /* Contact Section Special Styling */
 .contact-section {
-    background: #000000;
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
     color: #ffffff;
     border: 1px solid #333333;
     padding: 40px 32px;

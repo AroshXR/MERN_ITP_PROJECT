@@ -25,13 +25,10 @@ import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
-<<<<<<< HEAD
 import Outlet from './Components/Outlet/Outlet';
 import OutletDetail from './Components/Outlet/OutletDetail';
 import AdminOutlet from './Components/AdminOutlet/AdminOutlet';
-=======
 import OrderSummaryPage from './Components/OrderManagement/OrderSummaryPage';
->>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
 
 
 import RentalHome from './pages/RentalHome';
@@ -144,17 +141,18 @@ function App() {
 
         {/* Admin routes */}
         <Route
-<<<<<<< HEAD
           path="/admin-outlet"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <AdminOutlet />
-=======
+            </ProtectedRoute>
+          )}
+        />
+        <Route
           path="/admin-hub"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <AdminHub />
->>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
             </ProtectedRoute>
           )}
         />

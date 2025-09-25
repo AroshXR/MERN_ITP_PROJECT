@@ -9,7 +9,7 @@ import AboutUs from './AboutUs';
 
 function Home() {
   return (
-    <div className="home-container">
+    <div className="home-container" style={{ background: "linear-gradient(135deg, #eeeded 0%, #333333 100%)" }}>
       <NavBar />
       
       {/* Hero Section */}
@@ -37,7 +37,7 @@ function Home() {
             
             <div className="startButtons">
               <Link to="/login" className="startButtonsprimary">
-                <span style={{ color: "#fff", }}>Start Designing</span>
+                <span style={{ color: "#fff", }}>Get Started</span>
                 <i className="arrow-icon">→</i>
               </Link>
               <Link to="#about" className="startButtonssecondary">

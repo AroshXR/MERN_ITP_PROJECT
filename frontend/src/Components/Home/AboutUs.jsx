@@ -36,11 +36,11 @@ function AboutUs() {
                 <section className="about-section">
                     <h2>Our Values</h2>
                     <ul>
-                        <li><strong>Creativity:</strong> Fostering self-expression through innovative design tools and unlimited customization options.</li>
-                        <li><strong>Quality:</strong> Using premium materials and state-of-the-art printing techniques for lasting results.</li>
-                        <li><strong>Customer-Centric:</strong> Putting your satisfaction and experience at the heart of everything we do.</li>
-                        <li><strong>Sustainability:</strong> Committed to eco-friendly practices and responsible manufacturing processes.</li>
-                        <li><strong>Innovation:</strong> Continuously improving our technology and services to exceed expectations.</li>
+                        <li><strong>Creativity:</strong><br /> Fostering self-expression through innovative design tools and unlimited customization options.</li>
+                        <li><strong>Quality:</strong><br /> Using premium materials and state-of-the-art printing techniques for lasting results.</li>
+                        <li><strong>Customer-Centric:</strong><br /> Putting your satisfaction and experience at the heart of everything we do.</li>
+                        <li><strong>Sustainability:</strong><br /> Committed to eco-friendly practices and responsible manufacturing processes.</li>
+                        <li><strong>Innovation:</strong><br /> Continuously improving our technology and services to exceed expectations.</li>
                     </ul>
                 </section>
 
