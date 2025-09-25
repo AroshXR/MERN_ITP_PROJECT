@@ -52,7 +52,7 @@ const jobSchema = new Schema({
     max: Number,
     currency: {
       type: String,
-      default: "USD"
+      default: "LKR"
     }
   },
   status: {

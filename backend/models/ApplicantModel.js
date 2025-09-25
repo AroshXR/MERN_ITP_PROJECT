@@ -8,7 +8,8 @@ const applicantSchema = new Schema({
     required: [true, "Name is required"],
     trim: true,
     minlength: [2, "Name must be at least 2 characters long"],
-    maxlength: [50, "Name cannot exceed 50 characters"]
+    maxlength: [50, "Name cannot exceed 50 characters"],
+        match: [/^[A-Za-z\s]+$/, "Name can only contain letters and spaces"]
   },
   gmail: {
     type: String,
