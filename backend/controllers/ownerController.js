@@ -169,22 +169,33 @@ const toggleOutfitAvailability = async (req, res) => {
     }
 };
 
-//API to delete an Outfit
+//API to delete an Outfit (hard delete with related bookings)
 const deleteOutfit = async (req, res) => {
     try {
         const { _id } = req.user;
         const { outfitId } = req.body;
         const outfit = await Outfit.findById(outfitId);
 
+        if (!outfit) {
+            return res.json({ success: false, message: "Outfit not found" });
+        }
+
         // Checking if the outfit belongs to the user
         if (outfit.owner.toString() !== _id.toString()) {
             return res.json({ success: false, message: "Unauthorized" });
         }
-        outfit.owner = null;
-        outfit.isAvailable = false;
-        await outfit.save();
 
-        res.json({ success: true, message: "Outfit Removed" });
+        // Delete all related bookings first
+        const bookingDeleteResult = await Booking.deleteMany({ outfit: outfitId });
+        
+        // Delete the outfit from database
+        await Outfit.findByIdAndDelete(outfitId);
+
+        res.json({ 
+            success: true, 
+            message: "Outfit deleted successfully", 
+            deletedBookings: bookingDeleteResult.deletedCount || 0 
+        });
     } catch (error) {
         console.log(error.message);
         res.json({ success: false, message: error.message });
