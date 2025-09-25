@@ -9,10 +9,10 @@ const OutfitCard = ({ outfit }) => {
     const navigate = useNavigate();
     
     return (
-        <div className="group rounded-xl overflow-hidden shadow-lg hover:-translate-y-1 transition-all duration-500 cursor-pointer bg-white">
+        <div className="group rounded-xl overflow-hidden shadow-lg hover:-translate-y-1 transition-all duration-500 cursor-pointer bg-white h-full flex flex-col">
             <div
                 onClick={() => { navigate(`/outfit-details/${outfit._id}`); window.scrollTo(0, 0); }} // Use window.scrollTo instead of scrollTo
-                className="relative h-auto overflow-hidden"
+                className="relative h-auto overflow-hidden flex-shrink-0"
             >
                 <img
                     src={outfit.image}
@@ -30,15 +30,15 @@ const OutfitCard = ({ outfit }) => {
                 </div>
             </div>
 
-            <div className="p-4 sm:p-5">
+            <div className="p-4 sm:p-5 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-2">
                     <div>
-                        <h3 className="text-lg font-medium">{outfit.brand} {outfit.model}</h3>
+                        <h3 className="text-lg font-medium line-clamp-2">{outfit.brand} {outfit.model}</h3>
                         <p className="text-gray-500 text-sm">{outfit.category} • {outfit.condition}</p> {/* Fixed texxt-muted-foreground */}
                     </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-y-2 text-gray-600">
+                <div className="mt-4 grid grid-cols-2 gap-y-2 text-gray-600 flex-1">
                     <div className="flex items-center text-sm text-gray-500">
                         <img src={assets.users_icon} alt="Icon representing users" className="h-4 mr-2" />
                         <span>{outfit.size} Size</span>
