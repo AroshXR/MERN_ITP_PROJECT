@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import Title from '../Components/pasindu/Title'
 import Navbar from '../Components/pasindu/Navbar'
@@ -11,6 +12,7 @@ const MyBookings = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const currency = process.env.REACT_APP_CURRENCY
+  const navigate = useNavigate()
   const { isAuthenticated, getToken, currentUser } = useAuth()
 
   const fetchMyBookings = async () => {
@@ -171,36 +173,49 @@ const MyBookings = () => {
                 <p>Booked On {booking.createdAt.split('T')[0]} </p>
               </div>
               
-              {/* Remove Booking Button */}
-              <button
-                onClick={async () => {
-                  if (window.confirm('Are you sure you want to remove this booking?')) {
-                    try {
-                      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
-                      const token = getToken();
-                      
-                      const { data } = await axios.delete(`${BASE_URL}/api/booking/${booking._id}`, {
-                        headers: {
-                          Authorization: `Bearer ${token}`
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                {/* Edit Button - Only show for pending bookings */}
+                {booking.status === 'pending' && (
+                  <button
+                    onClick={() => navigate(`/edit-booking/${booking._id}`)}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 hover:shadow-lg transition-all py-2 px-4 font-medium text-white rounded-lg"
+                  >
+                    Edit
+                  </button>
+                )}
+                
+                {/* Remove Booking Button */}
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Are you sure you want to remove this booking?')) {
+                      try {
+                        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+                        const token = getToken();
+                        
+                        const { data } = await axios.delete(`${BASE_URL}/api/booking/${booking._id}`, {
+                          headers: {
+                            Authorization: `Bearer ${token}`
+                          }
+                        });
+                        
+                        if (data?.success) {
+                          alert('Booking removed successfully');
+                          fetchMyBookings(); // Refresh the bookings list
+                        } else {
+                          alert(data?.message || 'Failed to remove booking');
                         }
-                      });
-                      
-                      if (data?.success) {
-                        alert('Booking removed successfully');
-                        fetchMyBookings(); // Refresh the bookings list
-                      } else {
-                        alert(data?.message || 'Failed to remove booking');
+                      } catch (err) {
+                        console.error(err);
+                        alert('Error removing booking');
                       }
-                    } catch (err) {
-                      console.error(err);
-                      alert('Error removing booking');
                     }
-                  }
-                }}
-                className="w-full bg-red-500 hover:bg-red-600 hover:shadow-lg transition-all py-2 px-4 font-medium text-white rounded-lg"
-              >
-                Remove Booking
-              </button>
+                  }}
+                  className={`${booking.status === 'pending' ? 'flex-1' : 'w-full'} bg-red-500 hover:bg-red-600 hover:shadow-lg transition-all py-2 px-4 font-medium text-white rounded-lg`}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
 
           </div>

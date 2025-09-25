@@ -35,6 +35,7 @@ import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
 import Outfits from './pages/Outfits';
 import MyBookings from './pages/MyBookings';
+import EditBooking from './pages/EditBooking';
 import Layout from './pages/owner/Layout';
 import Dashboard from './pages/owner/Dashboard';
 import AddOutfit from './pages/owner/AddOutfit';
@@ -208,6 +209,14 @@ function App() {
           element={
             <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
               <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path='/edit-booking/:bookingId' 
+          element={
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <EditBooking />
             </ProtectedRoute>
           }
         />
