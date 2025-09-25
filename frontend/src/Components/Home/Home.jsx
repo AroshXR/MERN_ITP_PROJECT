@@ -40,7 +40,7 @@ function Home() {
                 <span style={{ color: "#fff", }}>Get Started</span>
                 <i className="arrow-icon">→</i>
               </Link>
-              <Link to="#about" className="startButtonssecondary">
+              <Link to="/learn-more" className="startButtonssecondary">
                 <span>Learn More</span>
               </Link>
             </div>

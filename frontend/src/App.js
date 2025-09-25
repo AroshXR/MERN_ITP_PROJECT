@@ -29,6 +29,7 @@ import Outlet from './Components/Outlet/Outlet';
 import OutletDetail from './Components/Outlet/OutletDetail';
 import AdminOutlet from './Components/AdminOutlet/AdminOutlet';
 import OrderSummaryPage from './Components/OrderManagement/OrderSummaryPage';
+import LearnMore from './Components/LearnMore/LearnMore';
 
 
 import RentalHome from './pages/RentalHome';
@@ -55,6 +56,7 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/learn-more" element={<LearnMore />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/contact" element={<ContactUs />} />
