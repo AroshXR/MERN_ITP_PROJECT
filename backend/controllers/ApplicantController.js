@@ -1,6 +1,7 @@
 const Applicant = require("../models/ApplicantModel");
 const User = require("../models/User");
 const { sendEmail } = require("../utils/email");
+const { getIO } = require("../utils/socket");
 
 // Input validation helper
 const validateApplicantInput = (data) => {
@@ -153,6 +154,12 @@ const addApplicant = async (req, res, next) => {
     
     console.log('Saved applicant:', savedApplicant);
     
+    // Notify listeners (admin dashboards) that a new applicant was created
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:created', { id: savedApplicant._id });
+    } catch (_) {}
+
     return res.status(201).json({ 
       message: "Application submitted successfully",
       data: savedApplicant
@@ -206,7 +213,10 @@ const getApplicantById = async (req, res, next) => {
 const updateApplicant = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, gmail, age, address, phone, status } = req.body;
+    const { 
+      name, gmail, age, address, phone, status,
+      position, department, experience, education, skills, coverLetter
+    } = req.body;
     
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid applicant ID format" });
@@ -223,20 +233,67 @@ const updateApplicant = async (req, res, next) => {
       });
     }
 
-    // Validate input if provided
-    if (name || gmail || age || address) {
-      const validationErrors = validateApplicantInput({ 
-        name: name || '', 
-        gmail: gmail || '', 
-        age: age || 0, 
-        address: address || '' 
-      });
-      if (validationErrors.length > 0) {
-        return res.status(400).json({ 
-          message: "Validation failed",
-          errors: validationErrors
-        });
+    // Validate only provided fields
+    const errors = [];
+    if (name !== undefined) {
+      if (!String(name).trim() || String(name).trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
       }
+    }
+    if (gmail !== undefined) {
+      const email = String(gmail).trim();
+      const emailRe = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRe.test(email)) {
+        errors.push('Please provide a valid email address');
+      }
+    }
+    if (age !== undefined) {
+      const ageNum = Number(age);
+      if (!ageNum || ageNum < 16 || ageNum > 100) {
+        errors.push('Age must be between 16 and 100 years');
+      }
+    }
+    if (address !== undefined) {
+      if (!String(address).trim() || String(address).trim().length < 10) {
+        errors.push('Address must be at least 10 characters long');
+      }
+    }
+    if (position !== undefined) {
+      if (!String(position).trim() || String(position).trim().length < 2) {
+        errors.push('Position is required');
+      }
+    }
+    if (department !== undefined) {
+      if (!String(department).trim() || String(department).trim().length < 2) {
+        errors.push('Department is required');
+      }
+    }
+    if (experience !== undefined) {
+      if (!String(experience).trim() || String(experience).trim().length < 2) {
+        errors.push('Experience is required');
+      }
+    }
+    if (education !== undefined) {
+      if (!String(education).trim() || String(education).trim().length < 2) {
+        errors.push('Education is required');
+      }
+    }
+    if (skills !== undefined) {
+      if (Array.isArray(skills)) {
+        if (skills.length < 1) errors.push('Skills are required');
+      } else {
+        if (!String(skills).trim() || String(skills).trim().length < 2) {
+          errors.push('Skills are required');
+        }
+      }
+    }
+    if (coverLetter !== undefined) {
+      if (!String(coverLetter).trim() || String(coverLetter).trim().length < 100) {
+        errors.push('Cover letter must be at least 100 characters long');
+      }
+    }
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Validation failed', errors });
     }
     
     // Check if email is being updated and if it already exists
@@ -253,11 +310,17 @@ const updateApplicant = async (req, res, next) => {
     }
     
     const updateData = {};
-    if (name) updateData.name = name;
-    if (gmail) updateData.gmail = gmail;
-    if (age) updateData.age = age;
-    if (address) updateData.address = address;
+    if (name !== undefined) updateData.name = name;
+    if (gmail !== undefined) updateData.gmail = gmail;
+    if (age !== undefined) updateData.age = age;
+    if (address !== undefined) updateData.address = address;
     if (phone !== undefined) updateData.phone = phone;
+    if (position !== undefined) updateData.position = position;
+    if (department !== undefined) updateData.department = department;
+    if (experience !== undefined) updateData.experience = experience;
+    if (education !== undefined) updateData.education = education;
+    if (skills !== undefined) updateData.skills = skills;
+    if (coverLetter !== undefined) updateData.coverLetter = coverLetter;
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
       updateData.status = status;
     }
@@ -272,6 +335,12 @@ const updateApplicant = async (req, res, next) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
+    // Emit update event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:updated', { id: updatedApplicant._id });
+    } catch (_) {}
+
     return res.status(200).json({ 
       message: "Applicant updated successfully",
       data: updatedApplicant
@@ -316,6 +385,12 @@ const deleteApplicant = async (req, res, next) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
+    // Emit delete event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:deleted', { id });
+    } catch (_) {}
+
     return res.status(200).json({ 
       message: "Applicant deleted successfully",
       data: { id: deletedApplicant._id, name: deletedApplicant.name }
@@ -469,6 +544,12 @@ Stay tuned for further updates! 📬`;
     if (!emailResult.success) {
       console.warn(`⚠️  Failed to send status update email to ${updatedApplicant.gmail}:`, emailResult.error);
     }
+
+    // Emit status change event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:status', { id: updatedApplicant._id, status });
+    } catch (_) {}
 
     return res.status(200).json({ 
       message: "Applicant status updated successfully",
@@ -647,6 +728,12 @@ Good luck! We're excited to meet you! 🚀`;
     if (!emailResult.success) {
       console.warn(`⚠️  Failed to send interview scheduling email to ${updatedApplicant.gmail}:`, emailResult.error);
     }
+
+    // Emit interview scheduled event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:interview', { id: updatedApplicant._id, interview });
+    } catch (_) {}
 
     return res.status(200).json({
       message: "Interview scheduled successfully",

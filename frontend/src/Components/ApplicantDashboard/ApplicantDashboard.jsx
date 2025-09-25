@@ -224,38 +224,94 @@ const ApplicantDashboard = () => {
     }
   };
 
-  const handleUpdateApplication = (updatedApplication) => {
-    const updatedApplications = applications.map((app) => {
-      const appId = app._id || app.id;
-      const updatedId = updatedApplication._id || updatedApplication.id;
-      return appId === updatedId ? updatedApplication : app;
-    });
-    setApplications(updatedApplications);
+  const handleUpdateApplication = async (updatedApplication) => {
+    const targetId = (selectedApplication && (selectedApplication._id || selectedApplication.id)) || updatedApplication._id || updatedApplication.id;
 
-    // Update localStorage
-    const storedApplications = localStorage.getItem('jobApplications');
-    if (storedApplications) {
-      const allApplications = JSON.parse(storedApplications);
-      const updatedId = updatedApplication._id || updatedApplication.id;
-      const updatedAllApplications = allApplications.map((app) => {
-        const appId = app._id || app.id;
-        return appId === updatedId ? updatedApplication : app;
+    try {
+      setError(null);
+      setSuccess('');
+      // Build a minimal diff payload of only changed fields
+      const original = selectedApplication || {};
+      const payload = {};
+      const keys = [
+        'name','gmail','age','address','phone','position','department','experience','education','skills','coverLetter','status'
+      ];
+      keys.forEach((k) => {
+        if (updatedApplication[k] === undefined) return;
+        const newVal = typeof updatedApplication[k] === 'string' ? updatedApplication[k].trim() : updatedApplication[k];
+        const oldValRaw = original[k];
+        const oldVal = typeof oldValRaw === 'string' ? oldValRaw.trim() : oldValRaw;
+        if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+          payload[k] = newVal;
+        }
       });
-      localStorage.setItem('jobApplications', JSON.stringify(updatedAllApplications));
-    }
 
-    if (selectedIndex !== null) {
-      const refreshed = updatedApplications[selectedIndex];
-      if (refreshed) {
-        setSelectedApplication(refreshed);
+      // If no changes detected, just close and show success
+      if (Object.keys(payload).length === 0) {
+        setShowEditForm(false);
+        setSelectedApplication(null);
+        setSelectedIndex(null);
+        setSuccess('No changes to update');
+        return;
       }
-    }
 
-    setShowEditForm(false);
-    setSelectedApplication(null);
-    setSelectedIndex(null);
-    setError(null); // Clear any previous errors
-    setSuccess('Application updated successfully');
+      const res = await fetch(`${API_BASE_URL}/applicant/${encodeURIComponent(targetId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = errJson?.message || 'Failed to update application';
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      console.debug('Update application response:', data);
+      const saved = data?.data || updatedApplication;
+
+      const updatedApplications = applications.map((app) => {
+        const appId = app._id || app.id;
+        const savedId = saved._id || saved.id || targetId;
+        return appId === savedId ? saved : app;
+      });
+      setApplications(updatedApplications);
+
+      // Update localStorage (best-effort cache)
+      const storedApplications = localStorage.getItem('jobApplications');
+      if (storedApplications) {
+        const allApplications = JSON.parse(storedApplications);
+        const savedId = saved._id || saved.id || targetId;
+        const updatedAllApplications = allApplications.map((app) => {
+          const appId = app._id || app.id;
+          return appId === savedId ? saved : app;
+        });
+        localStorage.setItem('jobApplications', JSON.stringify(updatedAllApplications));
+      }
+
+      if (selectedIndex !== null) {
+        const refreshed = updatedApplications[selectedIndex];
+        if (refreshed) {
+          setSelectedApplication(refreshed);
+        }
+      }
+
+      setShowEditForm(false);
+      setSelectedApplication(null);
+      setSelectedIndex(null);
+
+      // Re-fetch from server to confirm DB persistence and sync UI
+      const emailToFetch = searchEmail || currentUser?.email || saved.gmail;
+      if (emailToFetch) {
+        await fetchApplicationsByEmail(emailToFetch);
+      }
+
+      setSuccess('Application updated successfully');
+    } catch (e) {
+      console.error('Failed to update application:', e);
+      setError(e.message || 'Failed to update application');
+    }
   };
 
   const handleCloseEditForm = () => {

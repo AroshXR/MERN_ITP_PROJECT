@@ -48,6 +48,57 @@ export default function AdminApplicantManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
+  // Optional real-time updates via Socket.IO with polling fallback
+  useEffect(() => {
+    let cleanup = () => {};
+    let pollTimer = null;
+
+    const setup = async () => {
+      // Try dynamic import of socket.io-client
+      try {
+        const mod = await import('socket.io-client');
+        const io = mod.io || mod.default;
+        if (!io) throw new Error('socket.io-client not available');
+        const socket = io(API_BASE_URL, { transports: ['websocket'], reconnection: true });
+
+        const onChange = () => {
+          // Re-fetch while keeping current filter
+          fetchApplicants();
+        };
+
+        socket.on('connect', () => {
+          // Optionally, do an initial sync
+        });
+        socket.on('applicant:created', onChange);
+        socket.on('applicant:updated', onChange);
+        socket.on('applicant:deleted', onChange);
+        socket.on('applicant:status', onChange);
+        socket.on('applicant:interview', onChange);
+
+        cleanup = () => {
+          try {
+            socket.off('applicant:created', onChange);
+            socket.off('applicant:updated', onChange);
+            socket.off('applicant:deleted', onChange);
+            socket.off('applicant:status', onChange);
+            socket.off('applicant:interview', onChange);
+            socket.disconnect();
+          } catch (_) {}
+        };
+      } catch (e) {
+        // Fallback polling every 15s if socket unavailable
+        pollTimer = setInterval(() => {
+          fetchApplicants();
+        }, 15000);
+        cleanup = () => pollTimer && clearInterval(pollTimer);
+      }
+    };
+
+    setup();
+    return () => cleanup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
   const onApproveReject = async (id, status) => {
     try {
       setFeedback(null);
@@ -211,13 +262,16 @@ export default function AdminApplicantManagement() {
             <div><a href={`/admin-applicants/${a._id}`}>{a.name}</a></div>
             <div>{a.gmail}</div>
             <div>{a.position}</div>
-            <div>{a.status}</div>
+            <div>
+              <span className={`status-chip status-${(a.status || 'pending').toLowerCase()}`}>{a.status}</span>
+            </div>
             <div>
               <input
                 type="text"
                 placeholder="Status message"
                 value={messageById[a._id] ?? ''}
                 onChange={(e) => setMessageById(prev => ({ ...prev, [a._id]: e.target.value }))}
+                className="status-note-input"
               />
             </div>
             <div className="actions">
@@ -225,7 +279,7 @@ export default function AdminApplicantManagement() {
               <button className="btn btn--reject" onClick={() => onApproveReject(a._id, 'rejected')}>Reject</button>
             </div>
             <div>
-              <button className="btn" onClick={() => openInterview(a)} disabled={a.status === 'rejected'} title={a.status === 'rejected' ? 'Cannot schedule for rejected applications' : ''}>Schedule</button>
+              <button className="btn btn--schedule" onClick={() => openInterview(a)} disabled={a.status === 'rejected'} title={a.status === 'rejected' ? 'Cannot schedule for rejected applications' : ''}>Schedule</button>
               {a.interview?.scheduledAt && (
                 <div className="interview-badge">
                   {new Date(a.interview.scheduledAt).toLocaleString()}

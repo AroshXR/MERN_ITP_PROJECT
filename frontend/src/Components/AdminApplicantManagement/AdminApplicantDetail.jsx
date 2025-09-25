@@ -63,6 +63,53 @@ export default function AdminApplicantDetail() {
     /* eslint-disable-next-line */ 
   }, [id]);
 
+  // Optional real-time updates via Socket.IO with polling fallback
+  useEffect(() => {
+    let cleanup = () => {};
+    let pollTimer = null;
+
+    const setup = async () => {
+      try {
+        const mod = await import('socket.io-client');
+        const io = mod.io || mod.default;
+        if (!io) throw new Error('socket.io-client not available');
+        const socket = io(API_BASE_URL, { transports: ['websocket'], reconnection: true });
+
+        const onChange = (payload) => {
+          if (!payload || !payload.id || payload.id === id) {
+            fetchApplicant();
+          }
+        };
+
+        socket.on('connect', () => {
+          // connected
+        });
+        socket.on('applicant:updated', onChange);
+        socket.on('applicant:status', onChange);
+        socket.on('applicant:interview', onChange);
+
+        cleanup = () => {
+          try {
+            socket.off('applicant:updated', onChange);
+            socket.off('applicant:status', onChange);
+            socket.off('applicant:interview', onChange);
+            socket.disconnect();
+          } catch (_) {}
+        };
+      } catch (e) {
+        // Fallback polling every 15s if socket unavailable
+        pollTimer = setInterval(() => {
+          fetchApplicant();
+        }, 15000);
+        cleanup = () => pollTimer && clearInterval(pollTimer);
+      }
+    };
+
+    setup();
+    return () => cleanup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
   useEffect(() => {
     if (applicant?.gmail) {
       fetchNotifications();
