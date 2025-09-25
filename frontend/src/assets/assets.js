@@ -33,6 +33,9 @@ import location_icon_colored from "./location_icon_colored.svg"
 import testimonial_image_1 from "./testimonial_image_1.png"
 import testimonial_image_2 from "./testimonial_image_2.png"
 import main_homepage from "./main_homepage.png"
+import main_homepage2 from "./main_homepage2.png"
+import main_homepage3 from "./main_homepage3.png"
+import main_homepage4 from "./main_homepage4.png"
 import banner_wedding_image2 from "./banner_wedding_image2.jpg"
 import user_profile from "./user_profile.png"
 import upload_icon from "./upload_icon.svg"
@@ -93,6 +96,9 @@ export const assets = {
     testimonial_image_1,
     testimonial_image_2,
     main_homepage,
+    main_homepage2,
+    main_homepage3,
+    main_homepage4,
     banner_wedding_image2,
     outfit_image1,
     upload_icon,
