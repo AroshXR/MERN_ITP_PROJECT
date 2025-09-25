@@ -340,19 +340,73 @@ const updateApplicantStatus = async (req, res, next) => {
     try {
       const user = await User.findOne({ email: updatedApplicant.gmail.toLowerCase(), type: "Applicant" }).select("_id");
       if (user) {
+        const currentDate = new Date().toLocaleDateString();
+        const applicationDetails = `
+📋 Application Details:
+• Position: ${updatedApplicant.position}
+• Department: ${updatedApplicant.department}
+• Applied Date: ${new Date(updatedApplicant.appliedAt || updatedApplicant.createdAt).toLocaleDateString()}
+• Status Update: ${currentDate}`;
+
+        const notificationMessage = status === 'approved' 
+          ? `🎉 CONGRATULATIONS! Your application has been APPROVED!
+
+${applicationDetails}
+
+${statusMessage ? `📝 Admin Message: ${statusMessage}` : ''}
+
+🎯 Next Steps:
+• Check your email for detailed instructions
+• Our HR team will contact you soon
+• Prepare for the next phase of the hiring process
+
+Welcome to the team! 🚀`
+          : status === 'rejected'
+          ? `❌ Application Status Update - REJECTED
+
+${applicationDetails}
+
+${statusMessage ? `📝 Admin Message: ${statusMessage}` : ''}
+
+💡 What's Next:
+• Don't be discouraged - this is part of the journey
+• Consider applying for other positions that match your skills
+• Use this as a learning experience for future applications
+
+Thank you for your interest in our company! 🙏`
+          : `📢 Application Status Update - ${status.toUpperCase()}
+
+${applicationDetails}
+
+${statusMessage ? `📝 Admin Message: ${statusMessage}` : ''}
+
+Stay tuned for further updates! 📬`;
+        
         await User.findByIdAndUpdate(
           user._id,
           {
             $push: {
               notifications: {
-                message: `Your application for ${updatedApplicant.position} is ${status.toUpperCase()}${statusMessage ? `: ${statusMessage}` : ''}.`,
+                message: notificationMessage,
                 level: status === 'approved' ? 'success' : status === 'rejected' ? 'error' : 'info',
                 read: false,
-                createdAt: new Date()
+                createdAt: new Date(),
+                // Add additional metadata for better tracking
+                metadata: {
+                  applicantId: updatedApplicant._id,
+                  position: updatedApplicant.position,
+                  department: updatedApplicant.department,
+                  status: status,
+                  statusMessage: statusMessage || null,
+                  type: 'application_status_update'
+                }
               }
             }
           }
         );
+        console.log(`✅ Created detailed notification for user ${user._id} - Application ${status} for ${updatedApplicant.position}`);
+      } else {
+        console.log(`⚠️ No user found with email ${updatedApplicant.gmail} and type "Applicant"`);
       }
     } catch (notifyErr) {
       console.warn("⚠️ Failed to create user notification:", notifyErr?.message);
@@ -463,7 +517,36 @@ const scheduleInterview = async (req, res, next) => {
       const user = await User.findOne({ email: updatedApplicant.gmail.toLowerCase(), type: "Applicant" }).select("_id");
       if (user) {
         const interviewTime = new Date(interview.scheduledAt).toLocaleString();
-        const notifMessage = `Your interview for ${updatedApplicant.position} has been scheduled on ${interviewTime}${interview.mode ? ` (${interview.mode})` : ''}${interview.location ? ` at ${interview.location}` : ''}.`;
+        const interviewDate = new Date(interview.scheduledAt).toLocaleDateString();
+        const interviewTimeOnly = new Date(interview.scheduledAt).toLocaleTimeString();
+        
+        const notifMessage = `🎯 INTERVIEW SCHEDULED - Great News!
+
+📋 Application Details:
+• Position: ${updatedApplicant.position}
+• Department: ${updatedApplicant.department}
+• Applicant: ${updatedApplicant.name}
+
+📅 Interview Information:
+• Date: ${interviewDate}
+• Time: ${interviewTimeOnly}
+${interview.mode ? `• Mode: ${interview.mode}` : ''}
+${interview.location ? `• Location: ${interview.location}` : ''}
+${interview.meetingLink ? `• Meeting Link: ${interview.meetingLink}` : ''}
+
+${interview.notes ? `📝 Additional Notes:
+${interview.notes}
+
+` : ''}✅ Preparation Tips:
+• Arrive 10 minutes early
+• Bring copies of your resume
+• Research our company
+• Prepare questions about the role
+• Dress professionally
+${interview.meetingLink ? '• Test your internet connection beforehand' : ''}
+
+Good luck! We're excited to meet you! 🚀`;
+
         await User.findByIdAndUpdate(
           user._id,
           {
@@ -472,11 +555,22 @@ const scheduleInterview = async (req, res, next) => {
                 message: notifMessage,
                 level: 'info',
                 read: false,
-                createdAt: new Date()
+                createdAt: new Date(),
+                metadata: {
+                  applicantId: updatedApplicant._id,
+                  position: updatedApplicant.position,
+                  department: updatedApplicant.department,
+                  interviewDate: interview.scheduledAt,
+                  interviewMode: interview.mode || null,
+                  interviewLocation: interview.location || null,
+                  meetingLink: interview.meetingLink || null,
+                  type: 'interview_scheduled'
+                }
               }
             }
           }
         );
+        console.log(`✅ Created detailed interview notification for user ${user._id} - Interview scheduled for ${updatedApplicant.position}`);
       }
     } catch (notifyErr) {
       console.warn("⚠️ Failed to create interview notification:", notifyErr?.message);

@@ -40,6 +40,7 @@ const UserAccount = () => {
     const [identityError, setIdentityError] = useState('');
     const [identityMessage, setIdentityMessage] = useState('');
     const [identitySaving, setIdentitySaving] = useState(false);
+    const [expandedNotifications, setExpandedNotifications] = useState(new Set());
 
     const [formState, setFormState] = useState({
         username: '',
@@ -118,8 +119,8 @@ const UserAccount = () => {
 
         loadProfile();
         fetchNotifications();
-        // Poll every 30s while on this page to reflect new notifications automatically
-        const interval = setInterval(fetchNotifications, 30000);
+        // Poll every 15s while on this page to reflect new notifications automatically
+        const interval = setInterval(fetchNotifications, 15000);
         return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId]);
@@ -297,6 +298,18 @@ const UserAccount = () => {
         }
     };
 
+    const toggleNotificationExpansion = (notificationId) => {
+        setExpandedNotifications(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(notificationId)) {
+                newSet.delete(notificationId);
+            } else {
+                newSet.add(notificationId);
+            }
+            return newSet;
+        });
+    };
+
     if (!currentUser) {
         return null;
     }
@@ -307,7 +320,14 @@ const UserAccount = () => {
             <main className="user-account-content">
                 <header className="user-account-header">
                     <div>
-                        <h1><i className="bx bx-user-circle"></i> Your Account</h1>
+                        <h1>
+                            <i className="bx bx-user-circle"></i> Your Account
+                            {unreadCount > 0 && (
+                                <span className="header-notification-indicator">
+                                    <i className="bx bx-bell"></i> {unreadCount} new notification{unreadCount > 1 ? 's' : ''}
+                                </span>
+                            )}
+                        </h1>
                     </div>
                     <div className="header-nav-actions">
                         <button
@@ -455,15 +475,21 @@ const UserAccount = () => {
 
                 <section className="panel">
                     <div className="panel-header">
-                        <h2>Notifications</h2>
+                        <h2>
+                            <i className="bx bx-bell"></i> Notifications
+                            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+                        </h2>
                         <div className="panel-header__right">
-                            <span>{unreadCount} unread | {notifications.length} total</span>
+                            <span className="notification-summary">
+                                <strong>{unreadCount}</strong> unread | <strong>{notifications.length}</strong> total
+                            </span>
                             <button
                               type="button"
                               className="header-nav-btn secondary"
                               onClick={fetchNotifications}
                               disabled={notificationsLoading}
                             >
+                              <i className="bx bx-refresh"></i>
                               {notificationsLoading ? 'Refreshing...' : 'Refresh'}
                             </button>
                         </div>
@@ -477,24 +503,78 @@ const UserAccount = () => {
                     ) : (
                         <ul className="notification-list">
                             {notifications.map((notification) => (
-                                <li key={notification._id} className={notification.read ? 'notification read' : 'notification'}>
-                                    <div>
-                                        <p>{notification.message}</p>
-                                        <small>{new Date(notification.createdAt).toLocaleString()}</small>
+                                <li key={notification._id} className={`notification ${notification.read ? 'read' : 'unread'} ${notification.level || 'info'}`}>
+                                    <div className="notification-content">
+                                        <div className="notification-icon">
+                                            {notification.level === 'success' && <i className="bx bx-check-circle"></i>}
+                                            {notification.level === 'error' && <i className="bx bx-error-circle"></i>}
+                                            {(!notification.level || notification.level === 'info') && <i className="bx bx-info-circle"></i>}
+                                        </div>
+                                        <div className="notification-text">
+                                            <div className="notification-message">
+                                                {(() => {
+                                                    const lines = notification.message.split('\n');
+                                                    const isLong = lines.length > 5;
+                                                    const isExpanded = expandedNotifications.has(notification._id);
+                                                    const displayLines = isLong && !isExpanded ? lines.slice(0, 3) : lines;
+                                                    
+                                                    return (
+                                                        <>
+                                                            {displayLines.map((line, index) => (
+                                                                <p key={index} className={line.trim() === '' ? 'line-break' : ''}>
+                                                                    {line.trim() === '' ? '\u00A0' : line}
+                                                                </p>
+                                                            ))}
+                                                            {isLong && !isExpanded && (
+                                                                <p className="notification-truncated">...</p>
+                                                            )}
+                                                            {isLong && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="notification-expand-btn"
+                                                                    onClick={() => toggleNotificationExpansion(notification._id)}
+                                                                >
+                                                                    <i className={`bx ${isExpanded ? 'bx-chevron-up' : 'bx-chevron-down'}`}></i>
+                                                                    {isExpanded ? 'Show Less' : 'Show More'}
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                            <div className="notification-meta">
+                                                <small>
+                                                    <i className="bx bx-time"></i>
+                                                    {new Date(notification.createdAt).toLocaleString()}
+                                                </small>
+                                                {notification.metadata && (
+                                                    <small className="notification-type">
+                                                        <i className="bx bx-tag"></i>
+                                                        {notification.metadata.type === 'application_status_update' && 'Application Update'}
+                                                        {notification.metadata.type === 'interview_scheduled' && 'Interview Scheduled'}
+                                                        {notification.metadata.type === 'identity_verification_update' && 'Identity Verification'}
+                                                        {!notification.metadata.type && 'System Notification'}
+                                                    </small>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="notification-actions">
                                         <button
                                             type="button"
+                                            className="notification-action-btn"
                                             onClick={() => handleNotificationToggle(notification._id, !notification.read)}
+                                            title={notification.read ? 'Mark as unread' : 'Mark as read'}
                                         >
-                                            {notification.read ? 'Mark Unread' : 'Mark Read'}
+                                            <i className={notification.read ? 'bx bx-envelope' : 'bx bx-envelope-open'}></i>
                                         </button>
                                         <button
                                             type="button"
-                                            className="danger"
+                                            className="notification-action-btn danger"
                                             onClick={() => handleNotificationDelete(notification._id)}
+                                            title="Delete notification"
                                         >
-                                            Delete
+                                            <i className="bx bx-trash"></i>
                                         </button>
                                     </div>
                                 </li>
