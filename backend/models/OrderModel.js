@@ -42,6 +42,12 @@ const orderSchema = new Schema({
         required: true,
         trim: true
     },
+    CustomerName: {
+        type: String,
+        required: false,
+        trim: true,
+        maxlength: 120
+    },
     status: {
         type: String,
         enum: ["pending", "processing", "completed", "cancelled", "failed"],

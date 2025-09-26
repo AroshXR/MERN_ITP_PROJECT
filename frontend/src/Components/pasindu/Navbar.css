@@ -52,6 +52,11 @@
   background-color: #333333;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  /* Keep label on one line and align height with other buttons */
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
 }
 
 .nav-btn:hover {
@@ -162,6 +167,9 @@
     width: 100%;
     text-align: left;
     margin: 5px 0;
+    /* Allow wrapping on small screens to prevent overflow */
+    white-space: normal;
+    height: auto;
   }
 
   .search-bar {

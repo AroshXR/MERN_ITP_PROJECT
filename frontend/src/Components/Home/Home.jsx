@@ -13,8 +13,8 @@ function Home() {
       <NavBar />
       
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-background">
+      <section className="hero-section ">
+        <div className="hero-background fade-in">
           <div className="floating-shapes">
             <div className="shape shape-1"></div>
             <div className="shape shape-2"></div>
@@ -23,7 +23,7 @@ function Home() {
           </div>
         </div>
         
-        <div className="hero-content">
+        <div className="hero-content fade-in">
           <div className="hero-text">
             <h1 className="hero-title">
               Create Your
@@ -40,14 +40,14 @@ function Home() {
                 <span style={{ color: "#fff", }}>Get Started</span>
                 <i className="arrow-icon">→</i>
               </Link>
-              <Link to="#about" className="startButtonssecondary">
+              <Link to="/learn-more" className="startButtonssecondary">
                 <span>Learn More</span>
               </Link>
             </div>
           
           </div>
           
-          <div className="hero-visual">
+          <div className="hero-visual fade-in">
             <div className="tshirt-showcase">
               <div className="tshirt-card">
                 <span className="tshirt-label">Classic Fit</span>
@@ -64,7 +64,7 @@ function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="features-section">
+      <section className="features-section fade-in">
         <div className="container">
           <div className="section-header">
             <h2>Why Choose Klassy T-Shirts?</h2>
@@ -94,7 +94,7 @@ function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="about-section-wrapper">
+      <section id="about" className="about-section-wrapper fade-in">
         <AboutUs />
       </section>
 

@@ -3,56 +3,24 @@ import axios from "axios";
 import { useAuth } from "../../AuthGuard/AuthGuard";
 import "./OrderSummaryPage.css";
 import { useNavigate } from "react-router-dom";
-
 const toNumber = (value) => {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
 };
 
-// Compute total for a single payment/order - prioritize PaymentDetails orderDetails.total
-const computeOrderTotal = (paymentRecord) => {
-    // First priority: Use orderDetails.total from PaymentDetails (complete checkout total)
-    if (paymentRecord.orderDetails && paymentRecord.orderDetails.total !== undefined && paymentRecord.orderDetails.total !== null) {
-        return toNumber(paymentRecord.orderDetails.total);
+// Compute total for a single order from Orders collection
+const computeOrderTotal = (order) => {
+    // In Orders model, Price is stored as the total per order
+    if (order.Price !== undefined && order.Price !== null) {
+        return toNumber(order.Price);
     }
-
-    // Second priority: Direct total field
-    if (paymentRecord.total !== undefined && paymentRecord.total !== null) {
-        return toNumber(paymentRecord.total);
+    // Fallbacks for safety
+    if (order.price !== undefined && order.price !== null) {
+        return toNumber(order.price);
     }
-
-    // Third priority: Use the 'Price' field from individual orders (capital P)
-    if (paymentRecord.Price !== undefined && paymentRecord.Price !== null) {
-        return toNumber(paymentRecord.Price);
+    if (order.total !== undefined && order.total !== null) {
+        return toNumber(order.total);
     }
-
-    // Fourth priority: Use lowercase 'price' field
-    if (paymentRecord.price !== undefined && paymentRecord.price !== null) {
-        return toNumber(paymentRecord.price);
-    }
-
-    // Fifth priority: Other common total field names
-    if (paymentRecord.totalAmount !== undefined && paymentRecord.totalAmount !== null) {
-        return toNumber(paymentRecord.totalAmount);
-    }
-
-    if (paymentRecord.amount !== undefined && paymentRecord.amount !== null) {
-        return toNumber(paymentRecord.amount);
-    }
-
-    // Sixth priority: Calculate from orderDetails components
-    if (paymentRecord.orderDetails) {
-        const subtotal = toNumber(paymentRecord.orderDetails.subtotal || 0);
-        const tax = toNumber(paymentRecord.orderDetails.tax || 0);
-        const giftWrapFee = toNumber(paymentRecord.orderDetails.giftWrapFee || 0);
-        const shippingCost = toNumber(paymentRecord.shippingDetails?.cost || 0);
-        
-        if (subtotal > 0) {
-            return subtotal + tax + giftWrapFee + shippingCost;
-        }
-    }
-
-    // Last resort: return 0 if no total can be computed
     return 0;
 };
 
@@ -114,7 +82,7 @@ export default function OrderSummaryPage() {
             setError("");
             try {
                 const token = typeof getToken === "function" ? getToken() : null;
-                const response = await axios.get("http://localhost:5001/payment", {
+                const response = await axios.get("http://localhost:5001/orders", {
                     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                 });
                 const list = Array.isArray(response.data?.data)
@@ -197,6 +165,7 @@ export default function OrderSummaryPage() {
         const orderHeader = ["Order ID", "Customer", "Status", "Total", "Date"];
         const orderRows = filteredOrders.map((o) => [
             o.id || o._id || o.OrderID || "",
+            o.CustomerName ||
             o.customerName ||
             o.customer ||
             (o.deliveryDetails && 
@@ -386,7 +355,8 @@ export default function OrderSummaryPage() {
                                                 <tr key={o.id || o._id || o.OrderID}>
                                                     <td>{o.id || o._id || o.OrderID}</td>
                                                     <td>
-                                                        {o.customerName ||
+                                                        {o.CustomerName ||
+                                                        o.customerName ||
                                                         o.customer ||
                                                         (o.deliveryDetails && 
                                                             (o.deliveryDetails.firstName && o.deliveryDetails.lastName
@@ -404,7 +374,7 @@ export default function OrderSummaryPage() {
                                                         o.user?.email ||
                                                         "-"}
                                                     </td>
-                                                    <td className={`status ${String(o.status || "").toLowerCase()}`}>
+                                                    <td className={`orderStatus ${String(o.status || "").toLowerCase()}`}>
                                                         {o.status || "-"}
                                                     </td>
                                                     <td>{formatCurrency(computeOrderTotal(o))}</td>
