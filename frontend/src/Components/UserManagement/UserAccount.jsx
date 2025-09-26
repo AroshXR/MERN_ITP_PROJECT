@@ -6,20 +6,6 @@ import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import './UserAccount.css';
 
-const statusLabels = {
-    unverified: 'Not Verified',
-    pending: 'Pending Review',
-    verified: 'Verified',
-    rejected: 'Rejected'
-};
-
-const statusStyles = {
-    unverified: 'status-tag status-unverified',
-    pending: 'status-tag status-pending',
-    verified: 'status-tag status-verified',
-    rejected: 'status-tag status-rejected'
-};
-
 const UserAccount = () => {
     const navigate = useNavigate();
     const { currentUser, logout, updateStoredUser, refreshAuth } = useAuth();
@@ -36,10 +22,6 @@ const UserAccount = () => {
     const [notificationsError, setNotificationsError] = useState('');
     const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
-    const [identityForm, setIdentityForm] = useState({ evidence: '', notes: '' });
-    const [identityError, setIdentityError] = useState('');
-    const [identityMessage, setIdentityMessage] = useState('');
-    const [identitySaving, setIdentitySaving] = useState(false);
     const [expandedNotifications, setExpandedNotifications] = useState(new Set());
 
     const [formState, setFormState] = useState({
@@ -63,10 +45,7 @@ const UserAccount = () => {
             address: userData.address || '',
             phoneNumber: userData.phoneNumber || ''
         });
-        setIdentityForm({
-            evidence: userData.identityEvidence || '',
-            notes: userData.identityNotes || ''
-        });
+        // identity verification removed
     };
 
     // Reusable notifications loader
@@ -133,16 +112,7 @@ const UserAccount = () => {
         return () => clearTimeout(timer);
     }, [profileMessage]);
 
-    useEffect(() => {
-        if (!identityMessage && !identityError) {
-            return;
-        }
-        const timer = setTimeout(() => {
-            setIdentityMessage('');
-            setIdentityError('');
-        }, 4000);
-        return () => clearTimeout(timer);
-    }, [identityMessage, identityError]);
+    // identity verification feedback removed
 
     const handleFormChange = (event) => {
         const { name, value } = event.target;
@@ -227,50 +197,7 @@ const UserAccount = () => {
         }
     };
 
-    const handleIdentitySubmit = async (event) => {
-        event.preventDefault();
-        setIdentityError('');
-        setIdentityMessage('');
-
-        if (!identityForm.evidence || !identityForm.evidence.trim()) {
-            setIdentityError('Please provide details about your identity evidence.');
-            return;
-        }
-
-        if (!userId) {
-            return;
-        }
-
-        setIdentitySaving(true);
-        try {
-            const response = await axios.post(`http://localhost:5001/users/${userId}/identity/submit`, {
-                identityEvidence: identityForm.evidence,
-                identityNotes: identityForm.notes
-            });
-
-            if (response.data?.status === 'ok') {
-                applyProfile(response.data.user);
-                updateStoredUser(response.data.user);
-                setIdentityMessage('Identity verification submitted successfully.');
-            } else {
-                setIdentityError(response.data?.message || 'Unable to submit identity verification.');
-            }
-        } catch (error) {
-            console.error('Failed to submit identity verification:', error);
-            if (error.response?.data?.message) {
-                setIdentityError(error.response.data.message);
-            } else {
-                setIdentityError('Something went wrong while submitting your identity verification.');
-            }
-        } finally {
-            setIdentitySaving(false);
-        }
-    };
-
-    const handleIdentityChange = (event) => {
-        const { name, value } = event.target;
-        setIdentityForm((prev) => ({ ...prev, [name]: value }));
-    };
+    // identity verification handlers removed
 
     const handleNotificationToggle = async (notificationId, read) => {
         if (!userId || !notificationId) {
@@ -345,11 +272,9 @@ const UserAccount = () => {
                             Next <i className="bx bx-arrow-forward"></i>
                         </button>
                     </div>
-                    <div className={statusStyles[profile?.identityStatus || 'unverified']}>
-                        {statusLabels[profile?.identityStatus || 'unverified']}
-                    </div>
+                    {/* identity status badge removed */}
                 </header>
-                <p className="account-subtitle">Manage your profile, notifications, and identity verification.</p>
+                <p className="account-subtitle">Manage your profile and notifications.</p>
 
                 {profileLoading ? (
                     <section className="panel">
@@ -407,16 +332,7 @@ const UserAccount = () => {
                                 <span>Account Type</span>
                                 <input type="text" value={profile?.type || ''} disabled />
                             </label>
-                            {profile?.identitySubmittedAt && (
-                                <label>
-                                    <span>Identity Submitted</span>
-                                    <input
-                                        type="text"
-                                        value={new Date(profile.identitySubmittedAt).toLocaleString()}
-                                        disabled
-                                    />
-                                </label>
-                            )}
+                            {/* identity submission info removed */}
                             {profileMessage && <p className="form-feedback success">{profileMessage}</p>}
                             {profileError && <p className="form-feedback error">{profileError}</p>}
                             <div className="form-actions">
@@ -436,42 +352,7 @@ const UserAccount = () => {
                     </section>
                 )}
 
-                <section className="panel">
-                    <h2>Identity Verification</h2>
-                    <p className="panel-description">
-                        Provide details that help us verify your identity. An administrator will review your submission.
-                    </p>
-                    <form className="form-vertical" onSubmit={handleIdentitySubmit}>
-                        <label>
-                            <span>Identity Evidence</span>
-                            <textarea
-                                name="evidence"
-                                value={identityForm.evidence}
-                                onChange={handleIdentityChange}
-                                placeholder="Describe the documents or information you can provide for identity verification."
-                                rows={4}
-                                required
-                            />
-                        </label>
-                        <label>
-                            <span>Additional Notes (optional)</span>
-                            <textarea
-                                name="notes"
-                                value={identityForm.notes}
-                                onChange={handleIdentityChange}
-                                placeholder="Add any notes that will assist the reviewer."
-                                rows={3}
-                            />
-                        </label>
-                        <div className="form-actions">
-                            <button type="submit" className="primary-btn" disabled={identitySaving}>
-                                {identitySaving ? 'Submitting...' : 'Submit for Verification'}
-                            </button>
-                        </div>
-                        {identityMessage && <p className="form-feedback success">{identityMessage}</p>}
-                        {identityError && <p className="form-feedback error">{identityError}</p>}
-                    </form>
-                </section>
+                {/* Identity Verification section removed */}
 
                 <section className="panel">
                     <div className="panel-header">
