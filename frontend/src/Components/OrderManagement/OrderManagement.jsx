@@ -317,7 +317,7 @@ export default function OrderManagement() {
 
                 {/* Notification */}
                 {notification && (
-                    <div className={`notification ${notification.type}`}>
+                    <div className={`notificationNt ${notification.type}`}>
                         {notification.message}
                     </div>
                 )}
@@ -366,7 +366,7 @@ export default function OrderManagement() {
                                             <p>Your cart is empty</p>
                                             <p className="empty-cart-subtitle">Start customizing your clothing to see items here!</p>
                                             <button
-                                                onClick={() => history('/customizer?edit=true')}
+                                                onClick={() => history('/customizer')}
                                                 className="start-customizing-button"
                                             >
                                                 Start Customizing
