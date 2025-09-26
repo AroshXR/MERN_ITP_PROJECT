@@ -1,5 +1,6 @@
 import React from 'react';
 import NavBar from '../NavBar/navBar';
+import Footer from '../Footer/Footer';
 import './SkinToneColorGuide.css';
 
 const toneGuides = [
@@ -195,6 +196,7 @@ const SkinToneColorGuide = () => {
         </p>
         <a className="cta-button" href="/customizer">Open the customizer</a>
       </section>
+      <Footer />
     </div>
   );
 };

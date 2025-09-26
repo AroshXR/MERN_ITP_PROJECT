@@ -535,12 +535,18 @@
 /* Search input for filtering cart items */
 .order-search-input {
     padding: 10px 12px;
-    border: none;
-    padding: 8px 16px;
     border-radius: 6px;
-    cursor: pointer;
+    border: 1px solid #444;
+    background: #ffffff;
+    color: #000;
+    min-width: 260px;
     font-size: 14px;
-    transition: background-color 0.3s ease;
+}
+
+.order-search-input:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
 .test-button:hover {

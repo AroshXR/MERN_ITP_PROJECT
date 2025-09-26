@@ -34,7 +34,11 @@ export default function OrderManagement() {
                 item.color,
                 item.size,
                 item.selectedDesign?.name,
-                item.createdAt && new Date(item.createdAt).toLocaleDateString(),
+                ...(Array.isArray(item.placedDesigns) ? item.placedDesigns.map(d => d?.name) : []),
+                item.createdAt && new Date(item.createdAt).toLocaleString(),
+                item.quantity,
+                item.price,
+                item.totalPrice,
             ];
             return fields.filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
         });
@@ -370,7 +374,13 @@ export default function OrderManagement() {
                                         </div>
                                     ) : (
                                         <div className="items-list">
-                                            {filteredItems.map((item) => (
+                                            {filteredItems.length === 0 ? (
+                                                <div className="empty-cart">
+                                                    <p>No items match your search.</p>
+                                                    <p className="empty-cart-subtitle">Try a different keyword or clear the search.</p>
+                                                </div>
+                                            ) : (
+                                                filteredItems.map((item) => (
                                                 <div key={item.id} className="cart-item">
                                                     <div className="item-info">
                                                         <h3 className="item-name">{item.name || `Custom ${item.clothingType || 'Clothing'}`}</h3>
@@ -401,7 +411,7 @@ export default function OrderManagement() {
                                                                 <p><strong>Custom Image:</strong> Applied</p>
                                                             )}
                                                             {item.createdAt && (
-                                                                <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleDateString()}</p>
+                                                                <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleString()}</p>
                                                             )}
                                                         </div>
                                                         <p className="item-price">${(item.price || 0).toFixed(2)} per item</p>
@@ -440,7 +450,8 @@ export default function OrderManagement() {
                                                         <p className="item-total">${(item.totalPrice || 0).toFixed(2)}</p>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                ))
+                                            )}
                                         </div>
                                     )}
 
