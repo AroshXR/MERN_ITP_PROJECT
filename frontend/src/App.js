@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './AuthGuard/AuthGuard';
 import ProtectedRoute from './AuthGuard/ProtectedRoute';
 import Home from './Components/Home/Home';
@@ -25,15 +25,11 @@ import UserAccount from './Components/UserManagement/UserAccount';
 import AdminUserManagement from './Components/AdminManagement/AdminUserManagement';
 import PrivacyPolicy from './Components/PrivacyPolicy_Terms/PrivacyPolicy';
 import TermsConditions from './Components/PrivacyPolicy_Terms/TermsAndConditions';
-<<<<<<< HEAD
 import Outlet from './Components/Outlet/Outlet';
 import OutletDetail from './Components/Outlet/OutletDetail';
 import AdminOutlet from './Components/AdminOutlet/AdminOutlet';
-=======
+import ClothingInventoryManagement from './Components/ClothingInventoryManagement/ClothingInventoryManagement';
 import OrderSummaryPage from './Components/OrderManagement/OrderSummaryPage';
->>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
-
-
 import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
 import Outfits from './pages/Outfits';
@@ -46,21 +42,37 @@ import ManageBookings from './pages/owner/ManageBookings';
 //import { Toaster} from 'react-hot-toast'
 
 import AdminHub from './Components/AdminHub/AdminHub';
+import AdminCustomOrders from './pages/admin/CustomOrders';
+import AdminCustomOrderDetail from './pages/admin/CustomOrderDetail';
+import AdminTailors from './pages/admin/Tailors';
+
+// Gate that redirects logged-in customers to UserHome on outlet routes only
+import { useAuth } from './AuthGuard/AuthGuard';
+const OutletGate = ({ id = null }) => {
+  const { isAuthenticated, currentUser } = useAuth();
+  const isCustomer = isAuthenticated && isAuthenticated() && currentUser?.type?.toLowerCase() === 'customer';
+  if (isCustomer) {
+    return <Navigate to="/userHome" replace />;
+  }
+  // Render Outlet or OutletDetail based on whether an id is provided via route match
+  return id ? <OutletDetail /> : <Outlet />;
+};
+
 
 function App() {
   return (
     <AuthProvider>
       
       <Routes>
-        {/* Public routes */}
+       // {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/career" element={<Career />} />
         <Route path="/customizer" element={<ClothCustomizer />} />
-        <Route path="/outlet" element={<Outlet />} />
-        <Route path="/outlet/:id" element={<OutletDetail />} />
+        <Route path="/outlet" element={<OutletGate />} />
+        <Route path="/outlet/:id" element={<OutletGate id />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
@@ -142,19 +154,51 @@ function App() {
           )}
         />
 
-        {/* Admin routes */}
         <Route
-<<<<<<< HEAD
           path="/admin-outlet"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <AdminOutlet />
-=======
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/clothing-inventory"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <ClothingInventoryManagement />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
           path="/admin-hub"
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <AdminHub />
->>>>>>> 91b3c06a2e36a4280370583cee4a1e3e15af5e9d
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin/custom-orders"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminCustomOrders />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin/custom-orders/:id"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminCustomOrderDetail />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin/tailors"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminTailors />
             </ProtectedRoute>
           )}
         />

@@ -71,6 +71,16 @@ function NavBar() {
             <i className='bx bx-palette'></i> Color Guide
           </button>
         </Link>
+        <Link to="/outlet" onClick={closeMenu}>
+          <button className="nav-btn">
+            <i className='bx bx-store'></i> Outlet
+          </button>
+        </Link>
+        <Link to="/orderManagement" onClick={closeMenu}>
+          <button className="nav-btn">
+            <i className='bx bx-cart'></i> Cart
+          </button>
+        </Link>
         {userType === 'Applicant' && (
           <Link to="/applicant-dashboard" onClick={closeMenu}>
             <button className="nav-btn">
@@ -90,6 +100,11 @@ function NavBar() {
             <Link to="/admin-hub" onClick={closeMenu}>
               <button className="nav-btn">
                 <i className='bx bx-shield'></i> Admin
+              </button>
+            </Link>
+            <Link to="/admin/custom-orders" onClick={closeMenu}>
+              <button className="nav-btn">
+                <i className='bx bx-t-shirt'></i> Tailor Management
               </button>
             </Link>
           </>

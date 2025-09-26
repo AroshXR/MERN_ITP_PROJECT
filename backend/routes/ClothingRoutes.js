@@ -8,6 +8,7 @@ router.post('/', controller.create);
 router.put('/:id', controller.update);
 router.delete('/:id', controller.remove);
 router.post('/:id/reviews', controller.addReview);
+router.post('/report', controller.report);
 
 module.exports = router;
 

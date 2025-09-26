@@ -27,7 +27,7 @@ const AdminOutlet = () => {
   });
 
   useEffect(() => {
-    if (user?.type !== 'Admin') {
+    if (user?.type?.toLowerCase() !== 'admin') {
       navigate('/unauthorized');
       return;
     }

@@ -24,6 +24,46 @@ exports.getAll = async (req, res) => {
   }
 };
 
+// Generate a report for selected clothing items
+exports.report = async (req, res) => {
+  try {
+    const { ids } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'ids array is required' });
+    }
+
+    const items = await ClothingItem.find({ _id: { $in: ids } });
+    const data = items.map((it) => {
+      const reviews = Array.isArray(it.reviews) ? it.reviews : [];
+      const totalReviews = reviews.length;
+      const averageRating = totalReviews > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / totalReviews) : 0;
+      const timeline = reviews
+        .map(r => ({ date: r.createdAt, rating: r.rating, username: r.username || 'Anonymous', comment: r.comment || '' }))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      return {
+        _id: it._id,
+        name: it.name,
+        brand: it.brand,
+        category: it.category,
+        material: it.material,
+        price: it.price,
+        stock: it.stock,
+        status: it.status,
+        rating: Number.isFinite(it.rating) ? it.rating : averageRating,
+        numReviews: it.numReviews || totalReviews,
+        createdAt: it.createdAt,
+        timeline,
+      };
+    });
+
+    res.json({ count: data.length, data });
+  } catch (err) {
+    console.error('Error generating clothing report:', err);
+    res.status(500).json({ message: 'Failed to generate report' });
+  }
+};
+
 exports.getById = async (req, res) => {
   try {
     const item = await ClothingItem.findById(req.params.id);
