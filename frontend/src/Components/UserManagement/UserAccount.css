@@ -326,7 +326,7 @@
 
 /* Notification Badge */
 .notification-badge {
-    background: #dc2626;
+    background: #c73131;
     color: white;
     font-size: 0.75rem;
     font-weight: 700;
@@ -400,7 +400,16 @@
 }
 
 .notification.success {
-    border-color: #10b981;
+    border-color: #ade0cf;
+    display: block;          /* make it behave like the blue box */
+    width: 100%;             /* full width of container */
+    box-sizing: border-box;  /* include padding in width calc */
+    padding: 16px;           /* match spacing with blue box */
+    background: #f0fff4;     /* light green background */
+    border: 1px solid #38a169; /* green border */
+    border-radius: 12px;     /* same rounded edges */
+    position: relative;      /* for ::before indicators */
+    margin-bottom: 16px;  
 }
 
 .notification.success.unread {
@@ -409,7 +418,14 @@
 }
 
 .notification.success.unread::before {
-    background: #10b981;
+    background: #045a3d;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    border-radius: 12px 0 0 12px;
 }
 
 .notification.error {
@@ -456,7 +472,7 @@
 }
 
 .notification.success .notification-icon {
-    color: #10b981;
+    color: #0faf7a;
 }
 
 .notification.error .notification-icon {
@@ -551,7 +567,7 @@
 .notification-expand-btn {
     background: none;
     border: none;
-    color: #3b82f6;
+    color: #000000;
     font-size: 0.8rem;
     cursor: pointer;
     display: flex;
@@ -597,12 +613,12 @@
 }
 
 .notification-action-btn.danger {
-    color: #dc2626;
+    color: #ffffff;
 }
 
 .notification-action-btn.danger:hover {
     background: #fef2f2;
-    color: #b91c1c;
+    color: #530101;
 }
 
 .empty-state {
