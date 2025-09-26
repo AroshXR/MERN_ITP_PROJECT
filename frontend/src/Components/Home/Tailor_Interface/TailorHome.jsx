@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import NavBar from '../../NavBar/navBar';
 import Footer from '../../Footer/Footer';
 import { TShirtModel } from './components/TShirtModel';
@@ -6,6 +6,8 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds } from '@react-three/drei';
 import './TailorHome.css';
 import OrderSummeryTailor from './OrderSummery_tailor';
+import axios from 'axios';
+import { useAuth } from '../../../AuthGuard/AuthGuard';
 
 function Tailor_Home() {
   const [selectedColor, setSelectedColor] = useState("#ffffff");
@@ -15,6 +17,11 @@ function Tailor_Home() {
   const [activeDesignId, setActiveDesignId] = useState(null);
   const controlsRef = React.useRef();
   const [selectedSize, setSelectedSize] = useState(null);
+  const { getToken } = useAuth();
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+  const [assignedOrders, setAssignedOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
 
   const handleDesignSelect = (design) => {
     setSelectedDesign(design);
@@ -24,6 +31,30 @@ function Tailor_Home() {
   const handleColorSelect = (color) => {
     setSelectedColor(color);
   };
+
+  // Fetch orders assigned to the logged-in tailor
+  useEffect(() => {
+    const fetchAssigned = async () => {
+      try {
+        setOrdersLoading(true);
+        setOrdersError('');
+        const token = getToken();
+        if (!token) {
+          setAssignedOrders([]);
+          return;
+        }
+        const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAssignedOrders(res.data?.data || []);
+      } catch (e) {
+        setOrdersError('Failed to load assigned orders');
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+    fetchAssigned();
+  }, [getToken]);
 
   return (
     <div className="tailor-container">
@@ -46,6 +77,37 @@ function Tailor_Home() {
                 design: selectedDesign?.name || null
               }}
             />
+
+            {/* Assigned Orders Panel */}
+            <div style={{ marginTop: 16 }}>
+              <h2 style={{ margin: '12px 0' }}>My Assigned Orders</h2>
+              {ordersError && <div style={{ color: 'red', marginBottom: 8 }}>{ordersError}</div>}
+              {ordersLoading ? (
+                <div>Loading assigned orders...</div>
+              ) : (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {assignedOrders.map((o) => (
+                    <div key={o._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'grid', gap: 4 }}>
+                          <div><strong>Order:</strong> {o._id}</div>
+                          <div><strong>Status:</strong> {o.status}</div>
+                          <div><strong>Type:</strong> {o?.config?.clothingType || '—'}</div>
+                          <div><strong>Size/Color:</strong> {o?.config?.size || '—'} / {o?.config?.color || '—'}</div>
+                          {typeof o?.config?.quantity === 'number' && (
+                            <div><strong>Quantity:</strong> {o.config.quantity}</div>
+                          )}
+                        </div>
+                        {Array.isArray(o.previewGallery) && o.previewGallery.length > 0 && (
+                          <img src={o.previewGallery[0]} alt="preview" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 6 }} />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {assignedOrders.length === 0 && <div>No assigned orders yet.</div>}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Left Column: Clothing Type + T-Shirt Preview */}
