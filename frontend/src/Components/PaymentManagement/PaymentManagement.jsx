@@ -18,6 +18,7 @@ const CheckoutPage = () => {
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState("")
+  const [formErrors, setFormErrors] = useState({})
 
   // Cart and pricing state
   const [cartItems, setCartItems] = useState([])
@@ -166,13 +167,109 @@ const CheckoutPage = () => {
     }
   }
 
+  // Helpers for formatting
+  const formatCardNumber = (raw) => raw.replace(/\D/g, '').slice(0, 19).replace(/(.{4})/g, '$1 ').trim()
+  const formatExpiry = (raw) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 4)
+    if (digits.length <= 2) return digits
+    return digits.slice(0, 2) + '/' + digits.slice(2)
+  }
+  const formatPhone = (raw) => raw.replace(/[^\d+\s]/g, '').slice(0, 18)
+
+  // Per-field validators
+  const luhnCheck = (num) => {
+    const str = num.replace(/\s+/g, '')
+    if (!str) return false
+    let sum = 0, shouldDouble = false
+    for (let i = str.length - 1; i >= 0; i--) {
+      let digit = parseInt(str[i], 10)
+      if (shouldDouble) {
+        digit *= 2
+        if (digit > 9) digit -= 9
+      }
+      sum += digit
+      shouldDouble = !shouldDouble
+    }
+    return sum % 10 === 0
+  }
+
+  const isExpiryValid = (mmYY) => {
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(mmYY)) return false
+    const [mm, yy] = mmYY.split('/')
+    const expMonth = parseInt(mm, 10)
+    const expYear = 2000 + parseInt(yy, 10)
+    const now = new Date()
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const expDate = new Date(expYear, expMonth - 1, 1)
+    return expDate >= thisMonth
+  }
+
+  const validateField = (name, value, current = formData) => {
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        if (!value.trim()) return 'This field is required'
+        if (value.length > 50) return 'Too long (max 50)'
+        return ''
+      case 'email': {
+        if (!value.trim()) return 'Email is required'
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return emailRegex.test(value) ? '' : 'Enter a valid email address'
+      }
+      case 'phone': {
+        if (!value.trim()) return 'Phone number is required'
+        const phoneRegex = /^[\+]?\d[\d\s]{6,15}$/
+        return phoneRegex.test(value) ? '' : 'Enter a valid phone number'
+      }
+      case 'address':
+        if (!value.trim()) return 'Address is required'
+        if (value.trim().length < 5) return 'Address is too short'
+        return ''
+      case 'city':
+        return value.trim() ? '' : 'City is required'
+      case 'state':
+        return value ? '' : 'Province is required'
+      case 'zipCode': {
+        if (!value.trim()) return 'ZIP code is required'
+        const zipRegex = /^\d{5}$/
+        return zipRegex.test(value) ? '' : 'ZIP must be 5 digits'
+      }
+      case 'cardNumber': {
+        if (paymentMethod !== 'card') return ''
+        const onlyDigits = value.replace(/\s+/g, '')
+        if (onlyDigits.length < 13 || onlyDigits.length > 19) return 'Card number length is invalid'
+        return luhnCheck(value) ? '' : 'Card number failed validation'
+      }
+      case 'expiryDate':
+        if (paymentMethod !== 'card') return ''
+        return isExpiryValid(value) ? '' : 'Expiry must be in the future (MM/YY)'
+      case 'cvv':
+        if (paymentMethod !== 'card') return ''
+        return /^\d{3,4}$/.test(value) ? '' : 'CVV must be 3-4 digits'
+      case 'cardName':
+        if (paymentMethod !== 'card') return ''
+        return value.trim() ? '' : 'Name on card is required'
+      default:
+        return ''
+    }
+  }
+
   // Handle form input changes
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    const { name } = e.target
+    let { value, type, checked } = e.target
+
+    // Formatting for specific fields
+    if (name === 'cardNumber') value = formatCardNumber(value)
+    if (name === 'expiryDate') value = formatExpiry(value)
+    if (name === 'phone') value = formatPhone(value)
+
+    const nextValue = type === 'checkbox' ? checked : value
+    setFormData(prev => ({ ...prev, [name]: nextValue }))
+
+    // Live-validate this field
+    const error = validateField(name, nextValue, { ...formData, [name]: nextValue })
+    setFormErrors(prev => ({ ...prev, [name]: error }))
   }
 
   // Validate form data
@@ -499,8 +596,10 @@ const CheckoutPage = () => {
                         placeholder="John"
                         value={formData.firstName}
                         onChange={handleInputChange}
+                        aria-invalid={!!formErrors.firstName}
                         required
                       />
+                      {formErrors.firstName && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.firstName}</div>)}
                     </div>
                     <div className="form-group">
                       <label htmlFor="lastName">Last Name</label>
@@ -511,8 +610,10 @@ const CheckoutPage = () => {
                         placeholder="Doe"
                         value={formData.lastName}
                         onChange={handleInputChange}
+                        aria-invalid={!!formErrors.lastName}
                         required
                       />
+                      {formErrors.lastName && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.lastName}</div>)}
                     </div>
                   </div>
 
@@ -525,8 +626,10 @@ const CheckoutPage = () => {
                       placeholder="john@example.com"
                       value={formData.email}
                       onChange={handleInputChange}
+                      aria-invalid={!!formErrors.email}
                       required
                     />
+                    {formErrors.email && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.email}</div>)}
                   </div>
 
                   <div className="form-group">
@@ -538,8 +641,10 @@ const CheckoutPage = () => {
                       placeholder="+94 77 123 4567"
                       value={formData.phone}
                       onChange={handleInputChange}
+                      aria-invalid={!!formErrors.phone}
                       required
                     />
+                    {formErrors.phone && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.phone}</div>)}
                   </div>
 
                   <div className="form-group">
@@ -551,8 +656,10 @@ const CheckoutPage = () => {
                       placeholder="123 Main Street"
                       value={formData.address}
                       onChange={handleInputChange}
+                      aria-invalid={!!formErrors.address}
                       required
                     />
+                    {formErrors.address && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.address}</div>)}
                   </div>
 
                   <div className="form-row">
@@ -565,8 +672,10 @@ const CheckoutPage = () => {
                         placeholder="Kandy"
                         value={formData.city}
                         onChange={handleInputChange}
+                        aria-invalid={!!formErrors.city}
                         required
                       />
+                      {formErrors.city && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.city}</div>)}
                     </div>
                     <div className="form-group">
                       <label htmlFor="state">Province</label>
@@ -575,6 +684,7 @@ const CheckoutPage = () => {
                         name="state"
                         value={formData.state}
                         onChange={handleInputChange}
+                        aria-invalid={!!formErrors.state}
                         required
                       >
                         <option value="">Select Province</option>
@@ -601,8 +711,10 @@ const CheckoutPage = () => {
                         placeholder="20000"
                         value={formData.zipCode}
                         onChange={handleInputChange}
+                        aria-invalid={!!formErrors.zipCode}
                         required
                       />
+                      {formErrors.zipCode && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.zipCode}</div>)}
                     </div>
                     <div className="form-group">
                       <label htmlFor="country">Country</label>
@@ -741,8 +853,10 @@ const CheckoutPage = () => {
                           placeholder="1234 5678 9012 3456"
                           value={formData.cardNumber}
                           onChange={handleInputChange}
+                          aria-invalid={!!formErrors.cardNumber}
                           required
                         />
+                        {formErrors.cardNumber && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.cardNumber}</div>)}
                       </div>
                       <div className="form-row">
                         <div className="form-group">
@@ -754,8 +868,10 @@ const CheckoutPage = () => {
                             placeholder="MM/YY"
                             value={formData.expiryDate}
                             onChange={handleInputChange}
+                            aria-invalid={!!formErrors.expiryDate}
                             required
                           />
+                          {formErrors.expiryDate && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.expiryDate}</div>)}
                         </div>
                         <div className="form-group">
                           <label htmlFor="cvv">CVV</label>
@@ -766,8 +882,10 @@ const CheckoutPage = () => {
                             placeholder="123"
                             value={formData.cvv}
                             onChange={handleInputChange}
+                            aria-invalid={!!formErrors.cvv}
                             required
                           />
+                          {formErrors.cvv && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.cvv}</div>)}
                         </div>
                       </div>
                       <div className="form-group">
@@ -779,8 +897,10 @@ const CheckoutPage = () => {
                           placeholder="John Doe"
                           value={formData.cardName}
                           onChange={handleInputChange}
+                          aria-invalid={!!formErrors.cardName}
                           required
                         />
+                        {formErrors.cardName && (<div style={{color:'#b91c1c', fontSize:'12px', marginTop:4}}>{formErrors.cardName}</div>)}
                       </div>
                       <div className="checkbox-group">
                         <input

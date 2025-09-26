@@ -24,8 +24,8 @@ const applicantSchema = new Schema({
   age: {
     type: Number,
     required: [true, "Age is required"],
-    min: [16, "Age must be at least 16 years old"],
-    max: [100, "Age cannot exceed 100 years"]
+    min: [18, "Age must be at least 18 years old"],
+    max: [45, "Age cannot exceed 45 years"]
   },
   address: {
     type: String,
