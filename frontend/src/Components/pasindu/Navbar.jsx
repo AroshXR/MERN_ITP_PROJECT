@@ -7,13 +7,28 @@ import { useAuth } from '../../AuthGuard/AuthGuard'
 const Navbar = () => {
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
   const navigate = useNavigate()
   const { isAuthenticated, currentUser, logout } = useAuth()
+
+  const triggerCategorySearch = () => {
+    const term = searchTerm.trim()
+    if (!term) return
+    // Navigate to Outfits page with category query param
+    navigate(`/Outfits?category=${encodeURIComponent(term)}`)
+    setOpen(false)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      triggerCategorySearch()
+    }
+  }
 
   return (
     <nav className="navbar">
       {/* Logo */}
-      <h2 className="logo" onClick={() => navigate('/')}>
+      <h2 className="logo" onClick={() => navigate('/') }>
         Klassy T Shirts
       </h2>
 
@@ -53,9 +68,17 @@ const Navbar = () => {
           <input
             type="text"
             className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500"
-            placeholder="Search Products"
+            placeholder="Search by category"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
-          <img src={assets.search_icon} alt="search" />
+          <img
+            src={assets.search_icon}
+            alt="search"
+            onClick={triggerCategorySearch}
+            style={{ cursor: 'pointer' }}
+          />
         </div>
 
         {/* Buttons */}
