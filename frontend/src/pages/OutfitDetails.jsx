@@ -320,7 +320,7 @@ const OutfitDetails = () => {
             disabled={isBooking}
             className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 py-4 font-semibold text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
-            {isBooking ? '⏳ Booking...' : '🎯 Book Now'}
+            {isBooking ? '⏳ Booking...' : 'Book Now'}
           </button>
           <p className="text-center text-sm text-gray-600 bg-green-50 p-2 rounded">✅ No credit card required to reserve</p>
           </form>
