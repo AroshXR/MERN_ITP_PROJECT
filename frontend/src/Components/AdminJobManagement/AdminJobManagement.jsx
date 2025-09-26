@@ -304,7 +304,7 @@ const AdminJobManagement = () => {
       requirements: [''],
       responsibilities: [''],
       benefits: [''],
-      salary: { min: '', max: '', currency: 'USD' },
+      salary: { min: '', max: '', currency: 'LKR' },
       deadline: ''
     });
   };
