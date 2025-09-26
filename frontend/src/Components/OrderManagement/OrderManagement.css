@@ -21,14 +21,14 @@
     max-width: 300px;
 }
 
-.notification.success {
+.notificationNt.success {
     background: #28a745;
     width: 300px;
     margin-left: 20px;
     text-align: center;
 }
 
-.notification.error {
+.notificationNt.error {
     background: #dc3545;
 }
 
