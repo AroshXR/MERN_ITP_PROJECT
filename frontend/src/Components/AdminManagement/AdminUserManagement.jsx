@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
 import { useAuth } from '../../AuthGuard/AuthGuard';
+import { useNavigate } from 'react-router-dom';
 import './AdminUserManagement.css';
 
 const statusLabels = {
@@ -21,10 +22,12 @@ const notificationLevels = [
 
 const AdminUserManagement = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [createForm, setCreateForm] = useState({
         username: '',
@@ -39,7 +42,6 @@ const AdminUserManagement = () => {
     const [selectedUserId, setSelectedUserId] = useState('');
     const selectedUser = useMemo(() => users.find((user) => user._id === selectedUserId), [users, selectedUserId]);
 
-    const [identityForm, setIdentityForm] = useState({ status: 'pending', notes: '', reviewer: '' });
     const [notificationForm, setNotificationForm] = useState({ message: '', level: 'info' });
 
     const [managementMessage, setManagementMessage] = useState('');
@@ -69,16 +71,7 @@ const AdminUserManagement = () => {
         fetchUsers();
     }, []);
 
-    useEffect(() => {
-        if (!selectedUser) {
-            return;
-        }
-        setIdentityForm({
-            status: selectedUser.identityStatus || 'unverified',
-            notes: selectedUser.identityNotes || '',
-            reviewer: currentUser?.username || 'Admin'
-        });
-    }, [selectedUser, currentUser]);
+    // identity management removed
 
     useEffect(() => {
         if (!managementMessage && !managementError) {
@@ -123,6 +116,22 @@ const AdminUserManagement = () => {
         }
     };
 
+    const filteredUsers = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return users;
+        return users.filter((u) => {
+            const fields = [
+                u.username,
+                u.email,
+                u.type,
+                u.identityStatus,
+                u.address,
+                u.phoneNumber,
+            ];
+            return fields.filter(Boolean).some((val) => String(val).toLowerCase().includes(q));
+        });
+    }, [users, searchQuery]);
+
     const handleDeleteUser = async (userId) => {
         const confirmed = window.confirm('Delete this account? This cannot be undone.');
         if (!confirmed) {
@@ -147,45 +156,7 @@ const AdminUserManagement = () => {
         }
     };
 
-    const handleIdentityChange = (event) => {
-        const { name, value } = event.target;
-        setIdentityForm((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleIdentityUpdate = async (event) => {
-        event.preventDefault();
-        if (!selectedUser?._id) {
-            return;
-        }
-
-        setActionLoading(true);
-        setManagementMessage('');
-        setManagementError('');
-
-        try {
-            const response = await axios.patch(`http://localhost:5001/users/${selectedUser._id}/identity-status`, {
-                status: identityForm.status,
-                notes: identityForm.notes,
-                reviewer: identityForm.reviewer || currentUser?.username
-            });
-
-            if (response.data?.status === 'ok') {
-                setManagementMessage('Identity status updated.');
-                fetchUsers();
-            } else {
-                setManagementError(response.data?.message || 'Unable to update identity status.');
-            }
-        } catch (updateError) {
-            console.error('Failed to update identity status:', updateError);
-            if (updateError.response?.data?.message) {
-                setManagementError(updateError.response.data.message);
-            } else {
-                setManagementError('Unable to update identity status.');
-            }
-        } finally {
-            setActionLoading(false);
-        }
-    };
+    // identity handlers removed
 
     const handleNotificationChange = (event) => {
         const { name, value } = event.target;
@@ -259,6 +230,15 @@ const AdminUserManagement = () => {
                     {currentUser && (
                         <span className="admin-badge">Admin: {currentUser.username}</span>
                     )}
+                    <div className="header-nav-actions">
+                        <button
+                            type="button"
+                            className="header-nav-btn secondary"
+                            onClick={() => navigate(-1)}
+                        >
+                            <i className="bx bx-arrow-back"></i> Back
+                        </button>
+                    </div>
                 </header>
 
                 <section className="admin-panel">
@@ -303,10 +283,23 @@ const AdminUserManagement = () => {
 
                 <section className="admin-panel">
                     <div className="panel-heading">
-                        <h2>Registered Users</h2>
-                        <button type="button" onClick={fetchUsers} disabled={loading}>
-                            Refresh
-                        </button>
+                        <h2>
+                            Registered Users ({filteredUsers.length}{searchQuery ? ` / ${users.length}` : ''})
+                        </h2>
+                        <div className="users-toolbar">
+                            <i className="bx bx-search user-search-icon" aria-hidden="true"></i>
+                            <input
+                                type="text"
+                                className="user-search-input"
+                                placeholder="Search by name, email, role"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                aria-label="Search users"
+                            />
+                            <button type="button" onClick={fetchUsers} disabled={loading}>
+                                <i className="bx bx-refresh"></i> Refresh
+                            </button>
+                        </div>
                     </div>
                     {loading ? (
                         <p>Loading users...</p>
@@ -320,12 +313,11 @@ const AdminUserManagement = () => {
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Role</th>
-                                        <th>Identity Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.map((user) => (
+                                    {filteredUsers.map((user) => (
                                         <tr key={user._id} className={selectedUserId === user._id ? 'selected' : ''}>
                                             <td>{user.username}</td>
                                             <td>{user.email}</td>
@@ -339,11 +331,6 @@ const AdminUserManagement = () => {
                                                     <option value="Tailor">Tailor</option>
                                                     <option value="Admin">Admin</option>
                                                 </select>
-                                            </td>
-                                            <td>
-                                                <span className={`status-pill status-${user.identityStatus || 'unverified'}`}>
-                                                    {statusLabels[user.identityStatus || 'unverified']}
-                                                </span>
                                             </td>
                                             <td className="row-actions">
                                                 <button type="button" onClick={() => setSelectedUserId(user._id)}>
@@ -365,44 +352,6 @@ const AdminUserManagement = () => {
                     <section className="admin-panel">
                         <h2>Manage {selectedUser.username}</h2>
                         <div className="management-grid">
-                            <div className="management-card">
-                                <h3>Identity Verification</h3>
-                                <form className="vertical-form" onSubmit={handleIdentityUpdate}>
-                                    <label>
-                                        <span>Status</span>
-                                        <select name="status" value={identityForm.status} onChange={handleIdentityChange}>
-                                            <option value="unverified">Unverified</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="verified">Verified</option>
-                                            <option value="rejected">Rejected</option>
-                                        </select>
-                                    </label>
-                                    <label>
-                                        <span>Reviewer</span>
-                                        <input name="reviewer" value={identityForm.reviewer} onChange={handleIdentityChange} placeholder="Reviewer name" />
-                                    </label>
-                                    <label>
-                                        <span>Notes</span>
-                                        <textarea
-                                            name="notes"
-                                            rows={4}
-                                            value={identityForm.notes}
-                                            onChange={handleIdentityChange}
-                                            placeholder="Add details about the identity review."
-                                        />
-                                    </label>
-                                    {selectedUser.identityEvidence && (
-                                        <div className="identity-evidence">
-                                            <strong>User Evidence:</strong>
-                                            <p>{selectedUser.identityEvidence}</p>
-                                        </div>
-                                    )}
-                                    <button type="submit" disabled={actionLoading}>
-                                        {actionLoading ? 'Saving...' : 'Update Identity Status'}
-                                    </button>
-                                </form>
-                            </div>
-
                             <div className="management-card">
                                 <h3>Send Notification</h3>
                                 <form className="vertical-form" onSubmit={handleSendNotification}>

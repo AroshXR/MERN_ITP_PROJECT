@@ -3,8 +3,10 @@ import Footer from "../Footer/Footer"
 import NavBar from "../NavBar/navBar"
 import "./MaterialInventoryManagement.css"
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 export default function MaterialInventoryManagement() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("dashboard")
   const [inventoryItems, setInventoryItems] = useState([])
   const [suppliers, setSuppliers] = useState([])
@@ -354,6 +356,49 @@ export default function MaterialInventoryManagement() {
       <NavBar />
       <div className="dashboard-header">
         <h1>Material Inventory Management</h1>
+        
+        {/* Back Button */}
+        <div className="back-button-container" style={{ 
+          marginTop: '20px', 
+          marginBottom: '20px',
+          position: 'relative',
+          zIndex: 1000,
+          display: 'block',
+          width: 'fit-content'
+        }}>
+          <button 
+            className="back-button"
+            onClick={() => navigate(-1)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              background: '#ffffff',
+              border: '2px solid #333',
+              borderRadius: '8px',
+              color: '#333',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              position: 'relative',
+              zIndex: 1001
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#333';
+              e.target.style.color = '#fff';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#ffffff';
+              e.target.style.color = '#333';
+            }}
+          >
+            <span>←</span>
+            <span>Back</span>
+          </button>
+        </div>
  
         {successMessage && (
           <div style={{

@@ -10,9 +10,18 @@ export default function AdminApplicantManagement() {
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [messageById, setMessageById] = useState({});
-  const [interviewForm, setInterviewForm] = useState({ open: false, id: '', scheduledAt: '', mode: 'in-person', location: '', meetingLink: '', notes: '' });
+  const [interviewForm, setInterviewForm] = useState({
+    open: false,
+    id: '',
+    scheduledAt: '',
+    mode: 'in-person',
+    location: '',
+    meetingLink: '',
+    notes: ''
+  });
 
   const fetchApplicants = async () => {
     try {
@@ -23,7 +32,12 @@ export default function AdminApplicantManagement() {
       const res = await axios.get(`${API_BASE_URL}/applicant`, { params });
       setApplicants(res.data?.data || []);
     } catch (e) {
+      console.error('Failed to load applicants:', e);
       setError('Failed to load applicants');
+      setFeedback({
+        type: 'error',
+        message: 'Unable to load applicants. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -34,15 +48,76 @@ export default function AdminApplicantManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
+  // Optional real-time updates via Socket.IO with polling fallback
+  useEffect(() => {
+    let cleanup = () => {};
+    let pollTimer = null;
+
+    const setup = async () => {
+      // Try dynamic import of socket.io-client
+      try {
+        const mod = await import('socket.io-client');
+        const io = mod.io || mod.default;
+        if (!io) throw new Error('socket.io-client not available');
+        const socket = io(API_BASE_URL, { transports: ['websocket'], reconnection: true });
+
+        const onChange = () => {
+          // Re-fetch while keeping current filter
+          fetchApplicants();
+        };
+
+        socket.on('connect', () => {
+          // Optionally, do an initial sync
+        });
+        socket.on('applicant:created', onChange);
+        socket.on('applicant:updated', onChange);
+        socket.on('applicant:deleted', onChange);
+        socket.on('applicant:status', onChange);
+        socket.on('applicant:interview', onChange);
+
+        cleanup = () => {
+          try {
+            socket.off('applicant:created', onChange);
+            socket.off('applicant:updated', onChange);
+            socket.off('applicant:deleted', onChange);
+            socket.off('applicant:status', onChange);
+            socket.off('applicant:interview', onChange);
+            socket.disconnect();
+          } catch (_) {}
+        };
+      } catch (e) {
+        // Fallback polling every 15s if socket unavailable
+        pollTimer = setInterval(() => {
+          fetchApplicants();
+        }, 15000);
+        cleanup = () => pollTimer && clearInterval(pollTimer);
+      }
+    };
+
+    setup();
+    return () => cleanup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
   const onApproveReject = async (id, status) => {
     try {
+      setFeedback(null);
       const statusMessage = messageById[id] || '';
       await axios.patch(`${API_BASE_URL}/applicant/${id}/status`, { status, statusMessage });
       await fetchApplicants();
       setMessageById(prev => ({ ...prev, [id]: '' }));
-      alert(`Applicant ${status}`);
+      const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      const hasMessage = statusMessage.trim().length > 0;
+      setFeedback({
+        type: 'success',
+        message: `${statusLabel} status saved.${hasMessage ? ' Your note was delivered as part of the notification.' : ''} The applicant now sees this in their account notifications.`
+      });
     } catch (e) {
-      alert('Failed to update status');
+      console.error('Failed to update applicant status:', e);
+      setFeedback({
+        type: 'error',
+        message: 'Failed to update status. Please try again.'
+      });
     }
   };
 
@@ -61,6 +136,7 @@ export default function AdminApplicantManagement() {
 
   const submitInterview = async () => {
     try {
+      setFeedback(null);
       const payload = {
         scheduledAt: interviewForm.scheduledAt ? new Date(interviewForm.scheduledAt).toISOString() : '',
         mode: interviewForm.mode,
@@ -71,9 +147,16 @@ export default function AdminApplicantManagement() {
       await axios.post(`${API_BASE_URL}/applicant/${interviewForm.id}/schedule-interview`, payload);
       setInterviewForm(prev => ({ ...prev, open: false }));
       await fetchApplicants();
-      alert('Interview scheduled');
+      setFeedback({
+        type: 'success',
+        message: 'Interview schedule saved. The applicant was notified in their account.'
+      });
     } catch (e) {
-      alert('Failed to schedule interview');
+      console.error('Failed to schedule interview:', e);
+      setFeedback({
+        type: 'error',
+        message: 'Failed to schedule interview. Please try again.'
+      });
     }
   };
 
@@ -111,6 +194,20 @@ export default function AdminApplicantManagement() {
         </div>
       </div>
 
+      {feedback && (
+        <div className={`admin-applicants__feedback ${feedback.type}`}>
+          <span>{feedback.message}</span>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setFeedback(null)}
+            aria-label="Dismiss message"
+          >
+            <i className="bx bx-x"></i>
+          </button>
+        </div>
+      )}
+
       {loading && <div className="admin-applicants__info">Loading...</div>}
       {error && <div className="admin-applicants__error">{error}</div>}
 
@@ -118,7 +215,7 @@ export default function AdminApplicantManagement() {
         <section className="inline-scheduler">
           <div className="inline-scheduler__header">
             <h3>Schedule Interview</h3>
-            <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>✕</button>
+            <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>X</button>
           </div>
           <div className="inline-scheduler__body">
             <label>Date & Time</label>
@@ -165,13 +262,16 @@ export default function AdminApplicantManagement() {
             <div><a href={`/admin-applicants/${a._id}`}>{a.name}</a></div>
             <div>{a.gmail}</div>
             <div>{a.position}</div>
-            <div>{a.status}</div>
+            <div>
+              <span className={`status-chip status-${(a.status || 'pending').toLowerCase()}`}>{a.status}</span>
+            </div>
             <div>
               <input
                 type="text"
                 placeholder="Status message"
                 value={messageById[a._id] ?? ''}
                 onChange={(e) => setMessageById(prev => ({ ...prev, [a._id]: e.target.value }))}
+                className="status-note-input"
               />
             </div>
             <div className="actions">
@@ -179,7 +279,7 @@ export default function AdminApplicantManagement() {
               <button className="btn btn--reject" onClick={() => onApproveReject(a._id, 'rejected')}>Reject</button>
             </div>
             <div>
-              <button className="btn" onClick={() => openInterview(a)} disabled={a.status === 'rejected'} title={a.status === 'rejected' ? 'Cannot schedule for rejected applications' : ''}>Schedule</button>
+              <button className="btn btn--schedule" onClick={() => openInterview(a)} disabled={a.status === 'rejected'} title={a.status === 'rejected' ? 'Cannot schedule for rejected applications' : ''}>Schedule</button>
               {a.interview?.scheduledAt && (
                 <div className="interview-badge">
                   {new Date(a.interview.scheduledAt).toLocaleString()}

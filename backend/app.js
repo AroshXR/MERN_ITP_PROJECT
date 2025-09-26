@@ -88,6 +88,9 @@ const createToken = require('./utils/jwt');
 
 // Create Express app
 const app = express();
+const http = require('http');
+const { initSocket } = require('./utils/socket');
+const server = http.createServer(app);
 
 // Environment variables
 const PORT = process.env.PORT || 5001;
@@ -310,7 +313,7 @@ const connectToMongoDB = async () => {
       dbName: MONGODB_DBNAME,
     });
 
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
     
     // Load all models after successful connection
     require("./models/User");
@@ -330,10 +333,11 @@ const connectToMongoDB = async () => {
     
     console.log("All models loaded successfully");
 
-    // Start the server
-    app.listen(PORT, () => {
+    // Initialize Socket.IO and start the server
+    initSocket(server);
+    server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
-      console.log("Ready to accept connections!");
+      console.log("Ready to accept connections with Socket.IO!");
     });
 
   } catch (error) {

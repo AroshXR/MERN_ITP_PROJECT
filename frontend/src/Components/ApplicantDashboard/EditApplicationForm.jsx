@@ -22,7 +22,7 @@ const EditApplicationForm = ({ application, onSubmit, onClose, onPrev = () => {}
   useEffect(() => {
     if (application) {
       setFormData({
-        id: application.id,
+        id: application._id || application.id,
         name: application.name || '',
         gmail: application.gmail || '',
         age: application.age || '',

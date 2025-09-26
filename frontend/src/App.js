@@ -30,15 +30,22 @@ import OutletDetail from './Components/Outlet/OutletDetail';
 import AdminOutlet from './Components/AdminOutlet/AdminOutlet';
 import ClothingInventoryManagement from './Components/ClothingInventoryManagement/ClothingInventoryManagement';
 import OrderSummaryPage from './Components/OrderManagement/OrderSummaryPage';
+import BookingReport from './pages/admin/BookingReport';
+import LearnMore from './Components/LearnMore/LearnMore';
+
+
 import RentalHome from './pages/RentalHome';
 import OutfitDetails from './pages/OutfitDetails';
 import Outfits from './pages/Outfits';
 import MyBookings from './pages/MyBookings';
+import EditBooking from './pages/EditBooking';
 import Layout from './pages/owner/Layout';
 import Dashboard from './pages/owner/Dashboard';
 import AddOutfit from './pages/owner/AddOutfit';
+import EditOutfit from './pages/owner/EditOutfit';
 import ManageOutfits from './pages/owner/ManageOutfits';
 import ManageBookings from './pages/owner/ManageBookings';
+import Reports from './pages/owner/Reports';
 //import { Toaster} from 'react-hot-toast'
 
 import AdminHub from './Components/AdminHub/AdminHub';
@@ -66,6 +73,7 @@ function App() {
       <Routes>
        // {/* Public routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/learn-more" element={<LearnMore />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/contact" element={<ContactUs />} />
@@ -243,6 +251,14 @@ function App() {
             </ProtectedRoute>
           )}
         />
+        <Route
+          path="/admin/booking-reports"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <BookingReport />
+            </ProtectedRoute>
+          )}
+        />
 
 
         <Route path='/rentalHome' element={<RentalHome />}/>
@@ -257,6 +273,14 @@ function App() {
           }
         />
         <Route 
+          path='/edit-booking/:bookingId' 
+          element={
+            <ProtectedRoute allowedUserTypes={["Customer", "Applicant"]}>
+              <EditBooking />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
           path='/owner' 
           element={
             <ProtectedRoute allowedUserTypes={["owner", "Admin"]}>
@@ -266,8 +290,10 @@ function App() {
         >
             <Route index element={<Dashboard />} />
             <Route path='add-outfit' element={<AddOutfit />} />
+            <Route path='edit-outfit/:outfitId' element={<EditOutfit />} />
             <Route path='manage-outfits' element={<ManageOutfits />} />
             <Route path='manage-bookings' element={<ManageBookings />} />
+            <Route path='reports' element={<Reports />} />
         </Route>
 
 

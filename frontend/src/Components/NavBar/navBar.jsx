@@ -66,6 +66,11 @@ function NavBar() {
             <i className='bx bx-briefcase'></i> Career
           </button>
         </Link>
+        <Link to="/rentalhome" onClick={closeMenu}>
+          <button className="nav-btn">
+            <i className='bx bx-home'></i> Rental Home
+          </button>
+        </Link>
         <Link to="/color-guide" onClick={closeMenu}>
           <button className="nav-btn">
             <i className='bx bx-palette'></i> Color Guide
@@ -115,6 +120,14 @@ function NavBar() {
             <i className='bx bx-phone'></i> Contact Us
           </button>
         </Link>
+        {isLoggedIn && userType === 'Customer' && (
+          <Link to="/orderManagement" onClick={closeMenu}>
+            <button className="nav-btn">
+              <i className='bx bx-cart'></i> Cart
+            </button>
+          </Link>
+        )}
+        
         {isLoggedIn && (
           <Link to="/user/account" onClick={closeMenu}>
             <button className="nav-btn">
@@ -122,6 +135,7 @@ function NavBar() {
             </button>
           </Link>
         )}
+
         {showAuthLinks && (
           <>
             <Link to="/login" onClick={closeMenu}>

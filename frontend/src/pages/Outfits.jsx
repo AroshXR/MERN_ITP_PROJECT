@@ -6,6 +6,7 @@ import Navbar from '../Components/pasindu/Navbar'
 import axios from 'axios'
 import Footer from '../Components/Footer/Footer'
 import "./outfits.css"
+import { useLocation } from 'react-router-dom'
 
 const Outfits = () => {
   const [input, setInput] = useState('')
@@ -14,6 +15,7 @@ const Outfits = () => {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedLocation, setSelectedLocation] = useState('')
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const location = useLocation()
 
   const fetchOutfits = async () => {
     try {
@@ -39,6 +41,17 @@ const Outfits = () => {
   useEffect(() => {
     fetchOutfits();
   }, [input, selectedCategory, selectedLocation, priceRange]);
+
+  // Pick up category from query string (e.g., /Outfits?category=Evening%20Gowns)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const cat = params.get('category') || ''
+    if (cat && cat !== selectedCategory) {
+      setSelectedCategory(cat)
+      // Optionally scroll to results
+      window.scrollTo(0, 0)
+    }
+  }, [location.search])
 
   const handleSearch = (e) => {
     setInput(e.target.value);
@@ -95,6 +108,10 @@ const Outfits = () => {
           <option value="Cocktail Dresses">Cocktail Dresses</option>
           <option value="Wedding & Bridal Wear">Wedding & Bridal Wear</option>
           <option value="Men's Tuxedos & Suits">Men's Tuxedos & Suits</option>
+          <option value="Mini Dresses">Mini Dresses</option>
+          <option value="Maxi Dresses">Maxi Dresses</option>
+          <option value="Top">Top</option>
+          <option value="Skirt & Top">Skirt & Top</option>
         </select>
 
         <select value={selectedLocation} onChange={handleLocationChange} className="filter-select">
@@ -123,7 +140,7 @@ const Outfits = () => {
     </div>
       </div>
 
-      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-10'>
+      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-10 pb-24'>
         <p className='text-gray-500 xl:px-20 max-w-7xl mx-auto'>Showing {filteredOutfits.length} Outfits </p>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4 xl:px-20 max-w-7xl mx-auto'>

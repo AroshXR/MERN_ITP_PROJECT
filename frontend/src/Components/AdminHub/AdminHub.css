@@ -1,29 +1,111 @@
-.admin-hub-page{min-height:100vh;background:#f6f7fb}
-.admin-hub{width:min(1200px,92%);margin:0 auto;padding:28px 0 56px}
+.admin-hub-page {
+  min-height: 100vh;
+  background: #f6f7fb
+}
+
+.admin-hub {
+  width: min(1200px, 92%);
+  margin: 0 auto;
+  padding: 28px 0 56px
+}
 
 /* Hero header */
-.admin-hub__header{background:linear-gradient(135deg,#000000 0%,#333333 100%);color:#fff;border-radius:16px;padding:60px 20px;margin-bottom:40px;box-shadow:0 10px 30px rgba(0,0,0,0.3);text-align:center}
-.admin-hub__header h1{margin:0;font-size:3rem;font-weight:700}
-.admin-hub__header p{margin:1px auto 0;color:#e5e7eb;opacity:.9;max-width:600px;font-size:1.2rem}
+.admin-hub__header {
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 60px 20px;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center
+}
+
+.admin-hub__header h1 {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700
+}
+
+.admin-hub__header p {
+  margin: 1px auto 0;
+  color: #e5e7eb;
+  opacity: .9;
+  max-width: 600px;
+  font-size: 1.2rem
+}
 
 /* Grid */
-.admin-hub__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.admin-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px
+}
 
 /* Cards */
-.hub-card{display:flex;flex-direction:column;gap:8px;align-items:flex-start;padding:18px 18px 18px 18px;border-radius:14px;border:1px solid #ececec;background:#fff;box-shadow:0 10px 26px rgba(15,23,42,.08);cursor:pointer;text-align:left;position:relative;overflow:hidden;transition:.25s ease}
-.hub-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(600px 120px at -10% -10%,rgba(0,0,0,.06),transparent 60%)}
-.hub-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(15,23,42,.18)}
+.hub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 18px 18px 18px 18px;
+  border-radius: 14px;
+  border: 1px solid #ececec;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .08);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: .25s ease
+}
+
+.hub-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(600px 120px at -10% -10%, rgba(0, 0, 0, .06), transparent 60%)
+}
+
+.hub-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, .18)
+}
 
 /* Icon badge */
-.hub-card i{font-size:1.4rem;color:#111;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:10px;padding:8px}
+.hub-card i {
+  font-size: 1.4rem;
+  color: #111;
+  background: #f1f5f9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px
+}
 
-.hub-card h3{margin:6px 0 0;font-size:1.1rem;color:#111}
-.hub-card p{margin:0;color:#4b5563;line-height:1.4}
+.hub-card h3 {
+  margin: 6px 0 0;
+  font-size: 1.1rem;
+  color: #111
+}
+
+.hub-card p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.4
+}
 
 /* Focus state */
-.hub-card:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(0,0,0,.18)}
+.hub-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, .18)
+}
 
-@media (max-width: 640px){
-  .admin-hub__header{padding:22px 18px}
-  .admin-hub__header h1{font-size:1.7rem}
+@media (max-width: 640px) {
+  .admin-hub__header {
+    padding: 22px 18px
+  }
+
+  .admin-hub__header h1 {
+    font-size: 1.7rem
+  }
 }

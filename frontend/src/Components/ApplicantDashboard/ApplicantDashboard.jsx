@@ -13,6 +13,7 @@ const ApplicantDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState('');
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -118,15 +119,33 @@ const ApplicantDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.email]);
 
+  // Auto-dismiss success messages after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const handleSearch = async () => {
     if (!searchEmail.trim()) {
-      alert('Please enter an email address to search');
+      setError('Please enter an email address to search');
       return;
     }
+    setError(null); // Clear any previous errors
+    setSuccess(''); // Clear any previous success messages
     fetchApplicationsByEmail(searchEmail);
   };
 
   const handleEdit = (application, index) => {
+    // Prevent editing once application is approved
+    if ((application.status || '').toLowerCase() === 'approved') {
+      setError('You cannot edit an application after it has been approved.');
+      setSuccess('');
+      return;
+    }
     setSelectedApplication(application);
     setSelectedIndex(index);
     setShowEditForm(true);
@@ -147,6 +166,13 @@ const ApplicantDashboard = () => {
   };
 
   const handleDelete = (applicationId) => {
+    // Find target application to check status
+    const target = applications.find(app => (app._id || app.id) === applicationId);
+    if (target && (target.status || '').toLowerCase() === 'approved') {
+      setError('You cannot delete an application after it has been approved.');
+      setSuccess('');
+      return;
+    }
     if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
       const currentSelectedId =
         selectedIndex !== null && applications[selectedIndex]
@@ -193,41 +219,99 @@ const ApplicantDashboard = () => {
         }
       }
 
-      alert('Application deleted successfully');
+      setError(null); // Clear any previous errors
+      setSuccess('Application deleted successfully');
     }
   };
 
-  const handleUpdateApplication = (updatedApplication) => {
-    const updatedApplications = applications.map((app) => {
-      const appId = app._id || app.id;
-      const updatedId = updatedApplication._id || updatedApplication.id;
-      return appId === updatedId ? updatedApplication : app;
-    });
-    setApplications(updatedApplications);
+  const handleUpdateApplication = async (updatedApplication) => {
+    const targetId = (selectedApplication && (selectedApplication._id || selectedApplication.id)) || updatedApplication._id || updatedApplication.id;
 
-    // Update localStorage
-    const storedApplications = localStorage.getItem('jobApplications');
-    if (storedApplications) {
-      const allApplications = JSON.parse(storedApplications);
-      const updatedId = updatedApplication._id || updatedApplication.id;
-      const updatedAllApplications = allApplications.map((app) => {
-        const appId = app._id || app.id;
-        return appId === updatedId ? updatedApplication : app;
+    try {
+      setError(null);
+      setSuccess('');
+      // Build a minimal diff payload of only changed fields
+      const original = selectedApplication || {};
+      const payload = {};
+      const keys = [
+        'name','gmail','age','address','phone','position','department','experience','education','skills','coverLetter','status'
+      ];
+      keys.forEach((k) => {
+        if (updatedApplication[k] === undefined) return;
+        const newVal = typeof updatedApplication[k] === 'string' ? updatedApplication[k].trim() : updatedApplication[k];
+        const oldValRaw = original[k];
+        const oldVal = typeof oldValRaw === 'string' ? oldValRaw.trim() : oldValRaw;
+        if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+          payload[k] = newVal;
+        }
       });
-      localStorage.setItem('jobApplications', JSON.stringify(updatedAllApplications));
-    }
 
-    if (selectedIndex !== null) {
-      const refreshed = updatedApplications[selectedIndex];
-      if (refreshed) {
-        setSelectedApplication(refreshed);
+      // If no changes detected, just close and show success
+      if (Object.keys(payload).length === 0) {
+        setShowEditForm(false);
+        setSelectedApplication(null);
+        setSelectedIndex(null);
+        setSuccess('No changes to update');
+        return;
       }
-    }
 
-    setShowEditForm(false);
-    setSelectedApplication(null);
-    setSelectedIndex(null);
-    alert('Application updated successfully');
+      const res = await fetch(`${API_BASE_URL}/applicant/${encodeURIComponent(targetId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = errJson?.message || 'Failed to update application';
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      console.debug('Update application response:', data);
+      const saved = data?.data || updatedApplication;
+
+      const updatedApplications = applications.map((app) => {
+        const appId = app._id || app.id;
+        const savedId = saved._id || saved.id || targetId;
+        return appId === savedId ? saved : app;
+      });
+      setApplications(updatedApplications);
+
+      // Update localStorage (best-effort cache)
+      const storedApplications = localStorage.getItem('jobApplications');
+      if (storedApplications) {
+        const allApplications = JSON.parse(storedApplications);
+        const savedId = saved._id || saved.id || targetId;
+        const updatedAllApplications = allApplications.map((app) => {
+          const appId = app._id || app.id;
+          return appId === savedId ? saved : app;
+        });
+        localStorage.setItem('jobApplications', JSON.stringify(updatedAllApplications));
+      }
+
+      if (selectedIndex !== null) {
+        const refreshed = updatedApplications[selectedIndex];
+        if (refreshed) {
+          setSelectedApplication(refreshed);
+        }
+      }
+
+      setShowEditForm(false);
+      setSelectedApplication(null);
+      setSelectedIndex(null);
+
+      // Re-fetch from server to confirm DB persistence and sync UI
+      const emailToFetch = searchEmail || currentUser?.email || saved.gmail;
+      if (emailToFetch) {
+        await fetchApplicationsByEmail(emailToFetch);
+      }
+
+      setSuccess('Application updated successfully');
+    } catch (e) {
+      console.error('Failed to update application:', e);
+      setError(e.message || 'Failed to update application');
+    }
   };
 
   const handleCloseEditForm = () => {
@@ -290,6 +374,12 @@ const ApplicantDashboard = () => {
             {error}
           </div>
         )}
+        
+        {success && (
+          <div className="success-message">
+            {success}
+          </div>
+        )}
 
         {applications.length === 0 ? (
           <div className="no-applications">
@@ -330,6 +420,7 @@ const ApplicantDashboard = () => {
                 const skills = Array.isArray(application.skills)
                   ? application.skills.join(', ')
                   : application.skills;
+                const isApproved = (application.status || '').toLowerCase() === 'approved';
 
                 return (
                   <div key={cardKey} className="application-card">
@@ -379,12 +470,16 @@ const ApplicantDashboard = () => {
                       <button
                         onClick={() => handleEdit(application, index)}
                         className="edit-btn"
+                        disabled={isApproved}
+                        title={isApproved ? 'Editing is disabled after approval' : 'Edit this application'}
                       >
                         <i className="bx bx-edit"></i> Edit
                       </button>
                       <button
                         onClick={() => handleDelete(application._id || application.id)}
                         className="delete-btn"
+                        disabled={isApproved}
+                        title={isApproved ? 'Deletion is disabled after approval' : 'Delete this application'}
                       >
                         <i className="bx bx-trash"></i> Delete
                       </button>

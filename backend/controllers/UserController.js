@@ -1,4 +1,4 @@
-﻿
+
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -333,6 +333,87 @@ const updateIdentityStatus = async (request, response) => {
 
         if (!updatedUser) {
             return response.status(404).json({ status: "error", message: "User not found" });
+        }
+
+        // Create an in-app notification for identity status changes
+        if (status === "verified" || status === "rejected") {
+            try {
+                const currentDate = new Date().toLocaleDateString();
+                const submittedDate = updatedUser.identitySubmittedAt ? new Date(updatedUser.identitySubmittedAt).toLocaleDateString() : 'N/A';
+                
+                const notificationMessage = status === 'verified' 
+                    ? `🎉 IDENTITY VERIFICATION APPROVED!
+
+🆔 Verification Details:
+• Account: ${updatedUser.username}
+• Email: ${updatedUser.email}
+• Submitted: ${submittedDate}
+• Reviewed: ${currentDate}
+• Reviewer: ${reviewer || 'Admin'}
+
+✅ What This Means:
+• Your identity has been successfully verified
+• You now have full access to all platform features
+• Your account is fully activated
+• You can proceed with all services
+
+${notes ? `📝 Admin Notes: ${notes}` : ''}
+
+🎯 Next Steps:
+• Explore all available features
+• Complete your profile if needed
+• Start using our services with confidence
+
+Welcome to our verified community! 🚀`
+                    : `❌ IDENTITY VERIFICATION REJECTED
+
+🆔 Verification Details:
+• Account: ${updatedUser.username}
+• Email: ${updatedUser.email}
+• Submitted: ${submittedDate}
+• Reviewed: ${currentDate}
+• Reviewer: ${reviewer || 'Admin'}
+
+📝 Reason for Rejection:
+${notes || 'Please contact support for more information about the rejection reason.'}
+
+🔄 What You Can Do:
+• Review the rejection reason carefully
+• Gather the required documentation
+• Contact our support team for guidance
+• Resubmit your verification when ready
+
+📞 Need Help?
+Contact our support team for assistance with the verification process.
+
+Don't give up - we're here to help! 💪`;
+                
+                await User.findByIdAndUpdate(
+                    id,
+                    {
+                        $push: {
+                            notifications: {
+                                message: notificationMessage,
+                                level: status === 'verified' ? 'success' : 'error',
+                                read: false,
+                                createdAt: new Date(),
+                                metadata: {
+                                    userId: id,
+                                    identityStatus: status,
+                                    reviewer: reviewer || 'Admin',
+                                    submittedDate: updatedUser.identitySubmittedAt,
+                                    reviewedDate: new Date(),
+                                    notes: notes || null,
+                                    type: 'identity_verification_update'
+                                }
+                            }
+                        }
+                    }
+                );
+                console.log(`✅ Created detailed identity verification notification for user ${id} - Status: ${status}`);
+            } catch (notifyErr) {
+                console.warn("⚠️ Failed to create identity verification notification:", notifyErr?.message);
+            }
         }
 
         return response.status(200).json({ status: "ok", user: sanitizeUser(updatedUser) });

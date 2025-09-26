@@ -3,37 +3,25 @@ import axios from "axios";
 import { useAuth } from "../../AuthGuard/AuthGuard";
 import "./OrderSummaryPage.css";
 import { useNavigate } from "react-router-dom";
-
 const toNumber = (value) => {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
 };
 
-// Compute total for a single order as quantity * price with safe fallbacks
+// Compute total for a single order from Orders collection
 const computeOrderTotal = (order) => {
-    // If there are explicit items, sum quantity * price-like fields
-    const items = order.items || order.orderItems || order.products || [];
-    if (Array.isArray(items) && items.length > 0) {
-        return items.reduce((sum, item) => {
-            const qty = toNumber(item.quantity || item.qty || 1);
-            const unit = toNumber(
-                item.price || item.unitPrice || (item.totalPrice && qty ? item.totalPrice / qty : 0)
-            );
-            return sum + qty * unit;
-        }, 0);
+    // In Orders model, Price is stored as the total per order
+    if (order.Price !== undefined && order.Price !== null) {
+        return toNumber(order.Price);
     }
-
-    // Fall back to order-level quantity * price
-    const qty = toNumber(order.quantity || order.qty || order.Quantity);
-    const unit = toNumber(order.price || order.Price);
-    if (qty && unit) {
-        return qty * unit;
+    // Fallbacks for safety
+    if (order.price !== undefined && order.price !== null) {
+        return toNumber(order.price);
     }
-
-    // As a last resort, use provided totals
-    return toNumber(
-        order.totalAmount || order.total || order.amount || (order.orderDetails && order.orderDetails.total)
-    );
+    if (order.total !== undefined && order.total !== null) {
+        return toNumber(order.total);
+    }
+    return 0;
 };
 
 const computeSummary = (orders) => {
@@ -177,8 +165,17 @@ export default function OrderSummaryPage() {
         const orderHeader = ["Order ID", "Customer", "Status", "Total", "Date"];
         const orderRows = filteredOrders.map((o) => [
             o.id || o._id || o.OrderID || "",
+            o.CustomerName ||
             o.customerName ||
             o.customer ||
+            (o.deliveryDetails && 
+                (o.deliveryDetails.firstName && o.deliveryDetails.lastName
+                    ? `${o.deliveryDetails.firstName} ${o.deliveryDetails.lastName}`
+                    : o.deliveryDetails.email)) ||
+            (o.AdminID && typeof o.AdminID === 'object' &&
+                (o.AdminID.firstName && o.AdminID.lastName
+                    ? `${o.AdminID.firstName} ${o.AdminID.lastName}`
+                    : o.AdminID.email)) ||
             (o.userId &&
                 (o.userId.firstName && o.userId.lastName
                     ? `${o.userId.firstName} ${o.userId.lastName}`
@@ -355,14 +352,33 @@ export default function OrderSummaryPage() {
                                         </thead>
                                         <tbody>
                                             {filteredOrders.map((o) => (
-                                                <tr key={o.id || o._id}>
-                                                    <td>{o.id || o._id}</td>
-                                                    <td>{o.customerName || "-"}</td>
-                                                    <td className={`status ${String(o.status || "").toLowerCase()}`}>
+                                                <tr key={o.id || o._id || o.OrderID}>
+                                                    <td>{o.id || o._id || o.OrderID}</td>
+                                                    <td>
+                                                        {o.CustomerName ||
+                                                        o.customerName ||
+                                                        o.customer ||
+                                                        (o.deliveryDetails && 
+                                                            (o.deliveryDetails.firstName && o.deliveryDetails.lastName
+                                                                ? `${o.deliveryDetails.firstName} ${o.deliveryDetails.lastName}`
+                                                                : o.deliveryDetails.email)) ||
+                                                        (o.AdminID && typeof o.AdminID === 'object' &&
+                                                            (o.AdminID.firstName && o.AdminID.lastName
+                                                                ? `${o.AdminID.firstName} ${o.AdminID.lastName}`
+                                                                : o.AdminID.email)) ||
+                                                        (o.userId &&
+                                                            (o.userId.firstName && o.userId.lastName
+                                                                ? `${o.userId.firstName} ${o.userId.lastName}`
+                                                                : o.userId.email)) ||
+                                                        o.user?.name ||
+                                                        o.user?.email ||
+                                                        "-"}
+                                                    </td>
+                                                    <td className={`orderStatus ${String(o.status || "").toLowerCase()}`}>
                                                         {o.status || "-"}
                                                     </td>
                                                     <td>{formatCurrency(computeOrderTotal(o))}</td>
-                                                    <td>{o.createdAt || "-"}</td>
+                                                    <td>{o.createdAt || o.orderDate || o.date || o.CreatedAt || "-"}</td>
                                                 </tr>
                                             ))}
                                             {!filteredOrders.length && (

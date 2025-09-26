@@ -126,17 +126,17 @@ const getAllOutfits = async (req, res) => {
         // Get all outfits matching the query
         let outfits = await Outfit.find(query).populate('owner', 'username email');
         
-        // Filter out outfits with confirmed bookings
+        // Filter out outfits with pending or confirmed bookings
         const availableOutfits = [];
         
         for (const outfit of outfits) {
-            const confirmedBookings = await Booking.find({
+            const activeBookings = await Booking.find({
                 outfit: outfit._id,
-                status: 'confirmed'
+                status: { $in: ['pending', 'confirmed'] }
             });
             
-            // Only include outfit if no confirmed bookings exist
-            if (confirmedBookings.length === 0) {
+            // Only include outfit if no pending or confirmed bookings exist
+            if (activeBookings.length === 0) {
                 availableOutfits.push(outfit);
             }
         }
@@ -288,7 +288,89 @@ const updateUserImage = async (req, res) => {
     }
 };
 
+//API to get single outfit by ID for editing
+const getOutfitById = async (req, res) => {
+    try {
+        const { outfitId } = req.params;
+        const { _id } = req.user;
 
+        const outfit = await Outfit.findOne({ _id: outfitId, owner: _id });
+        
+        if (!outfit) {
+            return res.json({ success: false, message: "Outfit not found or you don't have permission to edit it" });
+        }
+
+        res.json({ success: true, outfit });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+//API to update outfit details
+const updateOutfit = async (req, res) => {
+    try {
+        const { outfitId } = req.params;
+        const { _id } = req.user;
+        
+        // Parse outfit data from request body
+        let outfitData = JSON.parse(req.body.outfitData);
+        const files = req.files;
+
+        // Verify outfit belongs to the user
+        const existingOutfit = await Outfit.findOne({ _id: outfitId, owner: _id });
+        if (!existingOutfit) {
+            return res.json({ success: false, message: "Outfit not found or you don't have permission to edit it" });
+        }
+
+        // Handle image updates
+        let imageUrl = existingOutfit.image; // Keep existing image by default
+        let additionalImages = existingOutfit.additionalImages || []; // Keep existing additional images
+
+        // Update main image if provided
+        if (files && files.mainImage) {
+            const mainImageFile = files.mainImage[0];
+            const fileBuffer = fs.readFileSync(mainImageFile.path);
+            const mainImageUpload = await imagekit.upload({
+                file: fileBuffer,
+                fileName: `outfit_${Date.now()}_main.${mainImageFile.originalname.split('.').pop()}`,
+                folder: '/outfits'
+            });
+            imageUrl = mainImageUpload.url;
+        }
+
+        // Update additional images if provided
+        if (files && files.additionalImages) {
+            const additionalImageUploads = [];
+            for (const file of files.additionalImages) {
+                const fileBuffer = fs.readFileSync(file.path);
+                const upload = await imagekit.upload({
+                    file: fileBuffer,
+                    fileName: `outfit_${Date.now()}_additional.${file.originalname.split('.').pop()}`,
+                    folder: '/outfits'
+                });
+                additionalImageUploads.push(upload.url);
+            }
+            additionalImages = additionalImageUploads;
+        }
+
+        // Update outfit in database
+        const updatedOutfit = await Outfit.findByIdAndUpdate(
+            outfitId,
+            {
+                ...outfitData,
+                image: imageUrl,
+                additionalImages: additionalImages
+            },
+            { new: true }
+        );
+
+        res.json({ success: true, message: "Outfit updated successfully", outfit: updatedOutfit });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
 
 // Exporting functions using CommonJS
 module.exports = {
@@ -299,6 +381,7 @@ module.exports = {
     toggleOutfitAvailability,
     deleteOutfit,
     getDashboardData,
-    updateUserImage
-    
+    updateUserImage,
+    getOutfitById,
+    updateOutfit
 };

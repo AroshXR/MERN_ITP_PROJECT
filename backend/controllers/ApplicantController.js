@@ -1,6 +1,7 @@
 const Applicant = require("../models/ApplicantModel");
 const User = require("../models/User");
 const { sendEmail } = require("../utils/email");
+const { getIO } = require("../utils/socket");
 
 // Input validation helper
 const validateApplicantInput = (data) => {
@@ -153,6 +154,12 @@ const addApplicant = async (req, res, next) => {
     
     console.log('Saved applicant:', savedApplicant);
     
+    // Notify listeners (admin dashboards) that a new applicant was created
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:created', { id: savedApplicant._id });
+    } catch (_) {}
+
     return res.status(201).json({ 
       message: "Application submitted successfully",
       data: savedApplicant
@@ -206,26 +213,87 @@ const getApplicantById = async (req, res, next) => {
 const updateApplicant = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, gmail, age, address, phone, status } = req.body;
+    const { 
+      name, gmail, age, address, phone, status,
+      position, department, experience, education, skills, coverLetter
+    } = req.body;
     
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid applicant ID format" });
     }
-    
-    // Validate input if provided
-    if (name || gmail || age || address) {
-      const validationErrors = validateApplicantInput({ 
-        name: name || '', 
-        gmail: gmail || '', 
-        age: age || 0, 
-        address: address || '' 
+    // Fetch current applicant to enforce business rules
+    const currentApplicant = await Applicant.findById(id).select('status');
+    if (!currentApplicant) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
+    // Do not allow editing details once approved. Admins should use the status endpoint for status changes.
+    if (currentApplicant.status === 'approved') {
+      return res.status(400).json({ 
+        message: "Cannot modify an application after it has been approved" 
       });
-      if (validationErrors.length > 0) {
-        return res.status(400).json({ 
-          message: "Validation failed",
-          errors: validationErrors
-        });
+    }
+
+    // Validate only provided fields
+    const errors = [];
+    if (name !== undefined) {
+      if (!String(name).trim() || String(name).trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
       }
+    }
+    if (gmail !== undefined) {
+      const email = String(gmail).trim();
+      const emailRe = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRe.test(email)) {
+        errors.push('Please provide a valid email address');
+      }
+    }
+    if (age !== undefined) {
+      const ageNum = Number(age);
+      if (!ageNum || ageNum < 16 || ageNum > 100) {
+        errors.push('Age must be between 16 and 100 years');
+      }
+    }
+    if (address !== undefined) {
+      if (!String(address).trim() || String(address).trim().length < 10) {
+        errors.push('Address must be at least 10 characters long');
+      }
+    }
+    if (position !== undefined) {
+      if (!String(position).trim() || String(position).trim().length < 2) {
+        errors.push('Position is required');
+      }
+    }
+    if (department !== undefined) {
+      if (!String(department).trim() || String(department).trim().length < 2) {
+        errors.push('Department is required');
+      }
+    }
+    if (experience !== undefined) {
+      if (!String(experience).trim() || String(experience).trim().length < 2) {
+        errors.push('Experience is required');
+      }
+    }
+    if (education !== undefined) {
+      if (!String(education).trim() || String(education).trim().length < 2) {
+        errors.push('Education is required');
+      }
+    }
+    if (skills !== undefined) {
+      if (Array.isArray(skills)) {
+        if (skills.length < 1) errors.push('Skills are required');
+      } else {
+        if (!String(skills).trim() || String(skills).trim().length < 2) {
+          errors.push('Skills are required');
+        }
+      }
+    }
+    if (coverLetter !== undefined) {
+      if (!String(coverLetter).trim() || String(coverLetter).trim().length < 100) {
+        errors.push('Cover letter must be at least 100 characters long');
+      }
+    }
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Validation failed', errors });
     }
     
     // Check if email is being updated and if it already exists
@@ -242,11 +310,17 @@ const updateApplicant = async (req, res, next) => {
     }
     
     const updateData = {};
-    if (name) updateData.name = name;
-    if (gmail) updateData.gmail = gmail;
-    if (age) updateData.age = age;
-    if (address) updateData.address = address;
+    if (name !== undefined) updateData.name = name;
+    if (gmail !== undefined) updateData.gmail = gmail;
+    if (age !== undefined) updateData.age = age;
+    if (address !== undefined) updateData.address = address;
     if (phone !== undefined) updateData.phone = phone;
+    if (position !== undefined) updateData.position = position;
+    if (department !== undefined) updateData.department = department;
+    if (experience !== undefined) updateData.experience = experience;
+    if (education !== undefined) updateData.education = education;
+    if (skills !== undefined) updateData.skills = skills;
+    if (coverLetter !== undefined) updateData.coverLetter = coverLetter;
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
       updateData.status = status;
     }
@@ -261,6 +335,12 @@ const updateApplicant = async (req, res, next) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
+    // Emit update event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:updated', { id: updatedApplicant._id });
+    } catch (_) {}
+
     return res.status(200).json({ 
       message: "Applicant updated successfully",
       data: updatedApplicant
@@ -291,12 +371,26 @@ const deleteApplicant = async (req, res, next) => {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ message: "Invalid applicant ID format" });
     }
-    
+    // Do not allow deleting if the application is already approved
+    const existing = await Applicant.findById(id).select('status');
+    if (!existing) {
+      return res.status(404).json({ message: "Applicant not found" });
+    }
+    if (existing.status === 'approved') {
+      return res.status(400).json({ message: "Cannot delete an approved application" });
+    }
+
     const deletedApplicant = await Applicant.findByIdAndDelete(id);
     if (!deletedApplicant) {
       return res.status(404).json({ message: "Applicant not found" });
     }
     
+    // Emit delete event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:deleted', { id });
+    } catch (_) {}
+
     return res.status(200).json({ 
       message: "Applicant deleted successfully",
       data: { id: deletedApplicant._id, name: deletedApplicant.name }
@@ -340,19 +434,73 @@ const updateApplicantStatus = async (req, res, next) => {
     try {
       const user = await User.findOne({ email: updatedApplicant.gmail.toLowerCase(), type: "Applicant" }).select("_id");
       if (user) {
+        const currentDate = new Date().toLocaleDateString();
+        const applicationDetails = `
+📋 Application Details:
+• Position: ${updatedApplicant.position}
+• Department: ${updatedApplicant.department}
+• Applied Date: ${new Date(updatedApplicant.appliedAt || updatedApplicant.createdAt).toLocaleDateString()}
+• Status Update: ${currentDate}`;
+
+        const notificationMessage = status === 'approved' 
+          ? `🎉 CONGRATULATIONS! Your application has been APPROVED!
+
+${applicationDetails}
+
+${statusMessage ? `📝 Admin Message: ${statusMessage}` : ''}
+
+🎯 Next Steps:
+• Check your email for detailed instructions
+• Our HR team will contact you soon
+• Prepare for the next phase of the hiring process
+
+Welcome to the team! 🚀`
+          : status === 'rejected'
+          ? `❌ Application Status Update - REJECTED
+
+${applicationDetails}
+
+${statusMessage ? `📝 Admin Message: ${statusMessage}` : ''}
+
+💡 What's Next:
+• Don't be discouraged - this is part of the journey
+• Consider applying for other positions that match your skills
+• Use this as a learning experience for future applications
+
+Thank you for your interest in our company! 🙏`
+          : `📢 Application Status Update - ${status.toUpperCase()}
+
+${applicationDetails}
+
+${statusMessage ? `📝 Admin Message: ${statusMessage}` : ''}
+
+Stay tuned for further updates! 📬`;
+        
         await User.findByIdAndUpdate(
           user._id,
           {
             $push: {
               notifications: {
-                message: `Your application for ${updatedApplicant.position} is ${status.toUpperCase()}${statusMessage ? `: ${statusMessage}` : ''}.`,
+                message: notificationMessage,
                 level: status === 'approved' ? 'success' : status === 'rejected' ? 'error' : 'info',
                 read: false,
-                createdAt: new Date()
+                createdAt: new Date(),
+                // Add additional metadata for better tracking
+                metadata: {
+                  applicantId: updatedApplicant._id,
+                  position: updatedApplicant.position,
+                  department: updatedApplicant.department,
+                  status: status,
+                  statusMessage: statusMessage || null,
+                  type: 'application_status_update'
+                }
               }
             }
           }
         );
+        console.log(`✅ Created detailed notification for user ${user._id} - Application ${status} for ${updatedApplicant.position}`);
+      } else {
+        console.log(`⚠️ No user found with email ${updatedApplicant.gmail} and type "Applicant"`);
       }
     } catch (notifyErr) {
       console.warn("⚠️ Failed to create user notification:", notifyErr?.message);
@@ -396,6 +544,12 @@ const updateApplicantStatus = async (req, res, next) => {
     if (!emailResult.success) {
       console.warn(`⚠️  Failed to send status update email to ${updatedApplicant.gmail}:`, emailResult.error);
     }
+
+    // Emit status change event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:status', { id: updatedApplicant._id, status });
+    } catch (_) {}
 
     return res.status(200).json({ 
       message: "Applicant status updated successfully",
@@ -463,7 +617,36 @@ const scheduleInterview = async (req, res, next) => {
       const user = await User.findOne({ email: updatedApplicant.gmail.toLowerCase(), type: "Applicant" }).select("_id");
       if (user) {
         const interviewTime = new Date(interview.scheduledAt).toLocaleString();
-        const notifMessage = `Your interview for ${updatedApplicant.position} has been scheduled on ${interviewTime}${interview.mode ? ` (${interview.mode})` : ''}${interview.location ? ` at ${interview.location}` : ''}.`;
+        const interviewDate = new Date(interview.scheduledAt).toLocaleDateString();
+        const interviewTimeOnly = new Date(interview.scheduledAt).toLocaleTimeString();
+        
+        const notifMessage = `🎯 INTERVIEW SCHEDULED - Great News!
+
+📋 Application Details:
+• Position: ${updatedApplicant.position}
+• Department: ${updatedApplicant.department}
+• Applicant: ${updatedApplicant.name}
+
+📅 Interview Information:
+• Date: ${interviewDate}
+• Time: ${interviewTimeOnly}
+${interview.mode ? `• Mode: ${interview.mode}` : ''}
+${interview.location ? `• Location: ${interview.location}` : ''}
+${interview.meetingLink ? `• Meeting Link: ${interview.meetingLink}` : ''}
+
+${interview.notes ? `📝 Additional Notes:
+${interview.notes}
+
+` : ''}✅ Preparation Tips:
+• Arrive 10 minutes early
+• Bring copies of your resume
+• Research our company
+• Prepare questions about the role
+• Dress professionally
+${interview.meetingLink ? '• Test your internet connection beforehand' : ''}
+
+Good luck! We're excited to meet you! 🚀`;
+
         await User.findByIdAndUpdate(
           user._id,
           {
@@ -472,11 +655,22 @@ const scheduleInterview = async (req, res, next) => {
                 message: notifMessage,
                 level: 'info',
                 read: false,
-                createdAt: new Date()
+                createdAt: new Date(),
+                metadata: {
+                  applicantId: updatedApplicant._id,
+                  position: updatedApplicant.position,
+                  department: updatedApplicant.department,
+                  interviewDate: interview.scheduledAt,
+                  interviewMode: interview.mode || null,
+                  interviewLocation: interview.location || null,
+                  meetingLink: interview.meetingLink || null,
+                  type: 'interview_scheduled'
+                }
               }
             }
           }
         );
+        console.log(`✅ Created detailed interview notification for user ${user._id} - Interview scheduled for ${updatedApplicant.position}`);
       }
     } catch (notifyErr) {
       console.warn("⚠️ Failed to create interview notification:", notifyErr?.message);
@@ -534,6 +728,12 @@ const scheduleInterview = async (req, res, next) => {
     if (!emailResult.success) {
       console.warn(`⚠️  Failed to send interview scheduling email to ${updatedApplicant.gmail}:`, emailResult.error);
     }
+
+    // Emit interview scheduled event
+    try {
+      const io = getIO && getIO();
+      if (io) io.emit('applicant:interview', { id: updatedApplicant._id, interview });
+    } catch (_) {}
 
     return res.status(200).json({
       message: "Interview scheduled successfully",

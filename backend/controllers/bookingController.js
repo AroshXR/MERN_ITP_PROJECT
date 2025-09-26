@@ -5,7 +5,7 @@ const Outfit = require("../models/Outfit");
 const checkAvailability = async (outfit, reservationDate, returnDate) => {
     const bookings = await Booking.find({
         outfit,
-        status: "confirmed", // Only check confirmed bookings
+        status: { $in: ["pending", "confirmed"] }, // Check both pending and confirmed bookings
         reservationDate: { $lte: returnDate },
         returnDate: { $gte: reservationDate },
     });
@@ -185,6 +185,193 @@ const deleteBooking = async (req, res) => {
     }
 };
 
+//API to get single booking by ID for editing
+const getBookingById = async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { _id } = req.user;
+
+        const booking = await Booking.findOne({ _id: bookingId, user: _id }).populate('outfit');
+        
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found or you don't have permission to edit it" });
+        }
+
+        res.json({ success: true, booking });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+//API to generate booking report for admin
+const generateBookingReport = async (req, res) => {
+    try {
+        const { role, type } = req.user;
+        
+        // Only admin can generate reports
+        if (role !== 'admin' && type !== 'Admin') {
+            return res.json({ success: false, message: "Unauthorized - Admin access required" });
+        }
+
+        const { startDate, endDate, status, location } = req.query;
+        
+        // Build query based on filters
+        let query = {};
+        
+        // Date filter
+        if (startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate + 'T23:59:59.999Z')
+            };
+        }
+        
+        // Status filter
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        // Get all bookings with populated data
+        let bookings = await Booking.find(query)
+            .populate({
+                path: 'outfit',
+                select: 'brand model category pricePerDay location image'
+            })
+            .populate({
+                path: 'user',
+                select: 'username email'
+            })
+            .populate({
+                path: 'owner',
+                select: 'username email'
+            })
+            .sort({ createdAt: -1 });
+
+        // Location filter (after population)
+        if (location && location !== 'all') {
+            bookings = bookings.filter(booking => 
+                booking.outfit && booking.outfit.location === location
+            );
+        }
+
+        // Calculate summary statistics
+        const totalBookings = bookings.length;
+        const totalRevenue = bookings
+            .filter(booking => booking.status === 'confirmed')
+            .reduce((sum, booking) => sum + booking.price, 0);
+        
+        const statusCounts = bookings.reduce((acc, booking) => {
+            acc[booking.status] = (acc[booking.status] || 0) + 1;
+            return acc;
+        }, {});
+
+        const reportData = {
+            bookings,
+            summary: {
+                totalBookings,
+                totalRevenue,
+                statusCounts,
+                reportPeriod: {
+                    startDate: startDate || 'All time',
+                    endDate: endDate || 'Present'
+                }
+            }
+        };
+
+        res.json({ success: true, reportData });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+//API to update booking details
+const updateBooking = async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { _id } = req.user;
+        const { reservationDate, returnDate, phone, email } = req.body;
+        const documentFile = req.file;
+
+        // Verify booking belongs to the user
+        const existingBooking = await Booking.findOne({ _id: bookingId, user: _id }).populate('outfit');
+        if (!existingBooking) {
+            return res.json({ success: false, message: "Booking not found or you don't have permission to edit it" });
+        }
+
+        // Only allow editing if booking is still pending
+        if (existingBooking.status !== 'pending') {
+            return res.json({ success: false, message: "Only pending bookings can be edited" });
+        }
+
+        // Validate required fields
+        if (!phone || !email) {
+            return res.json({ success: false, message: "Phone and email are required" });
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.json({ success: false, message: "Invalid email format" });
+        }
+
+        // Basic phone validation
+        const phoneRegex = /^[0-9]{10,}$/;
+        if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+            return res.json({ success: false, message: "Invalid phone number format" });
+        }
+
+        // Check availability for new dates (excluding current booking)
+        const bookings = await Booking.find({
+            outfit: existingBooking.outfit._id,
+            status: { $in: ["pending", "confirmed"] },
+            _id: { $ne: bookingId }, // Exclude current booking
+            reservationDate: { $lte: returnDate },
+            returnDate: { $gte: reservationDate },
+        });
+
+        if (bookings.length > 0) {
+            return res.json({ success: false, message: "Outfit not available for the selected dates" });
+        }
+
+        // Calculate new price if dates changed
+        let price = existingBooking.price;
+        if (reservationDate !== existingBooking.reservationDate.toISOString().split('T')[0] || 
+            returnDate !== existingBooking.returnDate.toISOString().split('T')[0]) {
+            const reserved = new Date(reservationDate);
+            const returned = new Date(returnDate);
+            const noOfDays = Math.ceil((returned - reserved) / (1000 * 60 * 60 * 24));
+            price = existingBooking.outfit.pricePerDay * noOfDays;
+        }
+
+        // Update booking details
+        const updateData = {
+            reservationDate,
+            returnDate,
+            phone,
+            email,
+            price
+        };
+
+        // Update document if new file provided
+        if (documentFile) {
+            updateData.document = documentFile.path;
+        }
+
+        const updatedBooking = await Booking.findByIdAndUpdate(
+            bookingId,
+            updateData,
+            { new: true }
+        ).populate('outfit');
+
+        res.json({ success: true, message: "Booking updated successfully", booking: updatedBooking });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // Exporting functions using CommonJS
 module.exports = {
     checkAvailabilityOfOutfit,
@@ -192,5 +379,8 @@ module.exports = {
     getUserBooking,
     getOwnerBooking,
     changeBookingStatus,
-    deleteBooking
+    deleteBooking,
+    getBookingById,
+    updateBooking,
+    generateBookingReport
 };

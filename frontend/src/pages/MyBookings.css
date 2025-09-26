@@ -1,0 +1,67 @@
+/* Reusable Sup Button Styles for MyBookings */
+
+.supbtn {
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .06s ease;
+}
+
+.supbtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Primary */
+.supbtn-primary {
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+.supbtn-primary:hover { background: linear-gradient(180deg, #1e55df, #1a45bb); }
+.supbtn-primary:active { transform: translateY(1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+
+/* Neutral */
+.supbtn-neutral {
+  background: #111827;
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.08);
+}
+.supbtn-neutral:hover { background: #0f172a; }
+.supbtn-neutral:active { transform: translateY(1px); }
+
+/* Danger */
+.supbtn-danger {
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+  color: #ffffff;
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);
+}
+.supbtn-danger:hover { background: linear-gradient(180deg, #e23c3c, #c81e1e); }
+.supbtn-danger:active { transform: translateY(1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); }
+
+/* Subtle outline */
+.supbtn-outline {
+  background: #ffffff;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+.supbtn-outline:hover { background: #f9fafb; }
+.supbtn-outline:active { transform: translateY(1px); }
+
+/* Size utilities (optional) */
+.supbtn-sm { padding: 8px 12px; border-radius: 10px; font-size: 0.875rem; }
+.supbtn-lg { padding: 12px 18px; border-radius: 14px; font-size: 1rem; }

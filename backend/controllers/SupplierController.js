@@ -100,7 +100,30 @@ exports.getAllSuppliers = async (req, res) => {
     console.log('Fetching all suppliers');
     const suppliers = await Supplier.find().sort({ createdAt: -1 });
     console.log('Found suppliers:', suppliers.length);
-    res.status(200).json(suppliers);
+    
+    // Automatically calculate and update order counts for each supplier
+    const suppliersWithOrderCounts = await Promise.all(
+      suppliers.map(async (supplier) => {
+        // Count orders for this supplier
+        const orderCount = await SupplierOrder.countDocuments({ supplierId: supplier._id });
+        
+        // Find the most recent order date
+        const latestOrder = await SupplierOrder.findOne({ supplierId: supplier._id })
+          .sort({ orderDate: -1 })
+          .select('orderDate');
+        
+        const lastOrderDate = latestOrder ? latestOrder.orderDate : 'Never';
+        
+        // Return supplier with updated counts (without saving to database)
+        return {
+          ...supplier.toObject(),
+          totalOrders: orderCount,
+          lastOrder: lastOrderDate
+        };
+      })
+    );
+    
+    res.status(200).json(suppliersWithOrderCounts);
   } catch (error) {
     console.error('Error fetching suppliers:', error);
     res.status(500).json({ message: 'Error fetching suppliers', error: error.message });
@@ -302,5 +325,56 @@ exports.getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching dashboard stats', error: error.message });
+  }
+};
+
+// Fix supplier order counts - recalculate totalOrders for all suppliers
+exports.fixSupplierOrderCounts = async (req, res) => {
+  try {
+    console.log('Starting supplier order count fix...');
+    
+    // Get all suppliers
+    const suppliers = await Supplier.find();
+    console.log(`Found ${suppliers.length} suppliers to update`);
+    
+    let updatedCount = 0;
+    
+    for (const supplier of suppliers) {
+      // Count orders for this supplier
+      const orderCount = await SupplierOrder.countDocuments({ supplierId: supplier._id });
+      
+      // Find the most recent order date
+      const latestOrder = await SupplierOrder.findOne({ supplierId: supplier._id })
+        .sort({ orderDate: -1 })
+        .select('orderDate');
+      
+      const lastOrderDate = latestOrder ? latestOrder.orderDate : 'Never';
+      
+      // Update supplier if values are different
+      if (supplier.totalOrders !== orderCount || supplier.lastOrder !== lastOrderDate) {
+        supplier.totalOrders = orderCount;
+        supplier.lastOrder = lastOrderDate;
+        await supplier.save();
+        updatedCount++;
+        
+        console.log(`Updated supplier ${supplier.name}: ${orderCount} orders, last order: ${lastOrderDate}`);
+      }
+    }
+    
+    console.log(`Fix completed. Updated ${updatedCount} suppliers.`);
+    
+    res.status(200).json({
+      message: 'Supplier order counts fixed successfully',
+      totalSuppliers: suppliers.length,
+      updatedSuppliers: updatedCount,
+      details: suppliers.map(s => ({
+        name: s.name,
+        totalOrders: s.totalOrders,
+        lastOrder: s.lastOrder
+      }))
+    });
+  } catch (error) {
+    console.error('Error fixing supplier order counts:', error);
+    res.status(500).json({ message: 'Error fixing supplier order counts', error: error.message });
   }
 };

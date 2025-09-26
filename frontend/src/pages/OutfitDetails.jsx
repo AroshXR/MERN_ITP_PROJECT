@@ -168,7 +168,7 @@ const OutfitDetails = () => {
                   <img
                     key={index}
                     src={image}
-                    className="w-full flex-shrink-0 object-cover h-[900px]"
+                    className="w-full flex-shrink-0 object-cover h-[500px] md:h-[800px]"
                     alt={`Outfit Image ${index + 1}`}
                   />
                 ))}
@@ -226,20 +226,27 @@ const OutfitDetails = () => {
         </div>
 
         {/* Right: Booking form */}
-        <form onSubmit={handleSubmit} className="shadow-lg h-max sticky top-18 rounded-xl p-6 space-y-6 text-gray-500 bg-white">
-          <p className="flex items-center justify-between text-2xl text-gray-800 font-semibold">{currency}{outfit.pricePerDay} <span className="text-base text-gray-400 font-normal">per day</span> </p>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-1 shadow-xl">
+          <form onSubmit={handleSubmit} className="bg-white h-max sticky top-16 rounded-xl p-6 space-y-6 text-gray-500 shadow-inner">
+          <div className="bg-gradient-to-r from-gray-900 to-black text-white p-6 rounded-xl text-center border border-gray-300 shadow-lg">
+            <p className="text-4xl font-bold">{currency}{outfit.pricePerDay}</p>
+            <p className="text-gray-300 text-sm mt-1">per day</p>
+          </div>
 
           <hr className="border-borderColor my-6" />
           
           {/* Contact Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">Contact Information</h3>
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <div className="w-2 h-2 bg-black rounded-full"></div>
+              Contact Information
+            </h3>
             
             <div className="flex flex-col gap-2">
               <label htmlFor="phone">Phone Number *</label>
               <input 
                 type="tel" 
-                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
                 required 
                 id="phone" 
                 placeholder="e.g., 0771234567"
@@ -252,7 +259,7 @@ const OutfitDetails = () => {
               <label htmlFor="email">Email Address *</label>
               <input 
                 type="email" 
-                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
                 required 
                 id="email" 
                 placeholder="e.g., john@example.com"
@@ -265,13 +272,13 @@ const OutfitDetails = () => {
               <label htmlFor="document">Upload ID Document *</label>
               <input 
                 type="file" 
-                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
                 required 
                 id="document" 
                 accept="image/*,.pdf"
                 onChange={(e) => setDocument(e.target.files[0])}
               />
-              <p className="text-xs text-gray-400">Upload your NIC, Passport, or Driver's License</p>
+              <p className="text-xs text-gray-500 bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">📄 Upload your NIC, Passport, or Driver's License</p>
             </div>
           </div>
 
@@ -279,25 +286,26 @@ const OutfitDetails = () => {
           
           {/* Booking Dates */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">Booking Dates</h3>
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <div className="w-2 h-2 bg-black rounded-full"></div>
+              Booking Dates
+            </h3>
             
             <div className="flex flex-col gap-2">
               <label htmlFor="reservation-date">Reservation Date</label>
               <input 
                 type="date" 
-                className="border border-solid border-borderColor px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" 
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white" 
                 required 
                 id="reservation-date" 
                 min={new Date().toISOString().split('T')[0]} 
                 value={reservationDate}
                 onChange={(e) => setReservationDate(e.target.value)}
               />
-            </div>
-            <div className="flex flex-col gap-2">
               <label htmlFor="return-date">Return Date</label>
               <input 
                 type="date" 
-                className="border border-solid border-borderColor px-3 py-2 rounded-lg" 
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
                 required 
                 id="return-date" 
                 min={reservationDate || new Date().toISOString().split('T')[0]} 
@@ -310,12 +318,13 @@ const OutfitDetails = () => {
           <button 
             type="submit"
             disabled={isBooking}
-            className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 py-4 font-semibold text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
-            {isBooking ? 'Booking...' : 'Book Now'}
+            {isBooking ? '⏳ Booking...' : 'Book Now'}
           </button>
-          <p className="text-center text-sm">No credit card required to reserve</p>
-        </form>
+          <p className="text-center text-sm text-gray-600 bg-green-50 p-2 rounded">✅ No credit card required to reserve</p>
+          </form>
+        </div>
       </div>
     </div>
     </div>

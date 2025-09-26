@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 import { assets, dummyOutfitData } from '../../assets/assets'
 import Title from '../../Components/pasindu/owner/Title'
 import { useState } from 'react'
@@ -7,6 +8,7 @@ import { useState } from 'react'
 const ManageOutfits = () => {
 
   const currency = process.env.REACT_APP_CURRENCY
+  const navigate = useNavigate()
 
   const [outfits,setOutfits] = useState([])
 
@@ -63,7 +65,7 @@ const ManageOutfits = () => {
                   <span className={`px-3 py-1 rounded-full text-xs ${outfit.isAvailable ? 'bg-green-100 text-green-500' : 'bg-red-100 text-red-500'}`}>{outfit.isAvailable ? "Available " : "Unavailable"} </span>
 
                 </td>
-                <td className='flex items-center p-3'>
+                <td className='flex items-center p-3 gap-2'>
                   <img src={outfit.isAvailable ? assets.eye_close_icon : assets.eye_icon} alt="" className='cursor-pointer' onClick={async()=>{
                     try{
                       const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
@@ -73,6 +75,14 @@ const ManageOutfits = () => {
                       }
                     }catch(err){ console.error(err) }
                   }}/>
+                  <img 
+                    src={assets.edit_icon} 
+                    alt="Edit" 
+                    className='cursor-pointer w-5 h-4' 
+                    onClick={()=>{
+                      navigate(`/owner/edit-outfit/${outfit._id}`)
+                    }}
+                  />
                   <img src={assets.delete_icon} alt="" className='cursor-pointer' onClick={async()=>{
                     try{
                       const ok = window.confirm('Are you sure you want to delete this outfit? This will permanently remove the outfit and all related bookings.')

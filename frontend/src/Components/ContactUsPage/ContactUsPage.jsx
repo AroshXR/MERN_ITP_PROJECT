@@ -27,7 +27,7 @@ function ContactUs() {
 
         <div>
             <NavBar />
-            <button className='contact-form-button back-button' onClick={handleBack}>
+            <button className='contact-back-button' onClick={handleBack}>
                 Back
             </button>
 

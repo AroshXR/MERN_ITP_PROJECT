@@ -28,6 +28,12 @@ ownerRouter.post("/delete-outfit", protect, h('deleteOutfit'));
 ownerRouter.get("/dashboard", protect, h('getDashboardData'));
 ownerRouter.post("/update-image", protect, upload.single("image"), h('updateUserImage'));
 
+// Routes for editing outfits
+ownerRouter.get("/outfit/:outfitId", protect, h('getOutfitById'));
+ownerRouter.put("/outfit/:outfitId", protect, upload.fields([
+    { name: 'mainImage', maxCount: 1 },
+    { name: 'additionalImages', maxCount: 3 }
+]), h('updateOutfit'));
 
 
 module.exports = ownerRouter;  // Replaced export default with module.exports

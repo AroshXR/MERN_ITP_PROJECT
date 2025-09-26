@@ -6,17 +6,35 @@ const jobSchema = new Schema({
     type: String,
     required: [true, "Job title is required"],
     trim: true,
-    minlength: [2, "Job title must be at least 2 characters long"]
+    minlength: [2, "Job title must be at least 2 characters long"],
+    validate: {
+      validator: function (v) {
+        return /^[A-Za-z\s]+$/.test(v); // only letters and spaces
+      },
+      message: "Job title can only contain letters"
+    }
   },
   department: {
     type: String,
     required: [true, "Department is required"],
-    trim: true
+    trim: true,
+    validate: {
+      validator: function (v) {
+        return /^[A-Za-z\s]+$/.test(v);
+      },
+      message: "Department can only contain letters"
+    }
   },
   location: {
     type: String,
     required: [true, "Location is required"],
-    trim: true
+    trim: true,
+  validate: {
+    validator: function (v) {
+      return /^[A-Za-z\s]+$/.test(v);
+    },
+    message: "Location can only contain letters"
+  }
   },
   type: {
     type: String,
@@ -48,13 +66,36 @@ const jobSchema = new Schema({
     trim: true
   }],
   salary: {
-    min: Number,
-    max: Number,
+    min: {
+      type: Number,
+      required: [true, "Minimum salary is required"],
+      min: [0, "Salary cannot be negative"],
+      validate: {
+        validator: function (v) {
+          return Number.isFinite(v); // must be a valid number
+        },
+        message: "Minimum salary must be a valid number"
+      }
+    },
+    max: {
+      type: Number,
+      required: [true, "Maximum salary is required"],
+      min: [0, "Salary cannot be negative"],
+      validate: {
+        validator: function (v) {
+          return Number.isFinite(v);
+        },
+        message: "Maximum salary must be a valid number"
+      }
+    },
     currency: {
       type: String,
-      default: "USD"
+      default: "LKR",
+      uppercase: true,
+      trim: true
     }
-  },
+  }
+  ,
   status: {
     type: String,
     enum: ["active", "inactive", "closed"],

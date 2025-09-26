@@ -27,12 +27,15 @@ import delete_icon from "./delete_icon.svg"
 import eye_icon from "./eye_icon.svg"
 import eye_close_icon from "./eye_close_icon.svg"
 import filter_icon from "./filter_icon.svg"
-import edit_icon from "./edit_icon.svg"
+import edit_icon from "./edit_icon.webp"
 import calendar_icon_colored from "./calendar_icon_colored.svg"
 import location_icon_colored from "./location_icon_colored.svg"
 import testimonial_image_1 from "./testimonial_image_1.png"
 import testimonial_image_2 from "./testimonial_image_2.png"
 import main_homepage from "./main_homepage.png"
+import main_homepage2 from "./main_homepage2.png"
+import main_homepage3 from "./main_homepage3.png"
+import main_homepage4 from "./main_homepage4.png"
 import banner_wedding_image2 from "./banner_wedding_image2.jpg"
 import user_profile from "./user_profile.png"
 import upload_icon from "./upload_icon.svg"
@@ -44,7 +47,18 @@ import dress1_2 from "./dress1_2.jpg"
 import dress1_3 from "./dress1_3.jpg"
 import dress1_4 from "./dress1_4.webp"
 
-export const cityList = ['All Ctegories','Party Dresses & Suits', 'Evening Gowns', 'Cocktail Dresses', 'Wedding & Bridal Wear','Men’s Tuxedos & Suits']
+export const cityList = [
+  'All Categories',
+  'Party Dresses & Suits', 
+  'Evening Gowns', 
+  'Cocktail Dresses', 
+  'Wedding & Bridal Wear',
+  'Men\'s Tuxedos & Suits', 
+  'Mini Dresses', 
+  'Maxi Dresses', 
+  'Top', 
+  'Skirt & Top'
+]
 
 export const assets = {
     logo,
@@ -82,6 +96,9 @@ export const assets = {
     testimonial_image_1,
     testimonial_image_2,
     main_homepage,
+    main_homepage2,
+    main_homepage3,
+    main_homepage4,
     banner_wedding_image2,
     outfit_image1,
     upload_icon,
@@ -105,6 +122,7 @@ export const ownerMenuLinks = [
     { name: "Add Outfit", path: "/owner/add-outfit", icon: addIcon, coloredIcon: addIconColored },
     { name: "Manage Outfits", path: "/owner/manage-outfits", icon: shirt_icon, coloredIcon: shirtIconColored },
     { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Reports", path: "/owner/reports", icon: cautionIconColored, coloredIcon: cautionIconColored },
 ]
 
 export const dummyUserData = {

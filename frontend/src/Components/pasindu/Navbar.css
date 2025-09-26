@@ -52,6 +52,11 @@
   background-color: #333333;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  /* Keep label on one line and align height with other buttons */
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
 }
 
 .nav-btn:hover {
@@ -78,26 +83,37 @@
 /* Search bar */
 .search-bar {
   display: flex;
+  align-items: center; /* vertically center input and icon */
   gap: 0.5rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #cccccc;
   padding: 0.5rem 1rem;
   border-radius: 1.5rem;
   max-width: 250px;
-  background-color: #1a1a1a;
+  background-color: #ffffff; /* light background for dark text */
 }
 
 .search-bar input {
   border: none;
   background: transparent;
   outline: none;
-  color: #fff;
+  color: #000;       /* black text while typing */
   font-size: 1rem;
+  flex: 1;             /* allow input to take available space */
+  min-width: 0;        /* prevent flexbox from forcing a large intrinsic width */
+  caret-color: #000;   /* black caret on light bg */
+}
+
+/* Placeholder color for search input */
+.search-bar input::placeholder {
+  color: #666666;
 }
 
 .search-bar img {
   width: 20px;
   height: 20px;
-  filter: invert(1);
+  filter: invert(0); /* keep icon dark on white bg */
+  flex: 0 0 auto;   /* keep icon from shrinking over input */
+  cursor: pointer;
 }
 
 /* Extra buttons (Dashboard, Login, Logout) */
@@ -162,6 +178,9 @@
     width: 100%;
     text-align: left;
     margin: 5px 0;
+    /* Allow wrapping on small screens to prevent overflow */
+    white-space: normal;
+    height: auto;
   }
 
   .search-bar {

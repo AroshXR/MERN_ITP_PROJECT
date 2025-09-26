@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import './AdminApplicantManagement.css';
 
@@ -11,8 +11,10 @@ export default function AdminApplicantDetail() {
   const [applicant, setApplicant] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState(null);
   const [statusMessage, setStatusMessage] = useState('');
-  const [interviewForm, setInterviewForm] = useState({ open: false, scheduledAt: '', mode: 'in-person', location: '', meetingLink: '', notes: '' });
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   const fetchApplicant = async () => {
     try {
@@ -20,52 +22,121 @@ export default function AdminApplicantDetail() {
       setError('');
       const res = await axios.get(`${API_BASE_URL}/applicant/${id}`);
       setApplicant(res.data?.data || null);
-      const iv = res.data?.data?.interview || {};
-      setInterviewForm(prev => ({
-        ...prev,
-        scheduledAt: iv.scheduledAt ? new Date(iv.scheduledAt).toISOString().slice(0, 16) : '',
-        mode: iv.mode || 'in-person',
-        location: iv.location || '',
-        meetingLink: iv.meetingLink || '',
-        notes: iv.notes || ''
-      }));
     } catch (e) {
+      console.error('Failed to load applicant:', e);
       setError('Failed to load applicant');
+      setFeedback({
+        type: 'error',
+        message: 'Unable to load applicant. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchApplicant(); /* eslint-disable-next-line */ }, [id]);
+  const fetchNotifications = async () => {
+    if (!applicant?.gmail) return;
+    try {
+      setNotificationsLoading(true);
+      // Find the user by email to get their notifications
+      const userRes = await axios.get(`${API_BASE_URL}/users`);
+      const users = userRes.data?.data || [];
+      const user = users.find(u => u.email === applicant.gmail && u.type === 'Applicant');
+      
+      if (user) {
+        const notifRes = await axios.get(`${API_BASE_URL}/users/${user._id}/notifications`);
+        if (notifRes.data?.status === 'ok') {
+          const list = Array.isArray(notifRes.data.notifications) ? notifRes.data.notifications : [];
+          list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setNotifications(list);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load notifications:', e);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  useEffect(() => { 
+    fetchApplicant(); 
+    /* eslint-disable-next-line */ 
+  }, [id]);
+
+  // Optional real-time updates via Socket.IO with polling fallback
+  useEffect(() => {
+    let cleanup = () => {};
+    let pollTimer = null;
+
+    const setup = async () => {
+      try {
+        const mod = await import('socket.io-client');
+        const io = mod.io || mod.default;
+        if (!io) throw new Error('socket.io-client not available');
+        const socket = io(API_BASE_URL, { transports: ['websocket'], reconnection: true });
+
+        const onChange = (payload) => {
+          if (!payload || !payload.id || payload.id === id) {
+            fetchApplicant();
+          }
+        };
+
+        socket.on('connect', () => {
+          // connected
+        });
+        socket.on('applicant:updated', onChange);
+        socket.on('applicant:status', onChange);
+        socket.on('applicant:interview', onChange);
+
+        cleanup = () => {
+          try {
+            socket.off('applicant:updated', onChange);
+            socket.off('applicant:status', onChange);
+            socket.off('applicant:interview', onChange);
+            socket.disconnect();
+          } catch (_) {}
+        };
+      } catch (e) {
+        // Fallback polling every 15s if socket unavailable
+        pollTimer = setInterval(() => {
+          fetchApplicant();
+        }, 15000);
+        cleanup = () => pollTimer && clearInterval(pollTimer);
+      }
+    };
+
+    setup();
+    return () => cleanup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    if (applicant?.gmail) {
+      fetchNotifications();
+    }
+  }, [applicant?.gmail]);
 
   const onApproveReject = async (status) => {
     try {
+      setFeedback(null);
+      const trimmedMessage = statusMessage.trim();
       await axios.patch(`${API_BASE_URL}/applicant/${id}/status`, { status, statusMessage });
       await fetchApplicant();
       setStatusMessage('');
-      alert(`Applicant ${status}`);
+      const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      setFeedback({
+        type: 'success',
+        message: `${statusLabel} status saved.${trimmedMessage ? ' Your note was delivered as part of the notification.' : ''} The applicant now sees this in their account notifications.`
+      });
     } catch (e) {
-      alert('Failed to update status');
+      console.error('Failed to update applicant status:', e);
+      setFeedback({
+        type: 'error',
+        message: 'Failed to update status. Please try again.'
+      });
     }
   };
 
-  const submitInterview = async () => {
-    try {
-      const payload = {
-        scheduledAt: interviewForm.scheduledAt ? new Date(interviewForm.scheduledAt).toISOString() : '',
-        mode: interviewForm.mode,
-        location: interviewForm.mode === 'in-person' ? interviewForm.location : undefined,
-        meetingLink: interviewForm.mode === 'online' ? interviewForm.meetingLink : undefined,
-        notes: interviewForm.notes || undefined
-      };
-      await axios.post(`${API_BASE_URL}/applicant/${id}/schedule-interview`, payload);
-      setInterviewForm(prev => ({ ...prev, open: false }));
-      await fetchApplicant();
-      alert('Interview scheduled');
-    } catch (e) {
-      alert('Failed to schedule interview');
-    }
-  };
 
   const resumeUrl = applicant?.resume?.filename ? `${API_BASE_URL}/uploads/resumes/${applicant.resume.filename}` : '';
 
@@ -90,6 +161,20 @@ export default function AdminApplicantDetail() {
           </button>
         </div>
       </div>
+
+      {feedback && (
+        <div className={`admin-applicants__feedback ${feedback.type}`}>
+          <span>{feedback.message}</span>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setFeedback(null)}
+            aria-label="Dismiss message"
+          >
+            <i className="bx bx-x"></i>
+          </button>
+        </div>
+      )}
 
       {loading && <div className="admin-applicants__info">Loading...</div>}
       {error && <div className="admin-applicants__error">{error}</div>}
@@ -144,48 +229,47 @@ export default function AdminApplicantDetail() {
             {applicant.interview?.notes && (
               <div className="detail__row column"><span>Notes</span><p>{applicant.interview.notes}</p></div>
             )}
-            <button className="btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: true }))}>Schedule / Edit</button>
+            <button className="btn" onClick={() => navigate('/admin-applicants')}>Back to Management</button>
           </div>
         </div>
       )}
 
-      {interviewForm.open && (
-        <div className="modal">
-          <div className="modal__content">
-            <div className="modal__header">
-              <h3>Schedule Interview</h3>
-              <button className="icon-btn" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>✕</button>
-            </div>
-            <div className="modal__body">
-              <label>Date & Time</label>
-              <input type="datetime-local" value={interviewForm.scheduledAt} onChange={(e) => setInterviewForm(prev => ({ ...prev, scheduledAt: e.target.value }))} />
-              <label>Mode</label>
-              <select value={interviewForm.mode} onChange={(e) => setInterviewForm(prev => ({ ...prev, mode: e.target.value }))}>
-                <option value="in-person">In person</option>
-                <option value="online">Online</option>
-              </select>
-              {interviewForm.mode === 'in-person' && (
-                <>
-                  <label>Location</label>
-                  <input type="text" value={interviewForm.location} onChange={(e) => setInterviewForm(prev => ({ ...prev, location: e.target.value }))} />
-                </>
-              )}
-              {interviewForm.mode === 'online' && (
-                <>
-                  <label>Meeting Link</label>
-                  <input type="text" value={interviewForm.meetingLink} onChange={(e) => setInterviewForm(prev => ({ ...prev, meetingLink: e.target.value }))} />
-                </>
-              )}
-              <label>Notes</label>
-              <textarea value={interviewForm.notes} onChange={(e) => setInterviewForm(prev => ({ ...prev, notes: e.target.value }))} />
-            </div>
-            <div className="modal__footer">
-              <button className="btn" onClick={submitInterview}>Save</button>
-              <button className="btn btn--ghost" onClick={() => setInterviewForm(prev => ({ ...prev, open: false }))}>Cancel</button>
-            </div>
-          </div>
+      {/* Notifications Section */}
+      <div className="detail__card">
+        <div className="detail__row">
+          <h3>Applicant Notifications</h3>
+          <button 
+            className="btn btn--ghost" 
+            onClick={fetchNotifications}
+            disabled={notificationsLoading}
+          >
+            {notificationsLoading ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
-      )}
+        {notificationsLoading ? (
+          <p>Loading notifications...</p>
+        ) : notifications.length === 0 ? (
+          <p className="empty-state">No notifications yet.</p>
+        ) : (
+          <div className="notifications-list">
+            {notifications.map((notification) => (
+              <div key={notification._id} className={`notification-item ${notification.read ? 'read' : 'unread'}`}>
+                <div className="notification-content">
+                  <p className="notification-message">{notification.message}</p>
+                  <small className="notification-time">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </small>
+                </div>
+                <div className="notification-level">
+                  <span className={`level-badge ${notification.level}`}>
+                    {notification.level}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

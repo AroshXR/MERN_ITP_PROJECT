@@ -25,6 +25,7 @@ const addClothCustomizer = async (req, res) => {
     try {
         const {
             clothingType,
+            nickname,
             color,
             selectedDesign,
             placedDesigns,
@@ -36,6 +37,7 @@ const addClothCustomizer = async (req, res) => {
         const newCustomizer = new ClothCustomizer({
             userId: req.user._id,
             clothingType: clothingType || "tshirt",
+            nickname,
             color,
             selectedDesign,
             placedDesigns: placedDesigns || [],

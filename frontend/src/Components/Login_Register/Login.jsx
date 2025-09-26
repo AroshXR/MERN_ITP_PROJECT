@@ -117,6 +117,14 @@ function LoginPage() {
       return;
     }
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(user.password)) {
+      setError(
+        'Password must have at least 8 characters, including 1 uppercase letter, 1 lowercase letter, and 1 number.'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
@@ -153,10 +161,9 @@ function LoginPage() {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col">  {/* container w-full min-h-screen flex flex-col */}
-      
+    <div className="w-full min-h-screen flex flex-col"> 
       <NavBar />
-      
+
       <div className="loginPage-container">
 
         <div className="login-header">
@@ -202,7 +209,7 @@ function LoginPage() {
         </div>
       </div>
 
-      
+
       <Footer />
     </div>
   )

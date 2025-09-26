@@ -197,16 +197,16 @@
   text-align: center;
   color: #666;
 }
-.status.completed {
+.orderStatus.completed {
   color: #0a7b34;
   font-weight: 600;
 }
-.status.pending {
+.orderStatus.pending {
   color: #b08000;
   font-weight: 600;
 }
-.status.cancelled,
-.status.canceled {
+.orderStatus.cancelled,
+.orderStatus.canceled {
   color: #b00020;
   font-weight: 600;
 }
