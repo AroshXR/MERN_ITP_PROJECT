@@ -66,6 +66,11 @@ function NavBar() {
             <i className='bx bx-briefcase'></i> Career
           </button>
         </Link>
+        <Link to="/rentalhome" onClick={closeMenu}>
+          <button className="nav-btn">
+            <i className='bx bx-home'></i> Rental Home
+          </button>
+        </Link>
         <Link to="/color-guide" onClick={closeMenu}>
           <button className="nav-btn">
             <i className='bx bx-palette'></i> Color Guide

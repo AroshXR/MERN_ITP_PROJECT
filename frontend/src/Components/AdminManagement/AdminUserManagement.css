@@ -2,7 +2,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f3f4f6;
+    background: #dedfe1;
 }
 
 .admin-management-content {
@@ -19,6 +19,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    
 }
 
 /* Header action buttons */

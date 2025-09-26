@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import './AdminJobManagement.css';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ const AdminJobManagement = () => {
   const [editingJob, setEditingJob] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     department: '',
@@ -25,6 +26,25 @@ const AdminJobManagement = () => {
   });
 
   const API_BASE_URL = 'http://localhost:5001';
+
+  const filteredJobs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return jobs;
+    return jobs.filter((job) => {
+      const fields = [
+        job.title,
+        job.department,
+        job.location,
+        job.type,
+        job.experience,
+        job.description,
+        job.status,
+      ];
+      return fields
+        .filter(Boolean)
+        .some((val) => String(val).toLowerCase().includes(q));
+    });
+  }, [jobs, searchQuery]);
 
   useEffect(() => {
     fetchJobs();
@@ -321,7 +341,21 @@ const AdminJobManagement = () => {
         <div className="admin-job-management">
 
           <div className="jobs-list">
-            <h2>Current Jobs ({jobs.length})</h2>
+            <h2>
+              Current Jobs ({filteredJobs.length}{searchQuery ? ` / ${jobs.length}` : ''})
+            </h2>
+            <div className="jobs-toolbar">
+              <div className="search-input-wrapper">
+                <i className="bx bx-search job-search-icon"></i>
+                <input
+                  type="text"
+                  className="job-search-input"
+                  placeholder="Search by title, department, location, type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
             {loading ? (
               <div className="loading-message">Loading jobs...</div>
             ) : error ? (
@@ -334,7 +368,7 @@ const AdminJobManagement = () => {
               </div>
             ) : (
               <div className="jobs-grid">
-                {jobs.map((job) => (
+                {filteredJobs.map((job) => (
                   <div key={job._id || job.id} className="job-card">
                     <div className="job-header">
                       <h3>{job.title}</h3>

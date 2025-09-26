@@ -91,28 +91,16 @@
 }
 
 .jobs-list {
-  background: white;
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
-.jobs-list h2 {
-  font-size: 1.8rem;
-  margin-bottom: 25px;
-  color: #333;
-  text-align: center;
-}
-
-.no-jobs {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.no-jobs i {
-  font-size: 4rem;
-  color: #666;
-  margin-bottom: 20px;
+  .jobs-list h2 {
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    color: #333;
+    text-align: center;
 }
 
 .no-jobs h3 {
