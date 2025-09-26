@@ -330,7 +330,7 @@ export default function OrderManagement() {
                             <input
                                 type="text"
                                 className="order-search-input"
-                                placeholder="Search your items (name, type, color, size, date)"
+                                placeholder="Search your items by nickname"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 aria-label="Search cart items"
