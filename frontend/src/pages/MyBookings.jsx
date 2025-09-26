@@ -5,6 +5,7 @@ import Title from '../Components/pasindu/Title'
 import Navbar from '../Components/pasindu/Navbar'
 import axios from 'axios'
 import { useAuth } from '../AuthGuard/AuthGuard'
+import './MyBookings.css'
 
 const MyBookings = () => {
 
@@ -85,7 +86,7 @@ const MyBookings = () => {
         <Title title='My Bookings' subTitle='View and manage your all bookings' align="left" />
         <button 
           onClick={fetchMyBookings}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          className="supbtn supbtn-neutral"
         >
           Refresh
         </button>
@@ -179,7 +180,7 @@ const MyBookings = () => {
                 {booking.status === 'pending' && (
                   <button
                     onClick={() => navigate(`/edit-booking/${booking._id}`)}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 hover:shadow-lg transition-all py-2 px-4 font-medium text-white rounded-lg"
+                    className={`${booking.status === 'pending' ? 'flex-1' : ''} supbtn supbtn-neutral`}
                   >
                     Edit
                   </button>
@@ -211,7 +212,7 @@ const MyBookings = () => {
                       }
                     }
                   }}
-                  className={`${booking.status === 'pending' ? 'flex-1' : 'w-full'} bg-red-500 hover:bg-red-600 hover:shadow-lg transition-all py-2 px-4 font-medium text-white rounded-lg`}
+                  className={`${booking.status === 'pending' ? 'flex-1' : 'w-full'} supbtn supbtn-danger`}
                 >
                   Remove
                 </button>
