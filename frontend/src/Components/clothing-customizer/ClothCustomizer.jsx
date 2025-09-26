@@ -35,6 +35,7 @@ function ClothCustomizer() {
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [nickname, setNickname] = useState('');
 
   // Fetch cart items count for the authenticated user
   const fetchCartCount = async () => {
@@ -107,6 +108,9 @@ function ClothCustomizer() {
         setQuantity(itemData.quantity);
         setDesignSize(itemData.selectedDesign?.size || 80);
         setDesignPosition(itemData.selectedDesign?.position || { x: 0, y: 0 });
+        if (typeof itemData.nickname === 'string') {
+          setNickname(itemData.nickname);
+        }
 
         // Load selected design
         if (itemData.selectedDesign) {
@@ -131,6 +135,7 @@ function ClothCustomizer() {
   const clearForm = () => {
     setSelectedColor("#ffffff");
     setSelectedDesign(null);
+    setNickname('');
 
     setFrontDesigns([]);
     setDesignSize(80);
@@ -324,6 +329,7 @@ function ClothCustomizer() {
 
       const clothCustomizerData = {
         clothingType: clothingType,
+        nickname: nickname,
         color: selectedColor,
         selectedDesign: selectedDesign ? {
           id: selectedDesign.id,
@@ -462,6 +468,27 @@ function ClothCustomizer() {
           <div className="customizer-panel">
             {/* Cloth type changer */}
             <div className="panel-section">
+              <h3>Customization Nickname</h3>
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Enter a name for your design"
+                  maxLength={50}
+                  className="form-control"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    border: '1px solid #ddd',
+                    fontSize: '14px'
+                  }}
+                />
+                <small className="text-muted" style={{ fontSize: '12px' }}>
+                  {nickname.length}/50 characters
+                </small>
+              </div>
               <h3>Clothing Type</h3>
               <div className="clothing-options">
                 <button

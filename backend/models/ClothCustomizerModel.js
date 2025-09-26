@@ -13,6 +13,12 @@ const clothCustomizerSchema = new Schema({
         enum: ["tshirt"],
         default: "tshirt"
     },
+    nickname: {
+        type: String,
+        trim: true,
+        maxlength: 50,
+        default: 'My Custom T-Shirt'
+    },
     color: {
         type: String,
         required: true,

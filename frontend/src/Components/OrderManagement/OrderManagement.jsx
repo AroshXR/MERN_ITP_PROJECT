@@ -82,7 +82,7 @@ export default function OrderManagement() {
             if (response.data.status === "ok") {
                 const transformedItems = response.data.data.map((item, index) => ({
                     id: item._id || `item-${index}`,
-                    name: `Custom ${item.clothingType || 'Clothing'}`,
+                    name: item.nickname || `Custom ${item.clothingType || 'Clothing'}`,
                     price: item.totalPrice && item.quantity ? (item.totalPrice / item.quantity) : (item.totalPrice || 0),
                     quantity: item.quantity || 1,
                     size: item.size || 'Standard',
