@@ -1,7 +1,7 @@
 "use client";
 import NavBar from '../NavBar/navBar';
 import Footer from '../Footer/Footer';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, Loader2, Edit3 } from "lucide-react";
 import "./OrderManagement.css";
 import { useNavigate } from 'react-router-dom';
@@ -15,12 +15,30 @@ export default function OrderManagement() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notification, setNotification] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Show notification
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
     };
+
+    // Filter items for display based on search
+    const filteredItems = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return cartItems;
+        return cartItems.filter((item) => {
+            const fields = [
+                item.name,
+                item.clothingType,
+                item.color,
+                item.size,
+                item.selectedDesign?.name,
+                item.createdAt && new Date(item.createdAt).toLocaleDateString(),
+            ];
+            return fields.filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
+        });
+    }, [cartItems, searchQuery]);
 
     // Fetch cloth customizer data when the user is authenticated
     useEffect(() => {
@@ -305,6 +323,14 @@ export default function OrderManagement() {
                     <div className="order-header">
                         <h1 className="order-title">Order Management</h1>
                         <div className="order-actions">
+                            <input
+                                type="text"
+                                className="order-search-input"
+                                placeholder="Search your items (name, type, color, size, date)"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                aria-label="Search cart items"
+                            />
                             <button
                                 onClick={fetchClothCustomizers}
                                 className="refresh-button"
@@ -313,7 +339,9 @@ export default function OrderManagement() {
                                 {loading ? 'Refreshing...' : 'Refresh Cart'}
                             </button>
                             <span className="cart-status">
-                                {cartItems.length > 0 ? `${cartItems.length} item(s) in cart` : 'Cart is empty'}
+                                {cartItems.length > 0
+                                    ? `${filteredItems.length}${searchQuery ? ` / ${cartItems.length}` : ''} item(s) visible`
+                                    : 'Cart is empty'}
                             </span>
                         </div>
                     </div>
@@ -324,7 +352,7 @@ export default function OrderManagement() {
                                 <div className="order-card">
                                     <div className="card-header">
                                         <h2 className="card-title">
-                                            Shopping Cart ({cartItems.length} items)
+                                            Shopping Cart ({filteredItems.length}{searchQuery ? ` / ${cartItems.length}` : ''} items)
                                         </h2>
                                     </div>
                                 <div className="card-content">
@@ -342,7 +370,7 @@ export default function OrderManagement() {
                                         </div>
                                     ) : (
                                         <div className="items-list">
-                                            {cartItems.map((item) => (
+                                            {filteredItems.map((item) => (
                                                 <div key={item.id} className="cart-item">
                                                     <div className="item-info">
                                                         <h3 className="item-name">{item.name || `Custom ${item.clothingType || 'Clothing'}`}</h3>
