@@ -100,18 +100,18 @@ const OutletDetail = () => {
 
     const handleBuyNow = () => {
         if (!item) return;
-        navigate('/paymentManagement', {
-            state: {
-                directPurchase: {
-                    id: item._id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: 1,
-                    imageUrl: item.imageUrl,
-                    totalPrice: item.price
-                }
-            }
-        });
+        try {
+            const payload = {
+                id: item._id,
+                name: item.name,
+                price: item.price,
+                quantity: 1,
+                imageUrl: item.imageUrl,
+                totalPrice: item.price,
+            };
+            sessionStorage.setItem('directPurchase', JSON.stringify(payload));
+        } catch (_) {}
+        navigate('/paymentManagement');
     };
 
     if (loading) return <div style={{ padding: 24, textAlign: 'center' }}>Loading...</div>;

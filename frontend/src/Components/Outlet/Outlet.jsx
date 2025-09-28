@@ -71,43 +71,43 @@ const Outlet = () => {
         <div className="outlet-page">
             {/* <NavBar /> */}
             <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
-            <h2>Outlet clothing Items</h2>
-            <form onSubmit={applyFilters} style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', marginBottom: 16 }}>
-                <input name="q" placeholder="Search" value={filters.q} onChange={handleChange} />
-                <select name="category" value={filters.category} onChange={handleChange}>
-                    <option value="">All Categories</option>
-                    {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-                <input name="brand" placeholder="Brand" value={filters.brand} onChange={handleChange} />
-                <select name="material" value={filters.material} onChange={handleChange}>
-                    <option value="">All Materials</option>
-                    {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-                <select name="color" value={filters.color} onChange={handleChange}>
-                    <option value="">All Colors</option>
-                    {COLOR_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-                <select name="size" value={filters.size} onChange={handleChange}>
-                    <option value="">All Sizes</option>
-                    {SIZE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-                <input name="minPrice" placeholder="Min Price" type="number" min={0} value={filters.minPrice} onChange={handleChange} />
-                <input name="maxPrice" placeholder="Max Price" type="number" min={0} value={filters.maxPrice} onChange={handleChange} />
-                <button type="submit">Apply</button>
-                <button type="button" onClick={() => { setFilters({ q: "", category: "", brand: "", material: "", color: "", size: "", minPrice: "", maxPrice: "" }); setTimeout(fetchItems, 0); }}>Reset</button>
-            </form>
-            {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
-            <div className="clothing-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-                {clothingItems.length === 0 ? (
-                    <p>No clothing items available.</p>
-                ) : (
-                    clothingItems.map((item) => (
-                        <OutletCard key={item._id} item={item} />
-                    ))
-                )}
+                <h2>Outlet clothing Items</h2>
+                <form onSubmit={applyFilters} style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', marginBottom: 16 }}>
+                    <input name="q" placeholder="Search" value={filters.q} onChange={handleChange} />
+                    <select name="category" value={filters.category} onChange={handleChange}>
+                        <option value="">All Categories</option>
+                        {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <input name="brand" placeholder="Brand" value={filters.brand} onChange={handleChange} />
+                    <select name="material" value={filters.material} onChange={handleChange}>
+                        <option value="">All Materials</option>
+                        {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <select name="color" value={filters.color} onChange={handleChange}>
+                        <option value="">All Colors</option>
+                        {COLOR_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <select name="size" value={filters.size} onChange={handleChange}>
+                        <option value="">All Sizes</option>
+                        {SIZE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <input name="minPrice" placeholder="Min Price" type="number" min={0} value={filters.minPrice} onChange={handleChange} />
+                    <input name="maxPrice" placeholder="Max Price" type="number" min={0} value={filters.maxPrice} onChange={handleChange} />
+                    <button type="submit">Apply</button>
+                    <button type="button" onClick={() => { setFilters({ q: "", category: "", brand: "", material: "", color: "", size: "", minPrice: "", maxPrice: "" }); setTimeout(fetchItems, 0); }}>Reset</button>
+                </form>
+                {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
+                <div className="clothing-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+                    {clothingItems.length === 0 ? (
+                        <p>No clothing items available.</p>
+                    ) : (
+                        clothingItems.map((item) => (
+                            <OutletCard key={item._id} item={item} />
+                        ))
+                    )}
+                </div>
             </div>
-            {/* <Footer /> */}
-            </div>
+            <Footer />
         </div>
     );
 };

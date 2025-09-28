@@ -16,7 +16,6 @@ router.get('/my', protect, ctrl.listMine);
 // Admin
 router.get('/', protect, ensureAdmin, ctrl.listAll);
 router.patch('/:id/assign', protect, ensureAdmin, ctrl.assignTailor);
-router.patch('/:id/status', protect, ensureAdmin, ctrl.updateStatus); // admin override
 
 // Tailor
 router.get('/assigned', protect, ctrl.listAssignedToMe);

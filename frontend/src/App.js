@@ -56,11 +56,7 @@ import AdminTailors from './pages/admin/Tailors';
 // Gate that redirects logged-in customers to UserHome on outlet routes only
 import { useAuth } from './AuthGuard/AuthGuard';
 const OutletGate = ({ id = null }) => {
-  const { isAuthenticated, currentUser } = useAuth();
-  const isCustomer = isAuthenticated && isAuthenticated() && currentUser?.type?.toLowerCase() === 'customer';
-  if (isCustomer) {
-    return <Navigate to="/userHome" replace />;
-  }
+  // Always allow access to Outlet and OutletDetail for all roles
   // Render Outlet or OutletDetail based on whether an id is provided via route match
   return id ? <OutletDetail /> : <Outlet />;
 };
