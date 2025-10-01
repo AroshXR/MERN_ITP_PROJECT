@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const { registerTailor, getMyTailorProfile, listTailors, syncTailorsFromUsers } = require('../controllers/TailorController');
+const { registerTailor, getMyTailorProfile, listTailors, syncTailorsFromUsers, adminOverview } = require('../controllers/TailorController');
 
 // Simple admin check middleware
 const ensureAdmin = (req, res, next) => {
@@ -17,6 +17,9 @@ router.get('/me', protect, getMyTailorProfile);
 
 // Admin: list tailors
 router.get('/', protect, ensureAdmin, listTailors);
+
+// Admin: combined overview (tailors + custom orders)
+router.get('/overview', protect, ensureAdmin, adminOverview);
 
 // Admin: sync Tailors from Users(type='Tailor')
 router.post('/sync', protect, ensureAdmin, syncTailorsFromUsers);

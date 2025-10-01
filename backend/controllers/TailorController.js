@@ -1,6 +1,7 @@
 const Tailor = require('../models/Tailor');
 const User = require('../models/User');
 const CustomOrder = require('../models/CustomOrder');
+const ClothCustomizer = require('../models/ClothCustomizerModel');
 
 // Register or update current user as a Tailor
 exports.registerTailor = async (req, res) => {
@@ -54,7 +55,9 @@ exports.getMyTailorProfile = async (req, res) => {
 // Admin: list all tailors with stats (rating is stored; activeOrderCount computed; busy if > 10)
 exports.listTailors = async (req, res) => {
   try {
-    const tailors = await Tailor.find().sort({ createdAt: -1 });
+    const tailors = await Tailor.find()
+      .populate('userId', 'username email type')
+      .sort({ createdAt: -1 });
 
     // Active statuses for orders assigned to a tailor
     const ACTIVE_STATUSES = ['pending','assigned','accepted','in_progress'];
@@ -65,6 +68,7 @@ exports.listTailors = async (req, res) => {
       const busy = activeOrderCount > 10;
       return {
         ...t.toObject(),
+        user: t.userId ? { id: t.userId._id, username: t.userId.username, email: t.userId.email, type: t.userId.type } : null,
         activeOrderCount,
         busy,
       };
@@ -116,5 +120,59 @@ exports.syncTailorsFromUsers = async (req, res) => {
   } catch (err) {
     console.error('syncTailorsFromUsers error:', err);
     res.status(500).json({ status: 'error', message: 'Failed to sync tailors' });
+  }
+};
+
+// Admin: overview of tailors (from Tailor collection) and custom orders (from ClothCustomizer)
+exports.adminOverview = async (req, res) => {
+  try {
+    // Tailors with stats
+    const tailors = await Tailor.find().sort({ createdAt: -1 });
+    const ACTIVE_STATUSES = ['pending','assigned','accepted','in_progress'];
+    const tailorsWithStats = await Promise.all(tailors.map(async (t) => {
+      const activeOrderCount = await CustomOrder.countDocuments({ assignedTailor: t._id, status: { $in: ACTIVE_STATUSES } });
+      const busy = activeOrderCount > 10;
+      return { ...t.toObject(), activeOrderCount, busy };
+    }));
+
+    // Tailors from User collection (registration source), optionally enriched with Tailor profile
+    const tailorUsers = await User.find({ type: 'Tailor' })
+      .select('_id username email type createdAt');
+
+    // Build a map of userId -> Tailor profile to enrich
+    const tailorProfiles = await Tailor.find({ userId: { $in: tailorUsers.map(u => u._id) } })
+      .select('userId name phone skills isActive rating createdAt');
+    const profileByUserId = new Map(tailorProfiles.map(p => [String(p.userId), p]));
+
+    const tailorsFromUsers = tailorUsers.map(u => {
+      const prof = profileByUserId.get(String(u._id));
+      return {
+        user: { id: u._id, username: u.username, email: u.email, type: u.type, createdAt: u.createdAt },
+        profile: prof ? {
+          id: prof._id,
+          name: prof.name,
+          phone: prof.phone,
+          skills: prof.skills,
+          isActive: prof.isActive,
+          rating: prof.rating,
+          createdAt: prof.createdAt,
+        } : null,
+      };
+    });
+
+    res.json({
+      status: 'ok',
+      data: {
+        tailors: tailorsWithStats,
+        tailorsFromUsers,
+        counts: {
+          tailors: tailorsWithStats.length,
+          tailorsFromUsers: tailorsFromUsers.length,
+        }
+      }
+    });
+  } catch (err) {
+    console.error('adminOverview error:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to build overview' });
   }
 };

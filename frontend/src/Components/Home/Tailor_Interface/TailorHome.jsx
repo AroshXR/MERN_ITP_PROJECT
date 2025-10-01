@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import NavBar from '../../NavBar/navBar';
 import Footer from '../../Footer/Footer';
 import { TShirtModel } from './components/TShirtModel';
@@ -10,29 +10,27 @@ import axios from 'axios';
 import { useAuth } from '../../../AuthGuard/AuthGuard';
 
 function Tailor_Home() {
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
-  const [selectedDesign, setSelectedDesign] = useState(null);
-  const [clothingType, setClothingType] = useState("tshirt");
-  const [selectedSide] = useState("front");
-  const [activeDesignId, setActiveDesignId] = useState(null);
+  const [selectedColor] = useState("#ffffff");
+  const [selectedDesign] = useState(null);
+  const [clothingType] = useState("tshirt");
   const controlsRef = React.useRef();
-  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedSize] = useState(null);
   const { getToken } = useAuth();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
-  const [assignedOrders, setAssignedOrders] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
+  const [latestStatuses, setLatestStatuses] = useState({}); // key: clothCustomizerId -> latest status entry
+  const [updatingStatusId, setUpdatingStatusId] = useState('');
 
-  const handleDesignSelect = (design) => {
-    setSelectedDesign(design);
-    setActiveDesignId(`${design.id}-${Date.now()}`);
-  };
+  const allowedTransitions = useMemo(() => ({
+    // free-form for now; tailor can set any of these except 'assigned'
+    options: ['accepted','in_progress','completed','delivered','cancelled'],
+  }), []);
 
-  const handleColorSelect = (color) => {
-    setSelectedColor(color);
-  };
+  // design/color handlers removed (unused)
 
-  // Fetch orders assigned to the logged-in tailor
+  // Fetch assignments for the logged-in tailor
   useEffect(() => {
     const fetchAssigned = async () => {
       try {
@@ -40,13 +38,13 @@ function Tailor_Home() {
         setOrdersError('');
         const token = getToken();
         if (!token) {
-          setAssignedOrders([]);
+          setAssignments([]);
           return;
         }
-        const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned/me`, {
+        const res = await axios.get(`${API_BASE_URL}/api/assignments/mine`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setAssignedOrders(res.data?.data || []);
+        setAssignments(res.data?.data || []);
       } catch (e) {
         setOrdersError('Failed to load assigned orders');
       } finally {
@@ -54,7 +52,48 @@ function Tailor_Home() {
       }
     };
     fetchAssigned();
-  }, [getToken]);
+  }, [getToken, API_BASE_URL]);
+
+  // Fetch latest statuses for current assignments
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const ids = (assignments || []).map(a => a?.clothCustomizerId?._id || a?.clothCustomizerId).filter(Boolean);
+        if (ids.length === 0) { setLatestStatuses({}); return; }
+        const token = getToken();
+        const res = await axios.get(`${API_BASE_URL}/api/order-status/latest`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { ids: ids.join(',') }
+        });
+        setLatestStatuses(res.data?.data || {});
+      } catch (e) {
+        // non-blocking
+      }
+    };
+    run();
+  }, [assignments, API_BASE_URL, getToken]);
+
+  const submitStatus = async (clothCustomizerId, status) => {
+    try {
+      if (!status) return;
+      setUpdatingStatusId(clothCustomizerId);
+      const token = getToken();
+      await axios.post(`${API_BASE_URL}/api/order-status`, {
+        clothCustomizerId,
+        status,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      // refresh latest
+      const res = await axios.get(`${API_BASE_URL}/api/order-status/latest`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { ids: clothCustomizerId }
+      });
+      setLatestStatuses(prev => ({ ...prev, ...(res.data?.data || {}) }));
+    } catch (e) {
+      alert('Failed to update status');
+    } finally {
+      setUpdatingStatusId('');
+    }
+  };
 
   return (
     <div className="tailor-container">
@@ -86,25 +125,40 @@ function Tailor_Home() {
                 <div>Loading assigned orders...</div>
               ) : (
                 <div style={{ display: 'grid', gap: 8 }}>
-                  {assignedOrders.map((o) => (
-                    <div key={o._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
+                  {assignments.map((a) => {
+                    const o = a.clothCustomizerId || {};
+                    return (
+                    <div key={a._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                         <div style={{ display: 'grid', gap: 4 }}>
-                          <div><strong>Order:</strong> {o._id}</div>
-                          <div><strong>Status:</strong> {o.status}</div>
-                          <div><strong>Type:</strong> {o?.config?.clothingType || '—'}</div>
-                          <div><strong>Size/Color:</strong> {o?.config?.size || '—'} / {o?.config?.color || '—'}</div>
-                          {typeof o?.config?.quantity === 'number' && (
-                            <div><strong>Quantity:</strong> {o.config.quantity}</div>
+                          <div><strong>Assignment:</strong> {a._id}</div>
+                          <div><strong>Order:</strong> {o?._id || '—'}</div>
+                          <div><strong>Type:</strong> {o?.clothingType || '—'}</div>
+                          <div><strong>Size/Color:</strong> {o?.size || '—'} / {o?.color || '—'}</div>
+                          {typeof o?.quantity === 'number' && (
+                            <div><strong>Quantity:</strong> {o.quantity}</div>
                           )}
+                          <div>
+                            <strong>Latest Status:</strong> {(() => {
+                              const entry = latestStatuses[String(o?._id)] || null;
+                              return entry?.status || '—';
+                            })()}
+                          </div>
                         </div>
-                        {Array.isArray(o.previewGallery) && o.previewGallery.length > 0 && (
-                          <img src={o.previewGallery[0]} alt="preview" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 6 }} />
-                        )}
+                        {/* If you store previews in customizer, show them here if available */}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                        <select defaultValue="" onChange={(e) => submitStatus(o?._id, e.target.value)} disabled={updatingStatusId === o?._id}>
+                          <option value="" disabled>Update status...</option>
+                          {allowedTransitions.options.map(s => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                        {updatingStatusId === o?._id && <span>Updating...</span>}
                       </div>
                     </div>
-                  ))}
-                  {assignedOrders.length === 0 && <div>No assigned orders yet.</div>}
+                  );})}
+                  {assignments.length === 0 && <div>No assigned orders yet.</div>}
                 </div>
               )}
             </div>

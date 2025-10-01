@@ -72,6 +72,8 @@ const analyticsRouter = require("./routes/AnalyticsRoutes");
 const orderRouter = require("./routes/OrderRoutes");
 const tailorRouter = require("./routes/TailorRoutes");
 const customOrderRouter = require("./routes/CustomOrderRoutes");
+const assignmentRouter = require("./routes/AssignmentRoutes");
+const orderStatusRouter = require("./routes/OrderStatusRoutes");
 
 
 
@@ -126,6 +128,8 @@ app.use("/orders", orderRouter);
 // Tailor management & Custom Orders (namespaced under /api)
 app.use("/api/tailors", tailorRouter);
 app.use("/api/custom-orders", customOrderRouter);
+app.use("/api/assignments", assignmentRouter);
+app.use("/api/order-status", orderStatusRouter);
 
 
     //pasindu                                                         sdsdsdssdsdsdsdsd
