@@ -58,40 +58,26 @@ const OutletDetail = () => {
     const handleAddToCart = async () => {
         if (!item) return;
         try {
-            if (isAuthenticated && isAuthenticated()) {
-                const token = getToken();
-                await axios.post(`${API_BASE_URL}/cart`, {
-                    source: 'outlet',
-                    itemId: item._id,
+            // Use localStorage cart consistently (no backend /cart route configured)
+            const raw = localStorage.getItem('outletCart');
+            const cart = raw ? JSON.parse(raw) : [];
+            const existingIndex = cart.findIndex(ci => ci._id === item._id);
+            if (existingIndex >= 0) {
+                cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+                cart[existingIndex].totalPrice = (cart[existingIndex].quantity) * (cart[existingIndex].price || 0);
+            } else {
+                cart.push({
+                    _id: item._id,
                     name: item.name,
                     price: item.price,
                     quantity: 1,
-                    imageUrl: item.imageUrl
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    imageUrl: item.imageUrl,
+                    totalPrice: item.price
                 });
-                alert('Added to cart');
-            } else {
-                // Fallback to local storage when not logged in
-                const raw = localStorage.getItem('outletCart');
-                const cart = raw ? JSON.parse(raw) : [];
-                const existingIndex = cart.findIndex(ci => ci._id === item._id);
-                if (existingIndex >= 0) {
-                    cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
-                    cart[existingIndex].totalPrice = (cart[existingIndex].quantity) * (cart[existingIndex].price || 0);
-                } else {
-                    cart.push({
-                        _id: item._id,
-                        name: item.name,
-                        price: item.price,
-                        quantity: 1,
-                        imageUrl: item.imageUrl,
-                        totalPrice: item.price
-                    });
-                }
-                localStorage.setItem('outletCart', JSON.stringify(cart));
-                alert('Added to cart (login to sync)');
             }
+            localStorage.setItem('outletCart', JSON.stringify(cart));
+            // Navigate user to cart page
+            navigate('/orderManagement');
         } catch (err) {
             console.error('Failed to add to cart', err);
             alert('Failed to add to cart');

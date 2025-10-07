@@ -99,13 +99,41 @@ const CheckoutPage = () => {
 
   // Fetch cart items on component mount
   useEffect(() => {
+    // Support direct purchase (Buy Now)
+    const dpRaw = sessionStorage.getItem('directPurchase')
+    if (dpRaw) {
+      try {
+        const dp = JSON.parse(dpRaw)
+        const qty = Number(dp.quantity) || 1
+        const price = Number(dp.price) || 0
+        const dpItem = [{
+          id: `direct-${dp.id || 'item'}`,
+          name: dp.name || 'Item',
+          price,
+          quantity: qty,
+          imageUrl: dp.imageUrl || null,
+          totalPrice: Number(dp.totalPrice) || (price * qty),
+          source: 'direct'
+        }]
+        setCartItems(dpItem)
+        setCartError(null)
+        setLoading(false)
+      } catch (_) {
+        // ignore parse errors and fallback to normal flow
+      }
+    }
+
     if (!isAuthenticated()) {
       setCartError('Please log in to proceed with checkout.')
       setLoading(false)
       navigate('/login')
       return
     }
-    fetchCartItems()
+
+    // If not a direct purchase, fetch normal cart
+    if (!dpRaw) {
+      fetchCartItems()
+    }
   }, [])
 
   const fetchCartItems = async () => {
@@ -138,7 +166,32 @@ const CheckoutPage = () => {
           createdAt: item.createdAt || new Date().toISOString()
         }))
 
-        setCartItems(transformedItems)
+        // Merge outlet items from localStorage (if any)
+        const raw = localStorage.getItem('outletCart')
+        const outletItems = raw ? JSON.parse(raw) : []
+        const mappedOutlet = Array.isArray(outletItems) ? outletItems.map((oi, idx) => ({
+          id: `outlet-${oi._id || idx}`,
+          source: 'outlet',
+          name: oi.name || 'Outlet Item',
+          price: Number(oi.price) || 0,
+          quantity: Number(oi.quantity) || 1,
+          imageUrl: oi.imageUrl || null,
+          size: oi.size || 'N/A',
+          color: oi.color || 'N/A',
+          clothingType: oi.category || 'clothing',
+          totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
+          createdAt: oi.createdAt || new Date().toISOString()
+        })) : []
+
+        // If a direct purchase existed and was set earlier, prefer that list over merged list
+        const dpRaw2 = sessionStorage.getItem('directPurchase')
+        if (dpRaw2) {
+          // keep previously set direct purchase item(s)
+          // do not override cartItems to avoid mixing with entire cart
+          return
+        }
+
+        setCartItems([...transformedItems, ...mappedOutlet])
 
         if (transformedItems.length === 0) {
           // Show empty-cart error only when not in post-payment cleanup flow
@@ -414,6 +467,8 @@ const CheckoutPage = () => {
 
         // Clear the cart after successful payment
         await clearCart()
+        // Clear direct purchase flag (if any)
+        try { sessionStorage.removeItem('directPurchase') } catch (_) {}
 
         // Optionally also reset form states
         setGiftWrap(false)

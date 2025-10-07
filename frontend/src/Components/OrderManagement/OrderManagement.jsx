@@ -94,8 +94,24 @@ export default function OrderManagement() {
                     totalPrice: item.totalPrice || 0,
                     createdAt: item.createdAt || new Date().toISOString()
                 }));
+                // Merge outlet items from localStorage
+                const raw = localStorage.getItem('outletCart');
+                const outletItems = raw ? JSON.parse(raw) : [];
+                const mappedOutlet = Array.isArray(outletItems) ? outletItems.map((oi, idx) => ({
+                    id: `outlet-${oi._id || idx}`,
+                    source: 'outlet',
+                    name: oi.name || 'Outlet Item',
+                    price: Number(oi.price) || 0,
+                    quantity: Number(oi.quantity) || 1,
+                    imageUrl: oi.imageUrl || null,
+                    size: oi.size || 'N/A',
+                    color: oi.color || 'N/A',
+                    clothingType: oi.category || 'clothing',
+                    totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
+                    createdAt: oi.createdAt || new Date().toISOString()
+                })) : [];
 
-                setCartItems(transformedItems);
+                setCartItems([...transformedItems, ...mappedOutlet]);
             } else {
                 setCartItems([]);
                 setError('Failed to fetch cart items');
@@ -134,14 +150,7 @@ export default function OrderManagement() {
         }
 
         try {
-            const authToken = getToken();
-            if (!authToken) {
-                alert('Authentication token not found. Please log in again.');
-                logout();
-                history('/login');
-                return;
-            }
-
+            const isOutlet = String(id).startsWith('outlet-');
             const itemToUpdate = cartItems.find(item => item.id === id);
             if (!itemToUpdate) {
                 console.error('Item not found for update:', id);
@@ -151,7 +160,34 @@ export default function OrderManagement() {
 
             const newTotalPrice = (itemToUpdate.price * newQuantity);
 
-            const response = await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
+            if (isOutlet) {
+                // Update localStorage cart
+                const raw = localStorage.getItem('outletCart');
+                const cart = raw ? JSON.parse(raw) : [];
+                const underlyingId = String(id).replace('outlet-', '');
+                const idx = cart.findIndex(ci => String(ci._id) === underlyingId);
+                if (idx >= 0) {
+                    cart[idx].quantity = newQuantity;
+                    cart[idx].totalPrice = newTotalPrice;
+                    localStorage.setItem('outletCart', JSON.stringify(cart));
+                }
+                setCartItems((items) => items.map((item) =>
+                    item.id === id ? { ...item, quantity: newQuantity, totalPrice: newTotalPrice } : item
+                ));
+                showNotification('Quantity updated successfully!');
+                return;
+            }
+
+            // Backend update for cloth-customizer items
+            const authToken = getToken();
+            if (!authToken) {
+                alert('Authentication token not found. Please log in again.');
+                logout();
+                history('/login');
+                return;
+            }
+
+            await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
                 quantity: newQuantity,
                 totalPrice: newTotalPrice
             }, {
@@ -159,8 +195,6 @@ export default function OrderManagement() {
                     Authorization: `Bearer ${authToken}`
                 }
             });
-
-            console.log('Backend update response:', response.data);
 
             setCartItems((items) => items.map((item) =>
                 item.id === id ? { ...item, quantity: newQuantity, totalPrice: newTotalPrice } : item
@@ -198,6 +232,18 @@ export default function OrderManagement() {
         if (!isConfirmed) return;
 
         try {
+            const isOutlet = String(id).startsWith('outlet-');
+            if (isOutlet) {
+                const underlyingId = String(id).replace('outlet-', '');
+                const raw = localStorage.getItem('outletCart');
+                const cart = raw ? JSON.parse(raw) : [];
+                const next = cart.filter(ci => String(ci._id) !== underlyingId);
+                localStorage.setItem('outletCart', JSON.stringify(next));
+                setCartItems((items) => items.filter((item) => item.id !== id));
+                showNotification('Item removed from cart successfully!');
+                return;
+            }
+
             const authToken = getToken();
             if (!authToken) {
                 alert('Authentication token not found. Please log in again.');
@@ -206,12 +252,11 @@ export default function OrderManagement() {
                 return;
             }
 
-            const response = await axios.delete(`http://localhost:5001/cloth-customizer/${id}`, {
+            await axios.delete(`http://localhost:5001/cloth-customizer/${id}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`
                 }
             });
-            console.log('Backend delete response:', response.data);
 
             setCartItems((items) => items.filter((item) => item.id !== id));
             showNotification('Item removed from cart successfully!');

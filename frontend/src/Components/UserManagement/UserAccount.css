@@ -239,11 +239,7 @@
 }
 
 /* Ensure only the primary action buttons on the account page are black */
-.user-account-page .form-actions .primary-btn {
-    background: #111 !important;
-    border-color: #111 !important;
-    color: #fff !important;
-}
+
 .user-account-page .form-actions .primary-btn:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 10px 20px rgba(0,0,0,.25);

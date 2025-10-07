@@ -335,6 +335,7 @@ const UserAccount = () => {
                             {/* identity submission info removed */}
                             {profileMessage && <p className="form-feedback success">{profileMessage}</p>}
                             {profileError && <p className="form-feedback error">{profileError}</p>}
+                            <br />
                             <div className="form-actions">
                                 <button type="submit" className="primary-btn" disabled={saveInProgress}>
                                     {saveInProgress ? 'Saving...' : 'Save Changes'}
@@ -365,13 +366,13 @@ const UserAccount = () => {
                                 <strong>{unreadCount}</strong> unread | <strong>{notifications.length}</strong> total
                             </span>
                             <button
-                              type="button"
-                              className="header-nav-btn secondary"
-                              onClick={fetchNotifications}
-                              disabled={notificationsLoading}
+                                type="button"
+                                className="header-nav-btn secondary"
+                                onClick={fetchNotifications}
+                                disabled={notificationsLoading}
                             >
-                              <i className="bx bx-refresh"></i>
-                              {notificationsLoading ? 'Refreshing...' : 'Refresh'}
+                                <i className="bx bx-refresh"></i>
+                                {notificationsLoading ? 'Refreshing...' : 'Refresh'}
                             </button>
                         </div>
                     </div>
@@ -398,7 +399,7 @@ const UserAccount = () => {
                                                     const isLong = lines.length > 5;
                                                     const isExpanded = expandedNotifications.has(notification._id);
                                                     const displayLines = isLong && !isExpanded ? lines.slice(0, 3) : lines;
-                                                    
+
                                                     return (
                                                         <>
                                                             {displayLines.map((line, index) => (
