@@ -62,6 +62,7 @@ const addClothCustomizer = async (req, res) => {
     }
 };
 
+//chetha added this part
 // Get cloth customizer by ID for the authenticated user
 const getClothCustomizerById = async (req, res) => {
     try {

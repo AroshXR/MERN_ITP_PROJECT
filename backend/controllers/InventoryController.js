@@ -14,6 +14,117 @@ try {
   };
 }
 
+// Export inventory as CSV
+exports.exportCSV = async (_req, res) => {
+  try {
+    const items = await MaterialInventory.find().sort({ itemName: 1 });
+    const headers = [
+      'itemName','description','quantity','unit','unitPrice','totalValue','supplierName','category','location','minimumStock','status'
+    ];
+    const rows = items.map(it => ([
+      it.itemName ?? '',
+      (it.description ?? '').toString().replace(/\n/g, ' ').replace(/\r/g, ' '),
+      it.quantity ?? 0,
+      it.unit ?? '',
+      it.unitPrice ?? 0,
+      it.totalValue ?? (Number(it.unitPrice||0) * Number(it.quantity||0)),
+      it.supplierName ?? '',
+      it.category ?? '',
+      it.location ?? '',
+      it.minimumStock ?? '',
+      it.status ?? '',
+    ]));
+    const escape = (v) => {
+      const s = String(v ?? '');
+      return /[,\"]/.test(s) ? '"' + s.replace(/\"/g, '""') + '"' : s;
+    };
+    const csv = [headers.join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="inventory_export.csv"');
+    return res.status(200).send(csv);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error exporting CSV', error: error.message });
+  }
+};
+
+// Import inventory from CSV (expects JSON body: { csv: string })
+exports.importCSV = async (req, res) => {
+  try {
+    const { csv } = req.body || {};
+    if (!csv || typeof csv !== 'string') {
+      return res.status(400).json({ message: 'CSV content is required in body.csv' });
+    }
+
+    const lines = csv.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return res.status(400).json({ message: 'CSV is empty' });
+    const header = lines[0].split(',').map(h => h.trim());
+
+    const idx = (name) => header.findIndex(h => h.toLowerCase() === name.toLowerCase());
+    const col = {
+      itemName: idx('itemName'), description: idx('description'), quantity: idx('quantity'), unit: idx('unit'),
+      unitPrice: idx('unitPrice'), supplierName: idx('supplierName'), category: idx('category'), location: idx('location'),
+      minimumStock: idx('minimumStock'), status: idx('status')
+    };
+    if (col.itemName === -1) return res.status(400).json({ message: 'CSV must include itemName column' });
+
+    let created = 0, updated = 0, errors = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const raw = lines[i];
+      // simple CSV split respecting quoted commas
+      const cells = [];
+      let cur = '', inQ = false;
+      for (let j = 0; j < raw.length; j++) {
+        const ch = raw[j];
+        if (ch === '"') { inQ = !inQ; continue; }
+        if (ch === ',' && !inQ) { cells.push(cur); cur = ''; } else { cur += ch; }
+      }
+      cells.push(cur);
+
+      const read = (idx) => idx >= 0 ? (cells[idx] ?? '').trim() : '';
+      try {
+        const itemName = read(col.itemName);
+        if (!itemName) continue;
+        const supplierName = read(col.supplierName);
+
+        // Try to find existing by itemName + supplierName
+        const q = supplierName ? { itemName, supplierName } : { itemName };
+        let doc = await MaterialInventory.findOne(q);
+
+        const payload = {
+          itemName,
+          description: read(col.description),
+          quantity: Number(read(col.quantity)) || 0,
+          unit: read(col.unit) || 'pieces',
+          unitPrice: Number(read(col.unitPrice)) || 0,
+          supplierName,
+          category: read(col.category) || 'Materials',
+          location: read(col.location) || 'Main Warehouse',
+          minimumStock: Number(read(col.minimumStock)) || 0,
+        };
+        // status recalculated by model virtual or keep provided if present
+        const s = read(col.status);
+        if (s) payload.status = s;
+
+        if (!doc) {
+          await MaterialInventory.create(payload);
+          created += 1;
+        } else {
+          Object.assign(doc, payload);
+          await doc.save();
+          updated += 1;
+        }
+      } catch (e) {
+        errors += 1;
+      }
+    }
+
+    return res.status(200).json({ message: 'Import complete', created, updated, errors });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error importing CSV', error: error.message });
+  }
+};
+
 // Get all inventory items
 exports.getAllInventoryItems = async (req, res) => {
   try {

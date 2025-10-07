@@ -1,5 +1,6 @@
 const CustomOrder = require('../models/CustomOrder');
 const Tailor = require('../models/Tailor');
+const ClothCustomizer = require('../models/ClothCustomizerModel');
 
 // Helpers
 const isAdmin = (user) => user?.type === 'Admin' || user?.role === 'admin';
@@ -13,6 +14,52 @@ const canViewOrder = async (user, order) => {
     if (tailor && String(tailor.userId) === String(user._id)) return true;
   }
   return false;
+};
+
+// Admin: migrate data from ClothCustomizerModel into CustomOrder
+exports.migrateFromCustomizer = async (req, res) => {
+  try {
+    const { limit = 500, dryRun = 'false' } = req.query;
+    const docs = await ClothCustomizer.find({}).sort({ createdAt: -1 }).limit(Number(limit));
+    let created = 0;
+
+    // Very simple existence check: look for a CustomOrder with same customerId and createdAt within 5 minutes window
+    const windowMs = 5 * 60 * 1000;
+
+    for (const c of docs) {
+      const near = await CustomOrder.findOne({
+        customerId: c.userId,
+        createdAt: { $gte: new Date(c.createdAt.getTime() - windowMs), $lte: new Date(c.createdAt.getTime() + windowMs) }
+      });
+      if (near) continue; // likely already migrated
+
+      if (dryRun === 'true') { created += 1; continue; }
+
+      await CustomOrder.create({
+        customerId: c.userId,
+        config: {
+          clothingType: c.clothingType || 'tshirt',
+          size: c.size || 'M',
+          color: c.color || 'white',
+          quantity: typeof c.quantity === 'number' ? c.quantity : 1,
+          notes: c.nickname || undefined,
+        },
+        // Basic projection; advanced mapping of designs could be added if needed
+        design: c.selectedDesign ? { designImageUrl: c.selectedDesign.preview || undefined, designMeta: c.selectedDesign } : undefined,
+        status: 'pending',
+        price: typeof c.totalPrice === 'number' ? c.totalPrice : undefined,
+        previewGallery: Array.isArray(c.placedDesigns) ? c.placedDesigns.map(d => d?.preview).filter(Boolean) : [],
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      });
+      created += 1;
+    }
+
+    return res.json({ status: 'ok', migrated: created, scanned: docs.length, dryRun: dryRun === 'true' });
+  } catch (err) {
+    console.error('migrateFromCustomizer error:', err);
+    return res.status(500).json({ status: 'error', message: 'Migration failed' });
+  }
 };
 
 // Customer: create custom order
@@ -41,11 +88,18 @@ exports.createOrder = async (req, res) => {
 // Admin: list all orders
 exports.listAll = async (req, res) => {
   try {
-    const { status, tailorId, id } = req.query;
+    const { status, tailorId, id, unassigned } = req.query;
     const q = {};
     if (status) q.status = status;
     if (tailorId) q.assignedTailor = tailorId;
     if (id) q._id = id;
+    if (unassigned === 'true') {
+      // Match orders where assignedTailor is null or not set
+      q.$or = [
+        { assignedTailor: { $exists: false } },
+        { assignedTailor: null },
+      ];
+    }
 
     const docs = await CustomOrder.find(q)
       .populate('customerId', 'username email')

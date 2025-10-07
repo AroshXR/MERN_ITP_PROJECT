@@ -23,12 +23,55 @@ function Tailor_Home() {
   const [latestStatuses, setLatestStatuses] = useState({}); // key: clothCustomizerId -> latest status entry
   const [updatingStatusId, setUpdatingStatusId] = useState('');
 
+  // Custom Orders (new): assigned to me via /api/custom-orders/assigned
+  const [customOrders, setCustomOrders] = useState([]);
+  const [customOrdersLoading, setCustomOrdersLoading] = useState(false);
+  const [customOrdersError, setCustomOrdersError] = useState('');
+  const [updatingOrderId, setUpdatingOrderId] = useState('');
+
+  // ClothCustomizer sessions (direct display)
+  const [ccItems, setCcItems] = useState([]);
+  const [ccLoading, setCcLoading] = useState(false);
+  const [ccError, setCcError] = useState('');
+
   const allowedTransitions = useMemo(() => ({
     // free-form for now; tailor can set any of these except 'assigned'
     options: ['accepted','in_progress','completed','delivered','cancelled'],
   }), []);
 
   // design/color handlers removed (unused)
+
+  // Update status for Custom Order (Tailor flow) - component scope
+  const updateCustomOrderStatus = async (orderId, nextStatus) => {
+    try {
+      if (!nextStatus) return;
+      setUpdatingOrderId(orderId);
+      const token = getToken();
+      await axios.patch(`${API_BASE_URL}/api/custom-orders/${orderId}/status`, { status: nextStatus }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Refresh list after update
+      const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCustomOrders(res.data?.data || []);
+    } catch (e) {
+      alert('Failed to update order status');
+    } finally {
+      setUpdatingOrderId('');
+    }
+  };
+
+  const nextStatusesFor = (current) => {
+    // Mirror backend allowed transitions for Tailor
+    const map = {
+      assigned: ['accepted'],
+      accepted: ['in_progress'],
+      in_progress: ['completed'],
+      completed: ['delivered'],
+    };
+    return map[current] || [];
+  };
 
   // Fetch assignments for the logged-in tailor
   useEffect(() => {
@@ -52,6 +95,27 @@ function Tailor_Home() {
       }
     };
     fetchAssigned();
+  }, [getToken, API_BASE_URL]);
+
+  // Fetch Custom Orders assigned to me (from CustomOrder collection)
+  useEffect(() => {
+    const fetchCustomOrders = async () => {
+      try {
+        setCustomOrdersLoading(true);
+        setCustomOrdersError('');
+        const token = getToken();
+        if (!token) { setCustomOrders([]); return; }
+        const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCustomOrders(res.data?.data || []);
+      } catch (e) {
+        setCustomOrdersError('Failed to load assigned custom orders');
+      } finally {
+        setCustomOrdersLoading(false);
+      }
+    };
+    fetchCustomOrders();
   }, [getToken, API_BASE_URL]);
 
   // Fetch latest statuses for current assignments
@@ -117,7 +181,7 @@ function Tailor_Home() {
               }}
             />
 
-            {/* Assigned Orders Panel */}
+            {/* Assigned Orders Panel (Legacy Assignment model) */}
             <div style={{ marginTop: 16 }}>
               <h2 style={{ margin: '12px 0' }}>My Assigned Orders</h2>
               {ordersError && <div style={{ color: 'red', marginBottom: 8 }}>{ordersError}</div>}
@@ -159,6 +223,35 @@ function Tailor_Home() {
                     </div>
                   );})}
                   {assignments.length === 0 && <div>No assigned orders yet.</div>}
+                </div>
+              )}
+            </div>
+
+            {/* ClothCustomizer sessions (direct) */}
+            <div style={{ marginTop: 24 }}>
+              <h2 style={{ margin: '12px 0' }}>My ClothCustomizer Sessions</h2>
+              {ccError && <div style={{ color: 'red', marginBottom: 8 }}>{ccError}</div>}
+              {ccLoading ? (
+                <div>Loading customizer data...</div>
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {ccItems.map((c) => (
+                    <div key={c._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
+                      <div style={{ display: 'grid', gap: 4 }}>
+                        <div><strong>ID:</strong> {c._id}</div>
+                        <div><strong>Nickname:</strong> {c.nickname || '—'}</div>
+                        <div><strong>Type/Size/Color:</strong> {(c.clothingType||'—')} • {(c.size||'—')} • {(c.color||'—')}</div>
+                        {typeof c.quantity === 'number' && (
+                          <div><strong>Quantity:</strong> {c.quantity}</div>
+                        )}
+                        {typeof c.totalPrice === 'number' && (
+                          <div><strong>Total Price:</strong> ${c.totalPrice.toFixed(2)}</div>
+                        )}
+                        <div><strong>Created:</strong> {c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {ccItems.length === 0 && <div>No customizer sessions found.</div>}
                 </div>
               )}
             </div>

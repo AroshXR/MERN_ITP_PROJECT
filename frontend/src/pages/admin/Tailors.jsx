@@ -119,6 +119,11 @@ export default function AdminTailors() {
                       <div><strong>Rating:</strong> {t.rating ?? '—'}</div>
                       <div><strong>Registered:</strong> {t.createdAt ? new Date(t.createdAt).toLocaleString() : '—'}</div>
                     </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <Link to={`/admin/custom-orders?tailorId=${t._id}`}>
+                        <button style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #ddd' }}>View Orders</button>
+                      </Link>
+                    </div>
                   </div>
                 ))}
                 {tailors.length === 0 && <div>No tailors found.</div>}

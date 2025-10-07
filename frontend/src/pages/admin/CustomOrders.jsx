@@ -5,96 +5,74 @@ import NavBar from '../../Components/NavBar/navBar';
 import Footer from '../../Components/Footer/Footer';
 import { useAuth } from '../../AuthGuard/AuthGuard';
 import TailorSubNav from '../../Components/tailor-management/TailorSubNav';
+import { Link } from 'react-router-dom';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
 
 export default function AdminCustomOrders() {
   const { getToken } = useAuth();
   // Canonical orders come from ClothCustomizer
-  const [customizers, setCustomizers] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [tailors, setTailors] = useState([]);
-  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [assigning, setAssigning] = useState(null); // orderId
-  const [selectedTailor, setSelectedTailor] = useState('');
+  const [selectedTailors, setSelectedTailors] = useState({}); // orderId -> tailorId mapping
   const [searchParams, setSearchParams] = useSearchParams();
-  const [latestStatuses, setLatestStatuses] = useState({}); // key: clothCustomizerId -> status entry
   const [updatingStatusId, setUpdatingStatusId] = useState('');
-  const [info, setInfo] = useState('');
+  const [info] = useState('');
+  const [lastAssigned, setLastAssigned] = useState(null);
 
   const statusFilter = searchParams.get('status') || '';
   const tailorFilter = searchParams.get('tailorId') || '';
+  const unassignedFilter = (searchParams.get('unassigned') || '') === 'true';
+  const idFilter = searchParams.get('id') || '';
 
   const fetchOrders = async () => {
     try {
-      setLoading(true);
-      setError('');
-      const token = getToken();
-      // Fetch ClothCustomizer entries across all users (admin)
-      let list = [];
-      setInfo('');
-      try {
-        const res = await axios.get(`${API_BASE_URL}/cloth-customizer/admin`, {
-          headers: { Authorization: `Bearer ${token}` },
+        setLoading(true);
+        setError('');
+        const token = getToken();
+        const params = {};
+        if (statusFilter) params.status = statusFilter;
+        if (tailorFilter) params.tailorId = tailorFilter;
+        if (unassignedFilter) params.unassigned = 'true';
+        if (idFilter) params.id = idFilter;
+        
+        // Add detailed logging
+        console.log('Token:', token);
+        console.log('Request URL:', `${API_BASE_URL}/api/custom-orders`);
+        console.log('Request params:', params);
+        
+        const res = await axios.get(`${API_BASE_URL}/api/custom-orders`, {
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            params,
         });
-        list = res.data?.data || [];
-      } catch (err) {
-        // If not admin, fallback to user-scoped list to show something
-        if (err?.response?.status === 403) {
-          const resUser = await axios.get(`${API_BASE_URL}/cloth-customizer`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          list = resUser.data?.data || [];
-          setInfo('Showing your own customizations. Log in as Admin to see all orders.');
-        } else {
-          throw err;
+        
+        // Log full response
+        console.log('Full API Response:', res);
+        
+        if (!res.data || !Array.isArray(res.data.data)) {
+            throw new Error('Invalid response format');
         }
-      }
-      // Basic client-side filters to mimic previous UX
-      if (tailorFilter) {
-        // Filter by current assignment tailor if available
-        try {
-          const assigns = await axios.get(`${API_BASE_URL}/api/assignments?tailorId=${tailorFilter}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const assignedIds = new Set((assigns.data?.data || []).map(a => a.clothCustomizerId?._id || a.clothCustomizerId));
-          list = list.filter(c => assignedIds.has(c._id));
-        } catch (_) {
-          // ignore if no admin access
-        }
-      }
-      setCustomizers(list);
-
-      // Fetch latest statuses for these orders
-      const ids = list.map(c => c._id);
-      if (ids.length) {
-        const latest = await axios.get(`${API_BASE_URL}/api/order-status/latest`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { ids: ids.join(',') }
-        });
-        setLatestStatuses(latest.data?.data || {});
-      } else {
-        setLatestStatuses({});
-      }
+        
+        setOrders(res.data.data);
     } catch (e) {
-      setError('Failed to load orders');
+        console.error('Detailed fetch error:', {
+            message: e.message,
+            response: e.response?.data,
+            status: e.response?.status,
+            headers: e.response?.headers
+        });
+        setError(`Failed to load orders: ${e.response?.data?.message || e.message}`);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
-
-  const fetchAssignments = useCallback(async () => {
-    try {
-      const token = getToken();
-      const res = await axios.get(`${API_BASE_URL}/api/assignments`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAssignments(res.data?.data || []);
-    } catch (e) {
-      // non-blocking
-    }
-  }, [getToken, API_BASE_URL]);
 
   const fetchTailors = useCallback(async () => {
     try {
@@ -106,43 +84,65 @@ export default function AdminCustomOrders() {
     } catch (e) {
       // non-blocking
     }
-  }, [getToken, API_BASE_URL]);
+  }, [getToken]);
 
   useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, tailorFilter]);
 
-  useEffect(() => { fetchTailors(); fetchAssignments(); }, [fetchTailors, fetchAssignments]);
+  useEffect(() => { fetchTailors(); }, [fetchTailors]);
 
-  const onAssign = async (customizerId) => {
+  const onAssign = async (orderId) => {
     try {
-      if (!selectedTailor) return alert('Please select a tailor');
-      setAssigning(customizerId);
+      const tailorId = selectedTailors[orderId];
+      if (!tailorId) {
+        alert('Please select a tailor');
+        return;
+      }
+
+      setAssigning(orderId);
       const token = getToken();
-      await axios.post(`${API_BASE_URL}/api/assignments`, { clothCustomizerId: customizerId, tailorId: selectedTailor }, { headers: { Authorization: `Bearer ${token}` } });
-      setSelectedTailor('');
-      await fetchAssignments();
+      
+      await axios.patch(
+        `${API_BASE_URL}/api/custom-orders/${orderId}/assign`,
+        { tailorId },
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+
+      setLastAssigned(orderId);
+      setTimeout(() => setLastAssigned(null), 3000);
+
+      // Clear selection for this order only
+      setSelectedTailors(prev => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
+
+      await fetchOrders(); // Refresh the list
     } catch (e) {
-      alert('Failed to assign tailor');
+      console.error('Assignment error:', e);
+      alert('Failed to assign tailor: ' + (e.response?.data?.message || e.message));
     } finally {
       setAssigning(null);
     }
   };
 
-  const updateStatus = async (clothCustomizerId, status) => {
+  const updateStatus = async (orderId, status) => {
     try {
       if (!status) return;
-      setUpdatingStatusId(clothCustomizerId);
+      setUpdatingStatusId(orderId);
       const token = getToken();
-      await axios.post(`${API_BASE_URL}/api/order-status`, { clothCustomizerId, status }, {
+      await axios.patch(`${API_BASE_URL}/api/custom-orders/${orderId}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const latest = await axios.get(`${API_BASE_URL}/api/order-status/latest`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { ids: clothCustomizerId }
-      });
-      setLatestStatuses(prev => ({ ...prev, ...(latest.data?.data || {}) }));
+      await fetchOrders();
     } catch (e) {
       alert('Failed to update status');
     } finally {
@@ -177,6 +177,23 @@ export default function AdminCustomOrders() {
               <option key={t._id} value={t._id}>{t.name}</option>
             ))}
           </select>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={unassignedFilter}
+              onChange={(e) => updateFilter('unassigned', e.target.checked ? 'true' : '')}
+            />
+            Unassigned only
+          </label>
+
+          <input
+            type="text"
+            placeholder="Search by Order ID"
+            value={idFilter}
+            onChange={(e) => updateFilter('id', e.target.value.trim())}
+            style={{ padding: '6px 8px' }}
+          />
         </div>
 
         {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
@@ -186,66 +203,56 @@ export default function AdminCustomOrders() {
         ) : (
           <div style={{ display: 'grid', gap: 20 }}>
             <section>
-              <h2 style={{ marginTop: 0 }}>Orders (from Cloth Customizer)</h2>
+              <h2 style={{ marginTop: 0 }}>Orders</h2>
               <div style={{ display: 'grid', gap: 12 }}>
-                {customizers.map(co => (
-                  <div key={co._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
+                {orders.map(order => (
+                  <div key={order._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                       <div style={{ display: 'grid', gap: 4 }}>
-                        <div><strong>ID:</strong> {co._id}</div>
-                        <div><strong>User:</strong> {co.userId ? `${co.userId.username} (${co.userId.email})` : '—'}</div>
-                        <div><strong>Type/Color/Size:</strong> {co.clothingType} / {co.color} / {co.size}</div>
-                        <div><strong>Quantity:</strong> {co.quantity} | <strong>Designs:</strong> {Array.isArray(co.placedDesigns) ? co.placedDesigns.length : 0}</div>
-                        <div><strong>Latest Status:</strong> {(() => { const e = latestStatuses[String(co._id)] || null; return e?.status || '—'; })()}</div>
+                        <div><strong>ID:</strong> <Link to={`/admin/custom-orders/${order._id}`}>{order._id}</Link></div>
+                        <div><strong>Customer:</strong> {order.customerId ? `${order.customerId.username} (${order.customerId.email})` : '—'}</div>
+                        <div><strong>Type/Color/Size:</strong> {order.config?.clothingType || '—'} / {order.config?.color || '—'} / {order.config?.size || '—'}</div>
+                        <div><strong>Quantity:</strong> {order.config?.quantity ?? '—'}</div>
+                        <div><strong>Status:</strong> {order.status || '—'}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div><strong>Total:</strong> {typeof co.totalPrice === 'number' ? `Rs. ${co.totalPrice.toFixed(2)}` : '—'}</div>
-                        <div><strong>Created:</strong> {co.createdAt ? new Date(co.createdAt).toLocaleString() : '—'}</div>
-                        <div><strong>Assigned Tailor:</strong> {
-                          (() => {
-                            const a = assignments.find(a => (a.clothCustomizerId?._id || a.clothCustomizerId) === co._id);
-                            return a?.tailorId?.name || '—';
-                          })()
-                        }</div>
+                        <div><strong>Price:</strong> {typeof order.price === 'number' ? `Rs. ${order.price.toFixed(2)}` : '—'}</div>
+                        <div><strong>Created:</strong> {order.createdAt ? new Date(order.createdAt).toLocaleString() : '—'}</div>
+                        <div><strong>Assigned Tailor:</strong> {order.assignedTailor?.name || '—'}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                      <select value={selectedTailor} onChange={(e) => setSelectedTailor(e.target.value)}>
+                      <select 
+                        value={selectedTailors[order._id] || ''} 
+                        onChange={(e) => setSelectedTailors(prev => ({
+                          ...prev,
+                          [order._id]: e.target.value
+                        }))}
+                      >
                         <option value="">Select tailor</option>
                         {tailors.map(t => (
                           <option key={t._id} value={t._id}>{t.name}</option>
                         ))}
                       </select>
-                      <button disabled={assigning === co._id} onClick={() => onAssign(co._id)}>
-                        {assigning === co._id ? 'Assigning...' : 'Assign Tailor'}
+                      <button disabled={assigning === order._id} onClick={() => onAssign(order._id)}>
+                        {assigning === order._id ? 'Assigning...' : 'Assign Tailor'}
                       </button>
-                      <select defaultValue="" onChange={(e) => updateStatus(co._id, e.target.value)} disabled={updatingStatusId === co._id}>
+                      <select defaultValue="" onChange={(e) => updateStatus(order._id, e.target.value)} disabled={updatingStatusId === order._id}>
                         <option value="" disabled>Update status...</option>
                         {['accepted','in_progress','completed','delivered','cancelled'].map(s => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
-                      {updatingStatusId === co._id && <span>Updating...</span>}
+                      {updatingStatusId === order._id && <span>Updating...</span>}
                     </div>
+                    {lastAssigned === order._id && <div style={{ color: 'green', marginTop: 8 }}>Tailor assigned successfully!</div>}
                   </div>
                 ))}
-                {customizers.length === 0 && <div>No orders found.</div>}
+                {orders.length === 0 && <div>No orders found.</div>}
               </div>
             </section>
 
-            <section>
-              <h2>Recent Assignments</h2>
-              <div style={{ display: 'grid', gap: 8 }}>
-                {assignments.map(a => (
-                  <div key={a._id} style={{ border: '1px solid #f1f1f1', borderRadius: 8, padding: 8 }}>
-                    <div><strong>Order:</strong> {a.clothCustomizerId?._id || a.clothCustomizerId}</div>
-                    <div><strong>Tailor:</strong> {a.tailorId?.name || '—'}</div>
-                    <div><strong>Assigned At:</strong> {a.assignedAt ? new Date(a.assignedAt).toLocaleString() : '—'}</div>
-                  </div>
-                ))}
-                {assignments.length === 0 && <div>No assignments yet.</div>}
-              </div>
-            </section>
+            {/* Recent assignments section removed as order carries assignedTailor */}
           </div>
         )}
       </main>

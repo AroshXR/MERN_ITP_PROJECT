@@ -3,6 +3,47 @@
   background-color: #f8f9fa;
 }
 
+/* Print Styles: show only the report section with charts and item details */
+@media print {
+  /* Hide global chrome */
+  .clothing-inventory-page nav,
+  .clothing-inventory-page footer,
+  .inventory-header,
+  .inventory-filters,
+  .inventory-grid,
+  .inventory-summary,
+  .btn,
+  .select-checkbox {
+    display: none !important;
+  }
+
+  /* Show report cleanly */
+  .report-results {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #000;
+  }
+
+  .report-results h2,
+  .report-results h3 {
+    color: #000 !important;
+  }
+
+  /* Ensure charts render at good size */
+  .report-results canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Page breaks between items */
+  .report-results .inventory-item-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
 .clothing-inventory {
   max-width: 1400px;
   margin: 0 auto;
@@ -313,6 +354,7 @@
   margin: 0 0 20px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2; /* standard property */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
