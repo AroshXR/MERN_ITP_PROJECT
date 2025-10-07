@@ -1069,7 +1069,7 @@ const CheckoutPage = () => {
                 Previous
               </button>
               {currentStep < 3 ? (
-                <button className="supbtn" onClick={() => setCurrentStep(currentStep + 1)}>
+                <button className="btn" onClick={() => setCurrentStep(currentStep + 1)}>
                   Continue
                 </button>
               ) : (

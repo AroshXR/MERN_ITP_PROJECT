@@ -30,7 +30,7 @@ function LoginPage() {
         return '/userHome';
       case 'Customer':
       default:
-        return '/userHome';
+        return '/customizer';
     }
   };
 
