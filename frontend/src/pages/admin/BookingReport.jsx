@@ -232,7 +232,7 @@ const BookingReport = () => {
         <button
           onClick={fetchReport}
           disabled={loading}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium disabled:opacity-50"
+          className="bg-red hover:bg-red text-white px-6 py-2 rounded-md font-medium disabled:opacity-50"
         >
           {loading ? 'Generating...' : '🔍 Generate Report'}
         </button>
@@ -240,7 +240,7 @@ const BookingReport = () => {
         {reportData && (
           <button
             onClick={generateHTMLReport}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md font-medium"
+            className="bg-black text-white px-6 py-2 rounded-md font-medium"
           >
             📄 View HTML Report
           </button>
