@@ -543,8 +543,8 @@ body {
   text-decoration: none;
   display: inline-block;
   text-align: center;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: red;
+  color:red;
   }
 
 /* Validation Error Styles */
