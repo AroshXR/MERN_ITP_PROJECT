@@ -653,6 +653,7 @@ body {
   transition: all 0.2s ease;
   min-width: 60px;
   justify-content: center;
+  box-shadow: none;
 }
 
 .action-btn:disabled {
@@ -660,44 +661,21 @@ body {
   cursor: not-allowed;
 }
 
-.use-btn {
-  background: #22c55e;
-  color: white;
-}
-
-.use-btn:hover:not(:disabled) {
-  background: #16a34a;
-  transform: translateY(-1px);
-}
-
-.quantity-btn {
-  background: #3b82f6;
-  color: white;
-}
-
-.quantity-btn:hover {
-  background: #2563eb;
-  transform: translateY(-1px);
-}
-
-.edit-btn {
-  background: #f59e0b;
-  color: white;
-}
-
-.edit-btn:hover {
-  background: #d97706;
-  transform: translateY(-1px);
-}
-
+.use-btn,
+.quantity-btn,
+.edit-btn,
 .delete-btn {
-  background: var(--destructive);
-  color: white;
+  background: #000000;
+  color: #ffffff;
 }
 
-.delete-btn:hover {
-  background: #b91c1c;
+.use-btn:hover:not(:disabled),
+.quantity-btn:hover:not(:disabled),
+.edit-btn:hover:not(:disabled),
+.delete-btn:hover:not(:disabled) {
+  background: #111111;
   transform: translateY(-1px);
+  box-shadow: none;
 }
 
 .data-table {
@@ -1148,6 +1126,7 @@ body {
   font-weight: 500;
   transition: all 0.2s ease;
   text-align: center;
+  box-shadow: none;
 }
 
 .card-action-btn.primary {
@@ -1159,6 +1138,7 @@ body {
 .card-action-btn.primary:hover:not(:disabled) {
   background: var(--secondary);
   transform: translateY(-1px);
+  box-shadow: none;
 }
 
 .card-action-btn.primary:disabled {
@@ -1167,15 +1147,16 @@ body {
 }
 
 .card-action-btn.secondary {
-  background: var(--muted);
-  color: var(--foreground);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
 }
 
 .card-action-btn.secondary:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
+  background: #000000;
+  color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: none;
 }
 
 .card-action-btn.danger {
@@ -1186,6 +1167,7 @@ body {
 .card-action-btn.danger:hover {
   background: #b91c1c;
   transform: translateY(-1px);
+  box-shadow: none;
 }
 
 /* Empty State */
