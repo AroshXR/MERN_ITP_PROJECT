@@ -47,8 +47,8 @@ function AboutUs() {
                 
             </div>
 
-            <section className="about-sections">
-                <section className="contact-section">
+            <section className="about-sections-styles">
+                <section className="contact-section-styles">
                     <h2>Get In Touch</h2>
                     <p>
                         Ready to bring your ideas to life? We're here to help you create something amazing.
