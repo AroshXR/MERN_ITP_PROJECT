@@ -12,8 +12,9 @@ const bookingSchema = new mongoose.Schema({
     price: {type: Number, required: true},
     phone: {type: String, required: true},
     email: {type: String, required: true},
-    document: {type: String, required: true} // Path to uploaded document
-
+    document: {type: String, required: true}, // Path to uploaded document
+    paymentStatus: {type: String, enum: ["unpaid", "paid", "refunded"], default: "unpaid"},
+    paymentMethod: {type: String, enum: ["card", "cash", "pay_on_return"], default: "card"}
 
 }, { timestamps: true });
 

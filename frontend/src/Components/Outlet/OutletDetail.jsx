@@ -18,6 +18,9 @@ const OutletDetail = () => {
     const [review, setReview] = useState({ rating: 5, comment: "", username: "" });
     const [submitting, setSubmitting] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    // Selection state
+    const [selectedSize, setSelectedSize] = useState("");
+    const [selectedColor, setSelectedColor] = useState("");
 
     const fetchItem = async () => {
         try {
@@ -36,6 +39,18 @@ const OutletDetail = () => {
         fetchItem();
         setSelectedImageIndex(0);
     }, [id]);
+
+    // Initialize default selections when item loads
+    useEffect(() => {
+        if (item) {
+            if (Array.isArray(item.sizes) && item.sizes.length > 0) {
+                setSelectedSize(prev => prev || item.sizes[0]);
+            }
+            if (Array.isArray(item.colors) && item.colors.length > 0) {
+                setSelectedColor(prev => prev || item.colors[0]);
+            }
+        }
+    }, [item]);
 
     const submitReview = async (e) => {
         e.preventDefault();
@@ -65,6 +80,9 @@ const OutletDetail = () => {
             if (existingIndex >= 0) {
                 cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
                 cart[existingIndex].totalPrice = (cart[existingIndex].quantity) * (cart[existingIndex].price || 0);
+                // Preserve existing size/color if already present; otherwise set if available
+                if (!cart[existingIndex].size && selectedSize) cart[existingIndex].size = selectedSize;
+                if (!cart[existingIndex].color && selectedColor) cart[existingIndex].color = selectedColor;
             } else {
                 cart.push({
                     _id: item._id,
@@ -72,7 +90,9 @@ const OutletDetail = () => {
                     price: item.price,
                     quantity: 1,
                     imageUrl: item.imageUrl,
-                    totalPrice: item.price
+                    totalPrice: item.price,
+                    size: selectedSize || null,
+                    color: selectedColor || null
                 });
             }
             localStorage.setItem('outletCart', JSON.stringify(cart));
@@ -94,6 +114,8 @@ const OutletDetail = () => {
                 quantity: 1,
                 imageUrl: item.imageUrl,
                 totalPrice: item.price,
+                size: selectedSize || null,
+                color: selectedColor || null,
             };
             sessionStorage.setItem('directPurchase', JSON.stringify(payload));
         } catch (_) {}
@@ -142,8 +164,37 @@ const OutletDetail = () => {
                     {item.description && <p style={{ marginTop: 8 }}>{item.description}</p>}
                     <p style={{ marginTop: 8 }}><strong>Price:</strong> ${item.price} {item.stock === 0 && <span style={{ marginLeft: 8, color: '#b91c1c', fontWeight: 600 }}>(Out of Stock)</span>}</p>
                     <p><strong>Stock:</strong> {item.stock}</p>
-                    {Array.isArray(item.sizes) && item.sizes.length > 0 && <p><strong>Sizes:</strong> {item.sizes.join(', ')}</p>}
-                    {Array.isArray(item.colors) && item.colors.length > 0 && <p><strong>Colors:</strong> {item.colors.join(', ')}</p>}
+                    {/* Size & Color selectors */}
+                    {Array.isArray(item.sizes) && item.sizes.length > 0 && (
+                        <div style={{ margin: '8px 0' }}>
+                            <label htmlFor="size-select"><strong>Size:</strong></label>
+                            <select
+                                id="size-select"
+                                value={selectedSize}
+                                onChange={(e) => setSelectedSize(e.target.value)}
+                                style={{ marginLeft: 8 }}
+                            >
+                                {item.sizes.map((s, i) => (
+                                    <option key={i} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    {Array.isArray(item.colors) && item.colors.length > 0 && (
+                        <div style={{ margin: '8px 0' }}>
+                            <label htmlFor="color-select"><strong>Color:</strong></label>
+                            <select
+                                id="color-select"
+                                value={selectedColor}
+                                onChange={(e) => setSelectedColor(e.target.value)}
+                                style={{ marginLeft: 8 }}
+                            >
+                                {item.colors.map((c, i) => (
+                                    <option key={i} value={c}>{c}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     {typeof item.rating === 'number' && <p><strong>Rating:</strong> {item.rating.toFixed(1)} ({item.numReviews || 0})</p>}
 
                     <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>

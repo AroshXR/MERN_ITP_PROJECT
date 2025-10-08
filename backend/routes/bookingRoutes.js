@@ -8,7 +8,9 @@ const {
     deleteBooking,
     getBookingById,
     updateBooking,
-    generateBookingReport
+    generateBookingReport,
+    updateBookingPaymentStatus,
+    sendBookingQRCode
 } = require("../controllers/bookingController");  // Replaced import with require
 const { protect } = require("../middleware/auth");  // Replaced import with require
 const upload = require("../middleware/multer");
@@ -21,6 +23,10 @@ bookingRouter.get('/user', protect, getUserBooking);
 bookingRouter.get('/owner', protect, getOwnerBooking);
 bookingRouter.post('/change-status', protect, changeBookingStatus);
 bookingRouter.delete('/:bookingId', protect, deleteBooking);
+
+// Payment status and QR code routes
+bookingRouter.post('/update-payment-status', protect, updateBookingPaymentStatus);
+bookingRouter.post('/send-qr-code', protect, sendBookingQRCode);
 
 // Admin route for booking reports
 bookingRouter.get('/admin/report', protect, generateBookingReport);

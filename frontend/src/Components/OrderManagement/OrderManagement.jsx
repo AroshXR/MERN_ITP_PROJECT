@@ -108,7 +108,12 @@ export default function OrderManagement() {
                     color: oi.color || 'N/A',
                     clothingType: oi.category || 'clothing',
                     totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
-                    createdAt: oi.createdAt || new Date().toISOString()
+                    createdAt: oi.createdAt || new Date().toISOString(),
+                    // Booking-specific fields
+                    type: oi.type || 'outlet',
+                    bookingId: oi.bookingId || null,
+                    rentalPeriod: oi.rentalPeriod || null,
+                    location: oi.location || null
                 })) : [];
 
                 setCartItems([...transformedItems, ...mappedOutlet]);
@@ -127,7 +132,32 @@ export default function OrderManagement() {
                 return;
             }
 
-            if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+            // Even if API fails, still load localStorage items (bookings, outlet items)
+            const raw = localStorage.getItem('outletCart');
+            const outletItems = raw ? JSON.parse(raw) : [];
+            const mappedOutlet = Array.isArray(outletItems) ? outletItems.map((oi, idx) => ({
+                id: `outlet-${oi._id || idx}`,
+                source: 'outlet',
+                name: oi.name || 'Outlet Item',
+                price: Number(oi.price) || 0,
+                quantity: Number(oi.quantity) || 1,
+                imageUrl: oi.imageUrl || null,
+                size: oi.size || 'N/A',
+                color: oi.color || 'N/A',
+                clothingType: oi.category || 'clothing',
+                totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
+                createdAt: oi.createdAt || new Date().toISOString(),
+                // Booking-specific fields
+                type: oi.type || 'outlet',
+                bookingId: oi.bookingId || null,
+                rentalPeriod: oi.rentalPeriod || null,
+                location: oi.location || null
+            })) : [];
+
+            if (mappedOutlet.length > 0) {
+                setCartItems(mappedOutlet);
+                setError(null); // Clear error if we have localStorage items
+            } else if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
                 setError('Cannot connect to server. Please check your connection and try again.');
             } else if (retryCount < 3) {
                 console.log(`Retrying... Attempt ${retryCount + 1}`);
@@ -427,36 +457,84 @@ export default function OrderManagement() {
                                             ) : (
                                                 filteredItems.map((item) => (
                                                 <div key={item.id} className="cart-item">
+                                                    {/* Display image for booking items */}
+                                                    {item.type === 'booking' && item.imageUrl && (
+                                                        <div style={{marginRight: '15px', flexShrink: 0}}>
+                                                            <img 
+                                                                src={item.imageUrl} 
+                                                                alt={item.name}
+                                                                style={{
+                                                                    width: '120px',
+                                                                    height: '120px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '8px',
+                                                                    border: '1px solid #e0e0e0'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
                                                     <div className="item-info">
-                                                        <h3 className="item-name">{item.name || `Custom ${item.clothingType || 'Clothing'}`}</h3>
+                                                        <h3 className="item-name">
+                                                            {item.name || `Custom ${item.clothingType || 'Clothing'}`}
+                                                            {item.type === 'booking' && (
+                                                                <span style={{
+                                                                    marginLeft: '10px',
+                                                                    padding: '2px 8px',
+                                                                    fontSize: '11px',
+                                                                    backgroundColor: '#4CAF50',
+                                                                    color: 'white',
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: 'normal'
+                                                                }}>
+                                                                    Rental Booking
+                                                                </span>
+                                                            )}
+                                                        </h3>
                                                         <div className="item-details">
-                                                            <p><strong>Size:</strong> {item.size || 'N/A'}</p>
-                                                            {/* <p><strong>Color:</strong> {item.color || 'N/A'}</p> */}
-                                                            <div className="color-preview">
-                                                                <div
-                                                                    className="color-palette"
-                                                                    style={{
-                                                                        backgroundColor: item.color,
-                                                                        width: "24px",
-                                                                        height: "24px",
-                                                                        borderRadius: "50%",
-                                                                        border: "1px solid #ccc",
-                                                                    }}
-                                                                    title={item.color}
-                                                                />
-                                                            </div>
-                                                            <p><strong>Type:</strong> {item.clothingType || 'N/A'}</p>
-                                                            {item.selectedDesign && item.selectedDesign.name && (
-                                                                <p><strong>Design:</strong> {item.selectedDesign.name}</p>
-                                                            )}
-                                                            {item.placedDesigns && item.placedDesigns.length > 0 && (
-                                                                <p><strong>Designs Applied:</strong> {item.placedDesigns.length}</p>
-                                                            )}
-                                                            {item.selectedDesign?.isCustomUpload && (
-                                                                <p><strong>Custom Image:</strong> Applied</p>
-                                                            )}
-                                                            {item.createdAt && (
-                                                                <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleString()}</p>
+                                                            {/* Show booking-specific info if it's a booking item */}
+                                                            {item.type === 'booking' && item.rentalPeriod ? (
+                                                                <>
+                                                                    <p><strong>Type:</strong> Outfit Rental</p>
+                                                                    <p><strong>Rental Period:</strong> {item.rentalPeriod.from} to {item.rentalPeriod.to}</p>
+                                                                    {item.location && (
+                                                                        <p><strong>Pickup Location:</strong> {item.location}</p>
+                                                                    )}
+                                                                    <p><strong>Category:</strong> {item.clothingType || 'N/A'}</p>
+                                                                    {item.createdAt && (
+                                                                        <p><strong>Added to Cart:</strong> {new Date(item.createdAt).toLocaleString()}</p>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <p><strong>Size:</strong> {item.size || 'N/A'}</p>
+                                                                    {/* <p><strong>Color:</strong> {item.color || 'N/A'}</p> */}
+                                                                    <div className="color-preview">
+                                                                        <div
+                                                                            className="color-palette"
+                                                                            style={{
+                                                                                backgroundColor: item.color,
+                                                                                width: "24px",
+                                                                                height: "24px",
+                                                                                borderRadius: "50%",
+                                                                                border: "1px solid #ccc",
+                                                                            }}
+                                                                            title={item.color}
+                                                                        />
+                                                                    </div>
+                                                                    <p><strong>Type:</strong> {item.clothingType || 'N/A'}</p>
+                                                                    {item.selectedDesign && item.selectedDesign.name && (
+                                                                        <p><strong>Design:</strong> {item.selectedDesign.name}</p>
+                                                                    )}
+                                                                    {item.placedDesigns && item.placedDesigns.length > 0 && (
+                                                                        <p><strong>Designs Applied:</strong> {item.placedDesigns.length}</p>
+                                                                    )}
+                                                                    {item.selectedDesign?.isCustomUpload && (
+                                                                        <p><strong>Custom Image:</strong> Applied</p>
+                                                                    )}
+                                                                    {item.createdAt && (
+                                                                        <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleString()}</p>
+                                                                    )}
+                                                                </>
                                                             )}
                                                         </div>
                                                         <p className="item-price">${(item.price || 0).toFixed(2)} per item</p>
@@ -469,29 +547,39 @@ export default function OrderManagement() {
                                                         >
                                                             <Trash2 className="small-icon" />
                                                         </button>
-                                                        <button
-                                                            onClick={() => editItem(item.id)}
-                                                            className="edit-button"
-                                                            title="Edit item"
-                                                        >
-                                                            <Edit3 className="small-icon" />
-                                                        </button>
-                                                        <div className="quantity-controls">
+                                                        {/* Hide edit button for booking items */}
+                                                        {item.type !== 'booking' && (
                                                             <button
-                                                                onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
-                                                                className="quantity-button"
-                                                                disabled={(item.quantity || 1) <= 1}
+                                                                onClick={() => editItem(item.id)}
+                                                                className="edit-button"
+                                                                title="Edit item"
                                                             >
-                                                                <Minus className="small-icon" />
+                                                                <Edit3 className="small-icon" />
                                                             </button>
-                                                            <span className="quantity-value">{item.quantity || 1}</span>
-                                                            <button
-                                                                onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
-                                                                className="quantity-button"
-                                                            >
-                                                                <Plus className="small-icon" />
-                                                            </button>
-                                                        </div>
+                                                        )}
+                                                        {/* Disable quantity controls for booking items */}
+                                                        {item.type !== 'booking' ? (
+                                                            <div className="quantity-controls">
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
+                                                                    className="quantity-button"
+                                                                    disabled={(item.quantity || 1) <= 1}
+                                                                >
+                                                                    <Minus className="small-icon" />
+                                                                </button>
+                                                                <span className="quantity-value">{item.quantity || 1}</span>
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
+                                                                    className="quantity-button"
+                                                                >
+                                                                    <Plus className="small-icon" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="quantity-controls">
+                                                                <span className="quantity-value" style={{padding: '0 20px'}}>Qty: {item.quantity || 1}</span>
+                                                            </div>
+                                                        )}
                                                         <p className="item-total">${(item.totalPrice || 0).toFixed(2)}</p>
                                                     </div>
                                                 </div>
