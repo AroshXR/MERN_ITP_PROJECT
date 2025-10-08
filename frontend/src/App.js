@@ -39,6 +39,7 @@ import OutfitDetails from './pages/OutfitDetails';
 import Outfits from './pages/Outfits';
 import MyBookings from './pages/MyBookings';
 import EditBooking from './pages/EditBooking';
+import BookingQRView from './pages/BookingQRView';
 import Layout from './pages/owner/Layout';
 import Dashboard from './pages/owner/Dashboard';
 import AddOutfit from './pages/owner/AddOutfit';
@@ -276,6 +277,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path='/booking-qr-view' element={<BookingQRView />} />
         <Route 
           path='/owner' 
           element={
