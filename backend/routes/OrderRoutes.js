@@ -5,7 +5,7 @@ const router = express.Router();
 const orderController = require("../controllers/OrderController");
 
 // Import authentication middleware (if needed)
-// const { authenticateToken } = require("../middleware/auth");
+const { protect } = require("../middleware/auth");
 
 // Order routes
 
@@ -15,6 +15,9 @@ router.post("/", orderController.createOrder);
 // GET /orders - Get all orders (with optional query parameters)
 // Query parameters: page, limit, AdminID
 router.get("/", orderController.getAllOrders);
+
+// GET /orders/my - Get orders for authenticated user
+router.get("/my", protect, orderController.getMyOrders);
 
 // GET /orders/statistics - Get order statistics
 router.get("/statistics", orderController.getOrderStatistics);

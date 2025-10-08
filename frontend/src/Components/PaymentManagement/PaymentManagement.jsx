@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
-  const { isAuthenticated, getToken, logout } = useAuth()
+  const { isAuthenticated, getToken, logout, currentUser } = useAuth()
 
   const [currentStep, setCurrentStep] = useState(1)
   const [shippingMethod, setShippingMethod] = useState("standard")
@@ -75,24 +75,28 @@ const CheckoutPage = () => {
       })
 
       const items = Array.isArray(listRes.data?.data) ? listRes.data.data : []
-      if (!items.length) {
-        setCartItems([])
-        return
+      
+      // Delete each item in parallel (best-effort)
+      if (items.length > 0) {
+        await Promise.allSettled(
+          items.map((it) =>
+            axios.delete(`http://localhost:5001/cloth-customizer/${it._id}`, {
+              headers: { Authorization: `Bearer ${authToken}` }
+            })
+          )
+        )
       }
 
-      // Delete each item in parallel (best-effort)
-      await Promise.allSettled(
-        items.map((it) =>
-          axios.delete(`http://localhost:5001/cloth-customizer/${it._id}`, {
-            headers: { Authorization: `Bearer ${authToken}` }
-          })
-        )
-      )
+      // Clear localStorage cart (outlet items and bookings)
+      localStorage.removeItem('outletCart')
 
       // Update local state
       setCartItems([])
     } catch (err) {
       console.error('Error clearing cart:', err)
+      // Still try to clear localStorage even if API fails
+      localStorage.removeItem('outletCart')
+      setCartItems([])
       // Fail silently to not block success flow
     }
   }
@@ -180,7 +184,12 @@ const CheckoutPage = () => {
           color: oi.color || 'N/A',
           clothingType: oi.category || 'clothing',
           totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
-          createdAt: oi.createdAt || new Date().toISOString()
+          createdAt: oi.createdAt || new Date().toISOString(),
+          // Booking-specific fields
+          type: oi.type || 'outlet',
+          bookingId: oi.bookingId || null,
+          rentalPeriod: oi.rentalPeriod || null,
+          location: oi.location || null
         })) : []
 
         // If a direct purchase existed and was set earlier, prefer that list over merged list
@@ -191,15 +200,18 @@ const CheckoutPage = () => {
           return
         }
 
-        setCartItems([...transformedItems, ...mappedOutlet])
+        const allItems = [...transformedItems, ...mappedOutlet]
+        setCartItems(allItems)
 
-        if (transformedItems.length === 0) {
+        if (allItems.length === 0) {
           // Show empty-cart error only when not in post-payment cleanup flow
           if (!ignoreEmptyCart) {
             setCartError('Your cart is empty. Please add items to your cart before proceeding to checkout.')
           } else {
             setCartError(null)
           }
+        } else {
+          setCartError(null)
         }
       } else {
         setCartError('Failed to fetch cart items')
@@ -214,7 +226,34 @@ const CheckoutPage = () => {
         return
       }
 
-      setCartError('Failed to load cart items. Please try again.')
+      // Even if API fails, still load localStorage items (bookings, outlet items)
+      const raw = localStorage.getItem('outletCart')
+      const outletItems = raw ? JSON.parse(raw) : []
+      const mappedOutlet = Array.isArray(outletItems) ? outletItems.map((oi, idx) => ({
+        id: `outlet-${oi._id || idx}`,
+        source: 'outlet',
+        name: oi.name || 'Outlet Item',
+        price: Number(oi.price) || 0,
+        quantity: Number(oi.quantity) || 1,
+        imageUrl: oi.imageUrl || null,
+        size: oi.size || 'N/A',
+        color: oi.color || 'N/A',
+        clothingType: oi.category || 'clothing',
+        totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
+        createdAt: oi.createdAt || new Date().toISOString(),
+        // Booking-specific fields
+        type: oi.type || 'outlet',
+        bookingId: oi.bookingId || null,
+        rentalPeriod: oi.rentalPeriod || null,
+        location: oi.location || null
+      })) : []
+
+      if (mappedOutlet.length > 0) {
+        setCartItems(mappedOutlet)
+        setCartError(null) // Clear error if we have localStorage items
+      } else {
+        setCartError('Failed to load cart items. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -436,7 +475,7 @@ const CheckoutPage = () => {
           cartItems: cartItems
         },
         giftMessage: formData.giftMessage,
-        userId: getToken() ? JSON.parse(atob(getToken().split('.')[1])).userId : null
+        userId: currentUser?.id || currentUser?._id || null
       }
 
       console.log('Submitting payment data:', paymentData)
@@ -460,6 +499,25 @@ const CheckoutPage = () => {
         }
         
         setSubmitMessage(successMessage)
+
+        // Update payment status for any booking items in the cart
+        const bookingItems = cartItems.filter(item => item.type === 'booking' && item.bookingId);
+        if (bookingItems.length > 0) {
+          for (const item of bookingItems) {
+            try {
+              await axios.post('http://localhost:5001/api/booking/update-payment-status', {
+                bookingId: item.bookingId,
+                paymentStatus: 'paid'
+              }, {
+                headers: {
+                  Authorization: `Bearer ${getToken()}`
+                }
+              });
+            } catch (err) {
+              console.error('Failed to update booking payment status:', err);
+            }
+          }
+        }
 
         // Prevent showing empty-cart error during post-payment cleanup
         setIgnoreEmptyCart(true)
@@ -1149,7 +1207,6 @@ const CheckoutPage = () => {
                   </div>
                   <p className="guarantee">30-day money-back guarantee</p>
                 </div>
-
 
               </div>
             </div>

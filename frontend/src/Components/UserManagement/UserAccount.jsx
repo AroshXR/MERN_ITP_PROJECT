@@ -8,7 +8,7 @@ import './UserAccount.css';
 
 const UserAccount = () => {
     const navigate = useNavigate();
-    const { currentUser, logout, updateStoredUser, refreshAuth } = useAuth();
+    const { currentUser, logout, updateStoredUser, refreshAuth, getToken } = useAuth();
 
     const [profile, setProfile] = useState(null);
     const [profileLoading, setProfileLoading] = useState(true);
@@ -23,6 +23,11 @@ const UserAccount = () => {
     const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
     const [expandedNotifications, setExpandedNotifications] = useState(new Set());
+
+    // Orders state
+    const [orders, setOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(false);
+    const [ordersError, setOrdersError] = useState('');
 
     const [formState, setFormState] = useState({
         username: '',
@@ -46,6 +51,81 @@ const UserAccount = () => {
             phoneNumber: userData.phoneNumber || ''
         });
         // identity verification removed
+    };
+
+    // Load authenticated user's orders
+    const fetchMyOrders = async () => {
+        if (!userId) return;
+        setOrdersLoading(true);
+        setOrdersError('');
+        try {
+            const token = typeof getToken === 'function' ? getToken() : null;
+            const response = await axios.get('http://localhost:5001/orders/my', {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined
+            });
+            // Controller returns { status:'ok', data:[...] }
+            const list = Array.isArray(response.data?.data)
+                ? response.data.data
+                : Array.isArray(response.data?.orders)
+                    ? response.data.orders
+                    : Array.isArray(response.data)
+                        ? response.data
+                        : [];
+            // Newest first already sorted by backend; keep safety sort
+            list.sort((a, b) => new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt));
+            // If empty, try fallback via AdminID query
+            if (!list.length) {
+                try {
+                    const fallback = await axios.get(`http://localhost:5001/orders`, {
+                        params: { AdminID: userId },
+                        headers: token ? { Authorization: `Bearer ${token}` } : undefined
+                    });
+                    const fallbackList = Array.isArray(fallback.data?.data)
+                        ? fallback.data.data
+                        : Array.isArray(fallback.data?.orders)
+                            ? fallback.data.orders
+                            : Array.isArray(fallback.data)
+                                ? fallback.data
+                                : [];
+                    fallbackList.sort((a, b) => new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt));
+                    setOrders(fallbackList);
+                } catch (fbErr) {
+                    console.error('Fallback /orders?AdminID failed:', fbErr);
+                    setOrders(list);
+                }
+            } else {
+                setOrders(list);
+            }
+        } catch (error) {
+            console.error('Failed to load orders:', error);
+            // If unauthorized, try fallback without /my
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                try {
+                    const token = typeof getToken === 'function' ? getToken() : null;
+                    const fallback = await axios.get(`http://localhost:5001/orders`, {
+                        params: { AdminID: userId },
+                        headers: token ? { Authorization: `Bearer ${token}` } : undefined
+                    });
+                    const fallbackList = Array.isArray(fallback.data?.data)
+                        ? fallback.data.data
+                        : Array.isArray(fallback.data?.orders)
+                            ? fallback.data.orders
+                            : Array.isArray(fallback.data)
+                                ? fallback.data
+                                : [];
+                    fallbackList.sort((a, b) => new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt));
+                    setOrders(fallbackList);
+                    setOrdersError('');
+                } catch (fbErr) {
+                    console.error('Fallback /orders?AdminID failed:', fbErr);
+                    setOrdersError(fbErr.response?.data?.message || error.response?.data?.message || 'Unable to load your orders.');
+                }
+            } else {
+                setOrdersError(error.response?.data?.message || 'Unable to load your orders.');
+            }
+        } finally {
+            setOrdersLoading(false);
+        }
     };
 
     // Reusable notifications loader
@@ -98,6 +178,7 @@ const UserAccount = () => {
 
         loadProfile();
         fetchNotifications();
+        fetchMyOrders();
         // Poll every 15s while on this page to reflect new notifications automatically
         const interval = setInterval(fetchNotifications, 15000);
         return () => clearInterval(interval);
@@ -465,6 +546,57 @@ const UserAccount = () => {
                     )}
                     <p className="panel-description">Admin status updates, interview schedules, and account alerts appear here.</p>
                 </section>
+
+                {/* Orders Panel */}
+                <section className="panel">
+                    <div className="panel-header">
+                        <h2>
+                            <i className="bx bx-receipt"></i> Your Orders
+                        </h2>
+                        <div className="panel-header__right">
+                            <button
+                                type="button"
+                                className="header-nav-btn secondary"
+                                onClick={fetchMyOrders}
+                                disabled={ordersLoading}
+                            >
+                                <i className="bx bx-refresh"></i>
+                                {ordersLoading ? 'Refreshing...' : 'Refresh'}
+                            </button>
+                        </div>
+                    </div>
+                    {ordersLoading ? (
+                        <p>Loading your orders...</p>
+                    ) : ordersError ? (
+                        <p className="form-feedback error">{ordersError}</p>
+                    ) : !orders.length ? (
+                        <p className="empty-state">You have not placed any orders yet.</p>
+                    ) : (
+                        <div className="tableWrapper">
+                            <table className="orderTable">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {orders.map((o) => (
+                                        <tr key={o._id || o.OrderID}>
+                                            <td>{o.OrderID || o._id}</td>
+                                            <td className={`orderStatus ${String(o.status || '').toLowerCase()}`}>{o.status || '-'}</td>
+                                            <td>{Number(o.Price ?? o.price ?? 0).toFixed(2)}</td>
+                                            <td>{o.CreatedAt || o.createdAt}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    <p className="panel-description">Orders placed via the customizer will appear here.</p>
+                </section>
             </main>
             <Footer />
         </div>
@@ -472,4 +604,3 @@ const UserAccount = () => {
 };
 
 export default UserAccount;
-
