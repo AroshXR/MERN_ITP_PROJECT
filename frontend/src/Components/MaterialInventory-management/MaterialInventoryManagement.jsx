@@ -530,7 +530,7 @@ export default function MaterialInventoryManagement() {
         )}
 
         {activeTab === "inventory" && (
-          <div>
+          <div className="inventory-section">
             {/* Enhanced Search and Filter Section */}
             <div className="inventory-controls">
               <div className="search-section">
@@ -729,9 +729,6 @@ export default function MaterialInventoryManagement() {
                               title="Use Item"
                               disabled={item.quantity === 0}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M9 11H1v2h8v8h2v-8h8v-2h-8V3H9v8z"/>
-                              </svg>
                               Use
                             </button>
                             <button
@@ -739,10 +736,6 @@ export default function MaterialInventoryManagement() {
                               onClick={() => openModal("quantity", item)}
                               title="Update Quantity"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                              </svg>
                               Qty
                             </button>
                             <button
@@ -750,10 +743,6 @@ export default function MaterialInventoryManagement() {
                               onClick={() => openModal("item", item)}
                               title="Edit Item"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                              </svg>
                               Edit
                             </button>
                             <button
@@ -761,10 +750,6 @@ export default function MaterialInventoryManagement() {
                               onClick={() => handleDelete(item._id)}
                               title="Delete Item"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="3,6 5,6 21,6"/>
-                                <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
-                              </svg>
                               Del
                             </button>
                           </div>

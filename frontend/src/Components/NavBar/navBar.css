@@ -1,17 +1,50 @@
-.navbar {
+.main-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   background: linear-gradient(to right, #000000, #1a1a1a);
   padding: 14px 16px; /* increased height and horizontal padding */
   color: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
   position: relative;
   z-index: 2;
+  overflow: visible; /* allow nav buttons to show scrollbar */
+}
+
+/* Horizontal scroll wrapper for entire row (logo + menu + buttons) */
+.main-navbar .navbar-scroll {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; /* Firefox */
+  flex: 1 1 auto;              /* allow taking remaining space */
+}
+.main-navbar .navbar-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.main-navbar .navbar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 4px;
+}
+
+/* Inner content keeps layout consistent */
+.main-navbar .navbar-content {
+  display: inline-flex;         /* inline so width:max-content works */
+  align-items: center;
+  gap: 12px;
+  width: max-content;           /* expand to fit all items */
+  min-width: max-content;       /* prevent shrinking to container */
+  flex: 0 0 auto;               /* do not shrink inside scroll */
 }
 
 /* Logo */
-.logo {
+.main-navbar .logo {
   margin: 0;
   font-size: 30px; /* slightly larger logo */
   font-weight: bold;
@@ -19,22 +52,57 @@
   color: #ffffff;
   text-shadow: 0 0 10px #666666;
   transition: all 0.3s ease;
+  flex: 0 0 auto; /* don't allow logo to consume flexible space */
+  max-width: 40vw;               /* keep room for buttons */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;             /* spacing from buttons */
+  position: relative;
+  z-index: 1;                    /* keep below buttons if overlap */
 }
 
-.logo:hover {
+.main-navbar .logo:hover {
   color: #f0f0f0;
   text-shadow: 0 0 15px #999999;
   transform: scale(1.05);
 }
 
 /* Nav buttons container */
-.nav-buttons {
+.main-navbar .nav-buttons {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;              /* keep in one line */
+  overflow-x: auto;               /* allow horizontal scroll if overflow */
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;                 /* take remaining space */
+  justify-content: flex-end;      /* align to right */
+  white-space: nowrap;            /* ensure no wrap for non-flex children */
+  min-width: 0;                   /* allow flex child to shrink properly */
+  position: relative;
+  z-index: 2;                     /* above logo if they overlap */
 }
 
-.nav-buttons button {
-  margin-left: 12px;
+/* Subtle horizontal scrollbar for overflow */
+.main-navbar .nav-buttons::-webkit-scrollbar {
+  height: 6px;
+}
+.main-navbar .nav-buttons::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main-navbar .nav-buttons::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 4px;
+}
+.main-navbar .nav-buttons {
+  scrollbar-color: rgba(255,255,255,0.25) transparent; /* Firefox */
+  scrollbar-width: thin;
+}
+
+.main-navbar .nav-buttons button {
+  margin-left: 0;                 /* rely on gap instead of margin */
   padding: 10px 22px; /* larger buttons */
   background-color: #333333;
   border: 2px solid #666666;
@@ -45,30 +113,66 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  flex: 0 0 auto;                 /* prevent shrinking to keep single row */
+  white-space: nowrap;            /* keep label on one line */
 }
 
-.nav-buttons button:hover {
+.main-navbar .nav-buttons button:hover {
   background-color: #ffffff;
   color: #000000;
   border-color: #ffffff;
   transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
 }
 
 /* Hamburger menu icon */
-.menu-icon {
+.main-navbar .menu-icon {
   display: none;
   font-size: 30px;
   cursor: pointer;
 }
 
+/* Medium screen */
+@media screen and (max-width: 1024px) {
+  .main-navbar .nav-buttons {
+    overflow-x: visible;
+    flex-wrap: wrap;               /* allow two rows on tablet */
+    gap: 6px;
+    row-gap: 6px;
+  }
+  .main-navbar .nav-buttons button {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+}
+
+/* Slightly earlier reductions for laptops */
+@media screen and (max-width: 1200px) {
+  .main-navbar .nav-buttons {
+    overflow-x: visible;           /* no horizontal scroll */
+    flex-wrap: wrap;               /* wrap to next line if needed */
+    row-gap: 6px;                  /* vertical spacing between rows */
+    justify-content: flex-end;
+  }
+  .main-navbar .nav-buttons button {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .main-navbar .nav-buttons button {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
 /* Mobile view */
 @media screen and (max-width: 768px) {
-  .menu-icon {
+  .main-navbar .menu-icon {
     display: block;
   }
 
-  .nav-buttons {
+  .main-navbar .nav-buttons {
     position: absolute;
     top: 70px; /* account for taller navbar */
     right: 0;
@@ -81,13 +185,14 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.8);
   }
 
-  .nav-buttons.active {
+  .main-navbar .nav-buttons.active {
     display: flex;
   }
 
-  .nav-buttons button {
+  .main-navbar .nav-buttons button {
     margin: 10px 0;
     width: 100%;
     text-align: left;
   }
 }
+

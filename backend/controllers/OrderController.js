@@ -1,4 +1,5 @@
 const Order = require("../models/OrderModel");
+const PaymentDetails = require("../models/PaymentDetailsModel");
 
 // Generate unique order ID
 const generateOrderId = () => {
@@ -290,3 +291,44 @@ module.exports = {
   deleteOrder,
   getOrderStatistics
 };
+
+// Get orders for the authenticated user
+// Note: Uses req.user injected by auth middleware
+const getMyOrders = async (req, res) => {
+  try {
+    console.log('[getMyOrders] Incoming request');
+    if (!req.user || !req.user._id) {
+      console.log('[getMyOrders] No authenticated user on request');
+      return res.status(401).json({ status: 'error', message: 'Not authenticated' });
+    }
+
+    const userId = req.user._id;
+    console.log('[getMyOrders] Authenticated user:', String(userId));
+    // Also include orders linked through PaymentDetails.userId
+    const paymentDocs = await PaymentDetails.find({ userId }).select('_id').lean();
+    console.log('[getMyOrders] Found payment docs:', paymentDocs.length);
+    const paymentIds = paymentDocs.map(p => String(p._id));
+
+    const query = paymentIds.length
+      ? { $or: [ { AdminID: userId }, { PaymentID: { $in: paymentIds } } ] }
+      : { AdminID: userId };
+    console.log('[getMyOrders] Query:', JSON.stringify(query));
+
+    const orders = await Order.find(query)
+      .sort({ CreatedAt: -1 })
+      .populate('DesignID', 'clothingType color size selectedDesign totalPrice')
+      .lean();
+    console.log('[getMyOrders] Orders found:', orders.length);
+
+    return res.status(200).json({
+      status: 'ok',
+      message: 'User orders retrieved successfully',
+      data: orders,
+    });
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    return res.status(500).json({ status: 'error', message: 'Internal server error while fetching user orders' });
+  }
+};
+
+module.exports.getMyOrders = getMyOrders;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../AuthGuard/AuthGuard'
-import Navbar from '../Components/pasindu/Navbar'
+import NavBar from '../Components/NavBar/navBar'
 import Footer from '../Components/Footer/Footer'
 
 const EditBooking = () => {
@@ -108,7 +108,7 @@ const EditBooking = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <NavBar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-500">Loading booking details...</div>
         </div>
@@ -120,7 +120,7 @@ const EditBooking = () => {
   if (!booking) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <NavBar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-red-500">Booking not found</div>
         </div>
@@ -133,7 +133,7 @@ const EditBooking = () => {
   if (booking.status !== 'pending') {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <NavBar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 text-lg mb-4">This booking cannot be edited</div>
@@ -153,7 +153,7 @@ const EditBooking = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <NavBar />
       
       <div className="flex-1 bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4">

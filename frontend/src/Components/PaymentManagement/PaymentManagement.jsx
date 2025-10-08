@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
-  const { isAuthenticated, getToken, logout } = useAuth()
+  const { isAuthenticated, getToken, logout, currentUser } = useAuth()
 
   const [currentStep, setCurrentStep] = useState(1)
   const [shippingMethod, setShippingMethod] = useState("standard")
@@ -436,7 +436,7 @@ const CheckoutPage = () => {
           cartItems: cartItems
         },
         giftMessage: formData.giftMessage,
-        userId: getToken() ? JSON.parse(atob(getToken().split('.')[1])).userId : null
+        userId: currentUser?.id || currentUser?._id || null
       }
 
       console.log('Submitting payment data:', paymentData)
