@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthGuard/AuthGuard';
 import './navBar.css';
- 
+
 function NavBar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,19 +23,17 @@ function NavBar() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    return () => {
-      document.head.removeChild(link);
-    };
+    return () => document.head.removeChild(link);
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = () => {
-    const confirmed = window.confirm('Are you sure you want to log out?');
-    if (!confirmed) return;
-    logout();
-    navigate('/login');
-    closeMenu();
+    if (window.confirm('Are you sure you want to log out?')) {
+      logout();
+      navigate('/login');
+      closeMenu();
+    }
   };
 
   const handleLogoClick = () => {
@@ -45,115 +43,52 @@ function NavBar() {
 
   const showAuthLinks = !isLoggedIn && !isLoginPage && !isRegisterPage;
   const showLogout = isLoggedIn && !(isHomePage || isLoginPage || isRegisterPage || isCustomizerPage);
-  const isCustomerOrApplicant = userType === 'Customer' || userType === 'Applicant';
 
   return (
     <nav className="navbar">
-      <h2 className="logo" onClick={handleLogoClick}>Klassy T Shirts</h2>
+      <h2 className="logo" onClick={handleLogoClick}>
+        Klassy T Shirts
+      </h2>
 
       <div className="menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
         <i className={menuOpen ? 'bx bx-x' : 'bx bx-menu'}></i>
       </div>
 
-      <div className={`nav-buttons ${menuOpen ? 'active' : ''}`}>
-        <Link to="/customizer" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-info-circle'></i> Customizer
-          </button>
-        </Link>
-        <Link to="/career" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-briefcase'></i> Career
-          </button>
-        </Link>
-        <Link to="/rentalhome" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-home'></i> Rental Home
-          </button>
-        </Link>
-        <Link to="/color-guide" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-palette'></i> Color Guide
-          </button>
-        </Link>
-        <Link to="/outlet" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-store'></i> Outlet
-          </button>
-        </Link>
-        <Link to="/orderManagement" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-cart'></i> Cart
-          </button>
-        </Link>
+      <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
+        <Link to="/customizer" onClick={closeMenu}><i className='bx bx-t-shirt'></i> Customizer</Link>
+        <Link to="/career" onClick={closeMenu}><i className='bx bx-briefcase'></i> Career</Link>
+        <Link to="/rentalhome" onClick={closeMenu}><i className='bx bx-home'></i> Rental Home</Link>
+        <Link to="/color-guide" onClick={closeMenu}><i className='bx bx-palette'></i> Colors</Link>
+        <Link to="/outlet" onClick={closeMenu}><i className='bx bx-store'></i> Outlet</Link>
+
         {userType === 'Applicant' && (
-          <Link to="/applicant-dashboard" onClick={closeMenu}>
-            <button className="nav-btn">
-              <i className='bx bx-user-check'></i> My Applications
-            </button>
-          </Link>
+          <Link to="/applicant-dashboard" onClick={closeMenu}><i className='bx bx-user-check'></i> My Applications</Link>
         )}
         {userType === 'Tailor' && (
-          <Link to="/tailorHome" onClick={closeMenu}>
-            <button className="nav-btn">
-              <i className='bx bx-scissors'></i> Tailor Home
-            </button>
-          </Link>
+          <Link to="/tailorHome" onClick={closeMenu}><i className='bx bx-scissors'></i> Tailor</Link>
         )}
         {userType === 'Admin' && (
           <>
-            <Link to="/admin-hub" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-shield'></i> Admin
-              </button>
-            </Link>
-            <Link to="/admin/custom-orders" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-t-shirt'></i> Tailor Management
-              </button>
-            </Link>
+            <Link to="/admin-hub" onClick={closeMenu}><i className='bx bx-shield'></i> Admin</Link>
+            <Link to="/admin/custom-orders" onClick={closeMenu}><i className='bx bx-cog'></i> Management</Link>
           </>
         )}
-        
-        <Link to="/contact" onClick={closeMenu}>
-          <button className="nav-btn">
-            <i className='bx bx-phone'></i> Contact Us
-          </button>
-        </Link>
-        {isLoggedIn && userType === 'Customer' && (
-          <Link to="/orderManagement" onClick={closeMenu}>
-            <button className="nav-btn">
-              <i className='bx bx-cart'></i> Cart
-            </button>
-          </Link>
-        )}
-        
+
+        <Link to="/contact" onClick={closeMenu}><i className='bx bx-phone'></i> Contact</Link>
+
         {isLoggedIn && (
-          <Link to="/user/account" onClick={closeMenu}>
-            <button className="nav-btn">
-              <i className='bx bx-user-circle'></i> My Account
-            </button>
-          </Link>
+          <Link to="/user/account" onClick={closeMenu}><i className='bx bx-user-circle'></i> Account</Link>
         )}
 
         {showAuthLinks && (
           <>
-            <Link to="/login" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-log-in'></i> Login
-              </button>
-            </Link>
-            <Link to="/register" onClick={closeMenu}>
-              <button className="nav-btn">
-                <i className='bx bx-user-plus'></i> Register
-              </button>
-            </Link>
+            <Link to="/login" onClick={closeMenu}><i className='bx bx-log-in'></i> Login</Link>
+            <Link to="/register" onClick={closeMenu}><i className='bx bx-user-plus'></i> Register</Link>
           </>
         )}
+
         {isLoggedIn && showLogout && (
-          <button onClick={handleLogout}>
-            <i className='bx bx-log-out'></i> Logout
-          </button>
+          <span className="logout" onClick={handleLogout}><i className='bx bx-log-out'></i> Logout</span>
         )}
       </div>
     </nav>
