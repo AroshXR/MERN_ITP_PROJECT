@@ -94,8 +94,29 @@ export default function OrderManagement() {
                     totalPrice: item.totalPrice || 0,
                     createdAt: item.createdAt || new Date().toISOString()
                 }));
+                // Merge outlet items from localStorage
+                const raw = localStorage.getItem('outletCart');
+                const outletItems = raw ? JSON.parse(raw) : [];
+                const mappedOutlet = Array.isArray(outletItems) ? outletItems.map((oi, idx) => ({
+                    id: `outlet-${oi._id || idx}`,
+                    source: 'outlet',
+                    name: oi.name || 'Outlet Item',
+                    price: Number(oi.price) || 0,
+                    quantity: Number(oi.quantity) || 1,
+                    imageUrl: oi.imageUrl || null,
+                    size: oi.size || 'N/A',
+                    color: oi.color || 'N/A',
+                    clothingType: oi.category || 'clothing',
+                    totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
+                    createdAt: oi.createdAt || new Date().toISOString(),
+                    // Booking-specific fields
+                    type: oi.type || 'outlet',
+                    bookingId: oi.bookingId || null,
+                    rentalPeriod: oi.rentalPeriod || null,
+                    location: oi.location || null
+                })) : [];
 
-                setCartItems(transformedItems);
+                setCartItems([...transformedItems, ...mappedOutlet]);
             } else {
                 setCartItems([]);
                 setError('Failed to fetch cart items');
@@ -111,7 +132,32 @@ export default function OrderManagement() {
                 return;
             }
 
-            if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+            // Even if API fails, still load localStorage items (bookings, outlet items)
+            const raw = localStorage.getItem('outletCart');
+            const outletItems = raw ? JSON.parse(raw) : [];
+            const mappedOutlet = Array.isArray(outletItems) ? outletItems.map((oi, idx) => ({
+                id: `outlet-${oi._id || idx}`,
+                source: 'outlet',
+                name: oi.name || 'Outlet Item',
+                price: Number(oi.price) || 0,
+                quantity: Number(oi.quantity) || 1,
+                imageUrl: oi.imageUrl || null,
+                size: oi.size || 'N/A',
+                color: oi.color || 'N/A',
+                clothingType: oi.category || 'clothing',
+                totalPrice: (Number(oi.price) || 0) * (Number(oi.quantity) || 1),
+                createdAt: oi.createdAt || new Date().toISOString(),
+                // Booking-specific fields
+                type: oi.type || 'outlet',
+                bookingId: oi.bookingId || null,
+                rentalPeriod: oi.rentalPeriod || null,
+                location: oi.location || null
+            })) : [];
+
+            if (mappedOutlet.length > 0) {
+                setCartItems(mappedOutlet);
+                setError(null); // Clear error if we have localStorage items
+            } else if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
                 setError('Cannot connect to server. Please check your connection and try again.');
             } else if (retryCount < 3) {
                 console.log(`Retrying... Attempt ${retryCount + 1}`);
@@ -134,14 +180,7 @@ export default function OrderManagement() {
         }
 
         try {
-            const authToken = getToken();
-            if (!authToken) {
-                alert('Authentication token not found. Please log in again.');
-                logout();
-                history('/login');
-                return;
-            }
-
+            const isOutlet = String(id).startsWith('outlet-');
             const itemToUpdate = cartItems.find(item => item.id === id);
             if (!itemToUpdate) {
                 console.error('Item not found for update:', id);
@@ -151,7 +190,34 @@ export default function OrderManagement() {
 
             const newTotalPrice = (itemToUpdate.price * newQuantity);
 
-            const response = await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
+            if (isOutlet) {
+                // Update localStorage cart
+                const raw = localStorage.getItem('outletCart');
+                const cart = raw ? JSON.parse(raw) : [];
+                const underlyingId = String(id).replace('outlet-', '');
+                const idx = cart.findIndex(ci => String(ci._id) === underlyingId);
+                if (idx >= 0) {
+                    cart[idx].quantity = newQuantity;
+                    cart[idx].totalPrice = newTotalPrice;
+                    localStorage.setItem('outletCart', JSON.stringify(cart));
+                }
+                setCartItems((items) => items.map((item) =>
+                    item.id === id ? { ...item, quantity: newQuantity, totalPrice: newTotalPrice } : item
+                ));
+                showNotification('Quantity updated successfully!');
+                return;
+            }
+
+            // Backend update for cloth-customizer items
+            const authToken = getToken();
+            if (!authToken) {
+                alert('Authentication token not found. Please log in again.');
+                logout();
+                history('/login');
+                return;
+            }
+
+            await axios.put(`http://localhost:5001/cloth-customizer/${id}`, {
                 quantity: newQuantity,
                 totalPrice: newTotalPrice
             }, {
@@ -159,8 +225,6 @@ export default function OrderManagement() {
                     Authorization: `Bearer ${authToken}`
                 }
             });
-
-            console.log('Backend update response:', response.data);
 
             setCartItems((items) => items.map((item) =>
                 item.id === id ? { ...item, quantity: newQuantity, totalPrice: newTotalPrice } : item
@@ -198,6 +262,18 @@ export default function OrderManagement() {
         if (!isConfirmed) return;
 
         try {
+            const isOutlet = String(id).startsWith('outlet-');
+            if (isOutlet) {
+                const underlyingId = String(id).replace('outlet-', '');
+                const raw = localStorage.getItem('outletCart');
+                const cart = raw ? JSON.parse(raw) : [];
+                const next = cart.filter(ci => String(ci._id) !== underlyingId);
+                localStorage.setItem('outletCart', JSON.stringify(next));
+                setCartItems((items) => items.filter((item) => item.id !== id));
+                showNotification('Item removed from cart successfully!');
+                return;
+            }
+
             const authToken = getToken();
             if (!authToken) {
                 alert('Authentication token not found. Please log in again.');
@@ -206,12 +282,11 @@ export default function OrderManagement() {
                 return;
             }
 
-            const response = await axios.delete(`http://localhost:5001/cloth-customizer/${id}`, {
+            await axios.delete(`http://localhost:5001/cloth-customizer/${id}`, {
                 headers: {
                     Authorization: `Bearer ${authToken}`
                 }
             });
-            console.log('Backend delete response:', response.data);
 
             setCartItems((items) => items.filter((item) => item.id !== id));
             showNotification('Item removed from cart successfully!');
@@ -382,36 +457,84 @@ export default function OrderManagement() {
                                             ) : (
                                                 filteredItems.map((item) => (
                                                 <div key={item.id} className="cart-item">
+                                                    {/* Display image for booking items */}
+                                                    {item.type === 'booking' && item.imageUrl && (
+                                                        <div style={{marginRight: '15px', flexShrink: 0}}>
+                                                            <img 
+                                                                src={item.imageUrl} 
+                                                                alt={item.name}
+                                                                style={{
+                                                                    width: '120px',
+                                                                    height: '120px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '8px',
+                                                                    border: '1px solid #e0e0e0'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
                                                     <div className="item-info">
-                                                        <h3 className="item-name">{item.name || `Custom ${item.clothingType || 'Clothing'}`}</h3>
+                                                        <h3 className="item-name">
+                                                            {item.name || `Custom ${item.clothingType || 'Clothing'}`}
+                                                            {item.type === 'booking' && (
+                                                                <span style={{
+                                                                    marginLeft: '10px',
+                                                                    padding: '2px 8px',
+                                                                    fontSize: '11px',
+                                                                    backgroundColor: '#4CAF50',
+                                                                    color: 'white',
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: 'normal'
+                                                                }}>
+                                                                    Rental Booking
+                                                                </span>
+                                                            )}
+                                                        </h3>
                                                         <div className="item-details">
-                                                            <p><strong>Size:</strong> {item.size || 'N/A'}</p>
-                                                            {/* <p><strong>Color:</strong> {item.color || 'N/A'}</p> */}
-                                                            <div className="color-preview">
-                                                                <div
-                                                                    className="color-palette"
-                                                                    style={{
-                                                                        backgroundColor: item.color,
-                                                                        width: "24px",
-                                                                        height: "24px",
-                                                                        borderRadius: "50%",
-                                                                        border: "1px solid #ccc",
-                                                                    }}
-                                                                    title={item.color}
-                                                                />
-                                                            </div>
-                                                            <p><strong>Type:</strong> {item.clothingType || 'N/A'}</p>
-                                                            {item.selectedDesign && item.selectedDesign.name && (
-                                                                <p><strong>Design:</strong> {item.selectedDesign.name}</p>
-                                                            )}
-                                                            {item.placedDesigns && item.placedDesigns.length > 0 && (
-                                                                <p><strong>Designs Applied:</strong> {item.placedDesigns.length}</p>
-                                                            )}
-                                                            {item.selectedDesign?.isCustomUpload && (
-                                                                <p><strong>Custom Image:</strong> Applied</p>
-                                                            )}
-                                                            {item.createdAt && (
-                                                                <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleString()}</p>
+                                                            {/* Show booking-specific info if it's a booking item */}
+                                                            {item.type === 'booking' && item.rentalPeriod ? (
+                                                                <>
+                                                                    <p><strong>Type:</strong> Outfit Rental</p>
+                                                                    <p><strong>Rental Period:</strong> {item.rentalPeriod.from} to {item.rentalPeriod.to}</p>
+                                                                    {item.location && (
+                                                                        <p><strong>Pickup Location:</strong> {item.location}</p>
+                                                                    )}
+                                                                    <p><strong>Category:</strong> {item.clothingType || 'N/A'}</p>
+                                                                    {item.createdAt && (
+                                                                        <p><strong>Added to Cart:</strong> {new Date(item.createdAt).toLocaleString()}</p>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <p><strong>Size:</strong> {item.size || 'N/A'}</p>
+                                                                    {/* <p><strong>Color:</strong> {item.color || 'N/A'}</p> */}
+                                                                    <div className="color-preview">
+                                                                        <div
+                                                                            className="color-palette"
+                                                                            style={{
+                                                                                backgroundColor: item.color,
+                                                                                width: "24px",
+                                                                                height: "24px",
+                                                                                borderRadius: "50%",
+                                                                                border: "1px solid #ccc",
+                                                                            }}
+                                                                            title={item.color}
+                                                                        />
+                                                                    </div>
+                                                                    <p><strong>Type:</strong> {item.clothingType || 'N/A'}</p>
+                                                                    {item.selectedDesign && item.selectedDesign.name && (
+                                                                        <p><strong>Design:</strong> {item.selectedDesign.name}</p>
+                                                                    )}
+                                                                    {item.placedDesigns && item.placedDesigns.length > 0 && (
+                                                                        <p><strong>Designs Applied:</strong> {item.placedDesigns.length}</p>
+                                                                    )}
+                                                                    {item.selectedDesign?.isCustomUpload && (
+                                                                        <p><strong>Custom Image:</strong> Applied</p>
+                                                                    )}
+                                                                    {item.createdAt && (
+                                                                        <p><strong>Added:</strong> {new Date(item.createdAt).toLocaleString()}</p>
+                                                                    )}
+                                                                </>
                                                             )}
                                                         </div>
                                                         <p className="item-price">${(item.price || 0).toFixed(2)} per item</p>
@@ -424,29 +547,39 @@ export default function OrderManagement() {
                                                         >
                                                             <Trash2 className="small-icon" />
                                                         </button>
-                                                        <button
-                                                            onClick={() => editItem(item.id)}
-                                                            className="edit-button"
-                                                            title="Edit item"
-                                                        >
-                                                            <Edit3 className="small-icon" />
-                                                        </button>
-                                                        <div className="quantity-controls">
+                                                        {/* Hide edit button for booking items */}
+                                                        {item.type !== 'booking' && (
                                                             <button
-                                                                onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
-                                                                className="quantity-button"
-                                                                disabled={(item.quantity || 1) <= 1}
+                                                                onClick={() => editItem(item.id)}
+                                                                className="edit-button"
+                                                                title="Edit item"
                                                             >
-                                                                <Minus className="small-icon" />
+                                                                <Edit3 className="small-icon" />
                                                             </button>
-                                                            <span className="quantity-value">{item.quantity || 1}</span>
-                                                            <button
-                                                                onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
-                                                                className="quantity-button"
-                                                            >
-                                                                <Plus className="small-icon" />
-                                                            </button>
-                                                        </div>
+                                                        )}
+                                                        {/* Disable quantity controls for booking items */}
+                                                        {item.type !== 'booking' ? (
+                                                            <div className="quantity-controls">
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
+                                                                    className="quantity-button"
+                                                                    disabled={(item.quantity || 1) <= 1}
+                                                                >
+                                                                    <Minus className="small-icon" />
+                                                                </button>
+                                                                <span className="quantity-value">{item.quantity || 1}</span>
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
+                                                                    className="quantity-button"
+                                                                >
+                                                                    <Plus className="small-icon" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="quantity-controls">
+                                                                <span className="quantity-value" style={{padding: '0 20px'}}>Qty: {item.quantity || 1}</span>
+                                                            </div>
+                                                        )}
                                                         <p className="item-total">${(item.totalPrice || 0).toFixed(2)}</p>
                                                     </div>
                                                 </div>

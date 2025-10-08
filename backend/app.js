@@ -66,11 +66,12 @@ const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
 const inventoryRouter = require("./routes/InventoryRoutes");
 const clothingRouter = require("./routes/ClothingRoutes");
+
 const analyticsRouter = require("./routes/AnalyticsRoutes");
+
 const orderRouter = require("./routes/OrderRoutes");
-
-
-     //pasindu
+const tailorRouter = require("./routes/TailorRoutes");
+const customOrderRouter = require("./routes/CustomOrderRoutes");
      //import oenerRouter from "./routes/ownerRoutes.js"
      const ownerRouter = require("./routes/ownerRoutes");
      const bookingRouter = require("./routes/bookingRoutes");
@@ -105,7 +106,6 @@ app.use(cors());
 // Serve uploaded files statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
 app.use("/users", userRouter);
 app.use("/applicant", applicantRouter);
 app.use("/jobs", jobRouter);
@@ -117,6 +117,10 @@ app.use("/inventory", inventoryRouter);
 app.use("/clothing", clothingRouter);
 app.use("/analytics", analyticsRouter);
 app.use("/orders", orderRouter);
+
+// Tailor management & Custom Orders (namespaced under /api)
+app.use("/api/tailors", tailorRouter);
+app.use("/api/custom-orders", customOrderRouter);
 
     //pasindu                                                         sdsdsdssdsdsdsdsd
     app.use("/api/owner", ownerRouter);

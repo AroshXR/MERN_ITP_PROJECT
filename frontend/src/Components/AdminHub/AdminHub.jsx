@@ -35,6 +35,12 @@ export default function AdminHub() {
             <p>Track materials and stock levels.</p>
           </button>
 
+          <button className="hub-card" onClick={() => navigate('/clothing-inventory')}>
+            <i className='bx bx-store'></i>
+            <h3>Clothing Inventory</h3>
+            <p>Manage clothing items, stock, and inventory.</p>
+          </button>
+
           <button className="hub-card supplier-card" onClick={() => navigate('/supplierManagement')}>
             <i className='bx bxs-truck'></i>
             <h3>Supplier Management</h3>
@@ -59,6 +65,23 @@ export default function AdminHub() {
             <p>Manage rental listings, bookings, and dashboards.</p>
           </button>
 
+          <button className="hub-card" onClick={() => navigate('/admin-jobs')}>
+            <i className='bx bx-cog'></i>
+            <h3>Job Management</h3>
+            <p>Create and manage job postings.</p>
+          </button>
+
+          <button className="hub-card" onClick={() => navigate('/admin/custom-orders')}>
+            <i className='bx bx-t-shirt'></i>
+            <h3>Tailor Management</h3>
+            <p>Assign tailors and track order statuses.</p>
+          </button>
+
+          <button className="hub-card" onClick={() => navigate('/admin-applicants')}>
+            <i className='bx bx-id-card'></i>
+            <h3>Applicants</h3>
+            <p>Review, shortlist, and schedule interviews.</p>
+          </button>
         </section>
       </main>
       <Footer />

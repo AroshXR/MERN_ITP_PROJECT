@@ -27,4 +27,8 @@ router.patch('/:id/use', InventoryController.useItem);
 // Check and send low stock alerts
 router.post('/alerts/check', InventoryController.checkLowStockAlerts);
 
+// CSV export/import
+router.get('/export-csv', InventoryController.exportCSV);
+router.post('/import-csv', InventoryController.importCSV);
+
 module.exports = router;

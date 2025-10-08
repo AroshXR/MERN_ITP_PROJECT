@@ -1,0 +1,83 @@
+/* ---- Outlet pages polish (scoped to Outlet components) ---- */
+.outlet-page {
+  background: #f9fafb;
+}
+
+.outlet-page h2 {
+  font-size: 1.75rem;
+  margin: 8px 0 16px;
+}
+
+.outlet-page form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.outlet-page form input,
+.outlet-page form select {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.outlet-page form button[type="submit"] {
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.outlet-page form button[type="button"] {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.outlet-page .clothing-list {
+  margin-top: 8px;
+}
+
+.outlet-page .clothing-card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+
+.outlet-page .clothing-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.outlet-page .clothing-card h3 {
+  color: #111827;
+}
+
+.outlet-page .clothing-card p {
+  color: #6b7280;
+}
+
+/* Outlet detail page minor polish */
+.outlet-detail h2 {
+  font-size: 1.75rem;
+}
+
+.outlet-detail button {
+  transition: transform 80ms ease, box-shadow 120ms ease;
+}
+
+.outlet-detail button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
+}
+
+.outlet-detail img {
+  background: #fff;
+}

@@ -236,9 +236,9 @@ const Reports = () => {
           <button
             onClick={fetchReport}
             disabled={loading}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-medium disabled:opacity-50 shadow-lg transition-all duration-300 hover:shadow-xl"
+            className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-xl font-medium disabled:opacity-50 shadow-lg transition-all duration-300 hover:shadow-xl"
           >
-            {loading ? '⏳ Generating...' : '🔍 Generate Report'}
+            {loading ? '⏳ Generating...' : ' Generate Report'}
           </button>
           
           {reportData && (

@@ -53,6 +53,91 @@ const MyBookings = () => {
     fetchMyBookings()
   }, [isAuthenticated, currentUser])
 
+  // Handle Pay Now - Add booking to cart and navigate to order management
+  const handlePayNow = (booking) => {
+    try {
+      // Get existing cart from localStorage
+      const existingCart = localStorage.getItem('outletCart');
+      const cart = existingCart ? JSON.parse(existingCart) : [];
+      
+      // Check if this booking is already in the cart
+      const existingItemIndex = cart.findIndex(item => 
+        item.bookingId === booking._id
+      );
+      
+      if (existingItemIndex !== -1) {
+        // Item already in cart, just navigate
+        navigate('/orderManagement');
+        return;
+      }
+      
+      // Create cart item from booking
+      const cartItem = {
+        _id: booking._id,
+        bookingId: booking._id, // Track that this is from a booking
+        name: `${booking.outfit.brand} ${booking.outfit.model} Rental`,
+        price: booking.price,
+        quantity: 1,
+        imageUrl: booking.outfit.image,
+        size: 'N/A',
+        color: 'N/A',
+        category: booking.outfit.category,
+        type: 'booking', // Mark as booking type
+        rentalPeriod: {
+          from: booking.reservationDate.split('T')[0],
+          to: booking.returnDate.split('T')[0]
+        },
+        location: booking.outfit.location,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Add to cart
+      cart.push(cartItem);
+      localStorage.setItem('outletCart', JSON.stringify(cart));
+      
+      // Navigate to order management
+      navigate('/orderManagement');
+    } catch (error) {
+      console.error('Error adding booking to cart:', error);
+      alert('Failed to add booking to cart. Please try again.');
+    }
+  };
+
+  // Handle Pay on Return - Send QR code via email
+  const handlePayOnReturn = async (booking) => {
+    try {
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+      const token = getToken();
+      
+      // Show loading message
+      const confirmMsg = 'Sending QR code to your email. This may take a moment...';
+      if (!window.confirm(`${confirmMsg}\n\nContinue?`)) {
+        return;
+      }
+      
+      // Send QR code via email
+      const { data } = await axios.post(
+        `${BASE_URL}/api/booking/send-qr-code`,
+        { bookingId: booking._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (data?.success) {
+        alert('✅ Success!\n\nA QR code has been sent to your email address. Please check your inbox.\n\nShow this QR code when you return the outfit to complete payment.');
+        fetchMyBookings(); // Refresh bookings
+      } else {
+        alert(data?.message || 'Failed to send QR code');
+      }
+    } catch (error) {
+      console.error('Error sending QR code:', error);
+      alert('Failed to send QR code. Please try again.');
+    }
+  };
+
   // Refresh data when page becomes visible
   useEffect(() => {
     const handleFocus = () => {
@@ -137,6 +222,13 @@ const MyBookings = () => {
                 }`}>
                   {booking.status} 
                 </p>
+                {booking.status === 'confirmed' && (
+                  <p className={`px-3 py-1 text-xs rounded-full ${
+                    booking.paymentStatus === 'paid' ? 'bg-blue-400/15 text-blue-600' : 'bg-gray-400/15 text-gray-600'
+                  }`}>
+                    {booking.paymentStatus || 'unpaid'}
+                  </p>
+                )}
               </div>
 
               <div className='flex items-start gap-2 mt-3'>
@@ -175,7 +267,7 @@ const MyBookings = () => {
               </div>
               
               {/* Action Buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 {/* Edit Button - Only show for pending bookings */}
                 {booking.status === 'pending' && (
                   <button
@@ -186,6 +278,24 @@ const MyBookings = () => {
                   </button>
                 )}
                 
+                {/* Payment Buttons - Only show for confirmed, unpaid bookings */}
+                {booking.status === 'confirmed' && booking.paymentStatus !== 'paid' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePayNow(booking)}
+                      className="flex-1 supbtn supbtn-payment"
+                    >
+                      Pay Now
+                    </button>
+                    <button
+                      onClick={() => handlePayOnReturn(booking)}
+                      className="flex-1 supbtn supbtn-payment"
+                    >
+                      Pay on Return
+                    </button>
+                  </div>
+                )}
+
                 {/* Remove Booking Button */}
                 <button
                   onClick={async () => {

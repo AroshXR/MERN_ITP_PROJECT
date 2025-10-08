@@ -372,6 +372,216 @@ const updateBooking = async (req, res) => {
     }
 };
 
+// API to update booking payment status
+const updateBookingPaymentStatus = async (req, res) => {
+    try {
+        const { bookingId, paymentStatus } = req.body;
+
+        if (!bookingId || !paymentStatus) {
+            return res.json({ success: false, message: "Booking ID and payment status are required" });
+        }
+
+        const booking = await Booking.findByIdAndUpdate(
+            bookingId,
+            { paymentStatus },
+            { new: true }
+        );
+
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+
+        res.json({ success: true, message: "Payment status updated successfully", booking });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API to send booking QR code via email (Pay on Return)
+const sendBookingQRCode = async (req, res) => {
+    try {
+        const { bookingId } = req.body;
+
+        if (!bookingId) {
+            return res.json({ success: false, message: "Booking ID is required" });
+        }
+
+        const booking = await Booking.findById(bookingId)
+            .populate('outfit')
+            .populate('user')
+            .populate('owner');
+
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+
+        // Update booking to set payment method as pay_on_return
+        booking.paymentMethod = 'pay_on_return';
+        await booking.save();
+
+        // Generate QR code data URL
+        const QRCode = require('qrcode');
+        const qrData = JSON.stringify({
+            bookingId: booking._id,
+            outfitName: `${booking.outfit.brand} ${booking.outfit.model}`,
+            category: booking.outfit.category,
+            location: booking.outfit.location,
+            reservationDate: booking.reservationDate,
+            returnDate: booking.returnDate,
+            price: booking.price,
+            phone: booking.phone,
+            email: booking.email,
+            status: booking.status,
+            paymentStatus: booking.paymentStatus,
+            paymentMethod: booking.paymentMethod
+        });
+
+        const qrCodeDataURL = await QRCode.toDataURL(qrData, {
+            errorCorrectionLevel: 'H',
+            type: 'image/png',
+            width: 300,
+            margin: 2
+        });
+
+        // Send email with QR code
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransporter({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: booking.email,
+            subject: `Outfit Rental Booking - Pay on Return - ${booking.outfit.brand} ${booking.outfit.model}`,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+                        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }
+                        .header h1 { margin: 0; font-size: 28px; }
+                        .content { padding: 30px; }
+                        .qr-section { text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px 0; }
+                        .qr-section img { max-width: 300px; border: 3px solid #667eea; border-radius: 8px; }
+                        .booking-details { background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                        .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+                        .detail-label { font-weight: bold; color: #374151; }
+                        .detail-value { color: #6b7280; }
+                        .alert-box { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; }
+                        .footer { background: #f8fafc; padding: 20px; text-align: center; color: #6b7280; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🎫 Booking Confirmation</h1>
+                            <p>Pay on Return - QR Code</p>
+                        </div>
+                        
+                        <div class="content">
+                            <h2>Dear ${booking.user.firstName || 'Customer'},</h2>
+                            <p>Your outfit rental booking has been confirmed with <strong>Pay on Return</strong> option. Please show this QR code when you return the outfit to complete your payment.</p>
+                            
+                            <div class="qr-section">
+                                <h3>📱 Your Booking QR Code</h3>
+                                <img src="${qrCodeDataURL}" alt="Booking QR Code" />
+                                <p style="color: #6b7280; font-size: 14px; margin-top: 10px;">Scan this code at pickup/return</p>
+                            </div>
+                            
+                            <div class="booking-details">
+                                <h3 style="margin-top: 0; color: #1f2937;">📋 Booking Details</h3>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Booking ID:</span>
+                                    <span class="detail-value">${booking._id}</span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Outfit:</span>
+                                    <span class="detail-value"><strong>${booking.outfit.brand} ${booking.outfit.model}</strong></span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Category:</span>
+                                    <span class="detail-value">${booking.outfit.category}</span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Pickup Location:</span>
+                                    <span class="detail-value">${booking.outfit.location}</span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Rental Period:</span>
+                                    <span class="detail-value">${new Date(booking.reservationDate).toLocaleDateString()} to ${new Date(booking.returnDate).toLocaleDateString()}</span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Total Amount:</span>
+                                    <span class="detail-value"><strong>$${booking.price.toFixed(2)}</strong></span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Payment Method:</span>
+                                    <span class="detail-value">Pay on Return</span>
+                                </div>
+                                
+                                <div class="detail-row">
+                                    <span class="detail-label">Status:</span>
+                                    <span class="detail-value">${booking.status.toUpperCase()}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="alert-box">
+                                <h4 style="margin-top: 0;">⚠️ Important Information</h4>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>Please bring this email or screenshot the QR code</li>
+                                    <li>Payment will be collected when you return the outfit</li>
+                                    <li>Accepted payment methods: Cash or Card</li>
+                                    <li>Late returns may incur additional charges</li>
+                                    <li>Contact us if you need to modify your booking</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <p style="color: #6b7280;">You can view your booking details anytime by scanning the QR code</p>
+                                <p style="color: #6b7280; font-size: 14px;">Booking confirmed on: ${new Date().toLocaleString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="footer">
+                            <p><strong>Outfit Rental Service</strong></p>
+                            <p>📧 Contact: ${process.env.EMAIL_USER}</p>
+                            <p>📞 Phone: ${booking.phone}</p>
+                            <p>© 2025 - All Rights Reserved</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ 
+            success: true, 
+            message: "QR code sent to your email successfully!",
+            qrCodeDataURL // Also return the QR code for immediate display
+        });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 // Exporting functions using CommonJS
 module.exports = {
     checkAvailabilityOfOutfit,
@@ -382,5 +592,7 @@ module.exports = {
     deleteBooking,
     getBookingById,
     updateBooking,
-    generateBookingReport
+    generateBookingReport,
+    updateBookingPaymentStatus,
+    sendBookingQRCode
 };
