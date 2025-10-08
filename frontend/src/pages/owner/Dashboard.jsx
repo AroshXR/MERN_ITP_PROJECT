@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { assets } from '../../assets/assets'
-import Title from '../../Components/pasindu/owner/Title'
+import './Dashboard.css'
 
 const Dashboard = () => {
 
@@ -49,73 +49,89 @@ const Dashboard = () => {
 
 
   return (
-    <div className='px-4 pt-10 md:px-10 flex-1'>
-      <div className='flex justify-between items-center'>
-        <Title title = "Admin Dashboard" subTitle ="Monitor overall platform performance including total outfits,bookings, revenue, and recent activities"/>
-        <button 
-          onClick={fetchDashboard}
-          className='px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dull transition-colors'
-        >
-          Refresh Data
-        </button>
-      </div>
-
-      <div className='grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 my-8 max-w-3xl '>
-        {dashboardCards.map((card,index)=>(
-          <div key={index} className='flex gap-2 items-center justify-between p-4 rounded-md border border-solid border-borderColor bg-white'>
-            <div>
-              <h1 className='text-xs text-gray-500'>{card.title}</h1>
-              <p className='text-lg font-semibold'>{card.value} </p>
-
-            </div>
-            <div className='flex items-center justify-center w-10 h-10 rounded-full bg-primary/10'>
-              <img src={card.icon} alt="" className='w-4 h-4'/>
-
-            </div>
-
+    <div className='owner-dashboard-page'>
+      <div className='owner-dashboard'>
+        {/* Header Section */}
+        <header className='dashboard__header'>
+          <div className='dashboard__header-content'>
+            <h1>Owner Dashboard</h1>
+            <p>Monitor overall platform performance including total outfits, bookings, revenue, and recent activities</p>
           </div>
-        ))}
+          <button 
+            onClick={fetchDashboard}
+            className='dashboard__refresh-btn'
+          >
+            <i className='bx bx-refresh'></i> Refresh Data
+          </button>
+        </header>
 
-      </div>
-
-      <div className='flex flex-wrap items-start gap-6 mb-8 w-full'>
-        {/*recent bookings */}
-        <div className='p-4 md:p-6 border border-solid border-borderColor rounded-md max-w-lg w-full bg-white'>
-          <h1 className='text-lg font-medium'>Recent Bookings</h1>
-          <p className='text-gray-500'>Latest Customer Bookings</p>
-          {data.recentBookings.map((booking,index)=>(
-            <div key={index} className='mt-4 flex items-center justify-between' >
-              <div className='flex items-center gap-2'>
-                <div className='hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-primary/10'>
-                  <img src={assets.listIconColored} alt="" className='h-5 w-5'/>
+        {/* Stats Grid */}
+        <section className='dashboard__stats-grid'>
+          {dashboardCards.map((card, index) => (
+            <div key={index} className='stat-card'>
+              <div className='stat-card__header'>
+                <div className='stat-card__info'>
+                  <h3>{card.title}</h3>
+                  <p>{card.value}</p>
                 </div>
-                <div>
-                  <p>{booking.outfit.brand} {booking.outfit.model} </p>
-                  <p className='text-sm text-gray-500'>{booking.createdAt.split('T')[0] } </p>
+                <div className='stat-card__icon'>
+                  <img src={card.icon} alt={card.title} />
                 </div>
-              </div>
-
-              <div className='flex items-center gap-2 font-medium'>
-                <p className='text-sm text-gray-500'>{currency} {booking.price} </p>
-                <p className='px-3 py-0.5 border border-solid border-borderColor rounded-full text-sm'>{booking.status} </p>
               </div>
             </div>
           ))}
+        </section>
 
-        </div>
+        {/* Main Content Grid */}
+        <section className='dashboard__content-grid'>
+          {/* Recent Bookings */}
+          <div className='info-card'>
+            <div className='info-card__header'>
+              <h2>Recent Bookings</h2>
+              <p>Latest customer bookings and their status</p>
+            </div>
+            {data.recentBookings.length > 0 ? (
+              data.recentBookings.map((booking, index) => (
+                <div key={index} className='booking-item'>
+                  <div className='booking-item__left'>
+                    <div className='booking-item__icon'>
+                      <img src={assets.listIconColored} alt="Booking" />
+                    </div>
+                    <div className='booking-item__details'>
+                      <h4>{booking.outfit.brand} {booking.outfit.model}</h4>
+                      <p>{new Date(booking.createdAt).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}</p>
+                    </div>
+                  </div>
+                  <div className='booking-item__right'>
+                    <span className='booking-item__price'>{currency} {booking.price}</span>
+                    <span className='booking-item__status'>{booking.status}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className='empty-state'>
+                <i className='bx bx-calendar-x'></i>
+                <p>No recent bookings available</p>
+              </div>
+            )}
+          </div>
 
-        {/*monthly revenue */}
-        <div className='p-4 md:p-6 mb-6 border border-solid border-borderColor rounded-md w-full md:max-w-xs bg-white'>
-          <h1 className='text-lh font-medium'>Monthly Revenue</h1>
-          <p className='text-gray-500'>Revenue for current Month</p>
-          <p className='text-3xl mt-6 font-semibold text-primary'>{currency} {data.monthlyRevenue} </p>
-
-        </div>
-
+          {/* Monthly Revenue */}
+          <div className='info-card revenue-card'>
+            <div className='info-card__header'>
+              <h2>Monthly Revenue</h2>
+              <p>Total revenue for the current month</p>
+            </div>
+            <div className='revenue-card__amount'>
+              {currency} {data.monthlyRevenue.toLocaleString()}
+            </div>
+          </div>
+        </section>
       </div>
-
-      
-        
     </div>
   )
 }
