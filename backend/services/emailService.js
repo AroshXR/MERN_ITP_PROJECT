@@ -537,9 +537,284 @@ const sendPayOnReturnEmail = async (booking, recipientEmail) => {
   }
 };
 
+// Send return reminder email
+const sendReturnReminderEmail = async (booking, recipientEmail) => {
+  console.log(`📧 Sending return reminder to: ${recipientEmail}`);
+  
+  try {
+    const returnDate = new Date(booking.returnDate);
+    const today = new Date();
+    const daysUntilReturn = Math.ceil((returnDate - today) / (1000 * 60 * 60 * 24));
+    
+    let reminderType = '';
+    let urgencyClass = '';
+    let reminderMessage = '';
+    
+    if (daysUntilReturn === 2) {
+      reminderType = 'REMINDER - Return in 2 Days';
+      urgencyClass = 'early-reminder';
+      reminderMessage = 'Friendly reminder: Your rental item needs to be returned in 2 days.';
+    } else if (daysUntilReturn === 1) {
+      reminderType = 'FINAL REMINDER - Return Tomorrow';
+      urgencyClass = 'urgent-reminder';
+      reminderMessage = 'This is your final reminder! Your rental item must be returned tomorrow.';
+    } else if (daysUntilReturn === 0) {
+      reminderType = 'URGENT - Return Today';
+      urgencyClass = 'critical-reminder';
+      reminderMessage = 'Your rental item must be returned TODAY to avoid additional charges.';
+    } else if (daysUntilReturn < 0) {
+      reminderType = 'OVERDUE - Late Return';
+      urgencyClass = 'overdue-reminder';
+      reminderMessage = 'Your rental item is OVERDUE. Additional charges are now being applied.';
+    }
+
+    const emailResult = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: recipientEmail,
+      subject: `🚨 ${reminderType} - Booking #${booking._id.toString().slice(-6)}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              background-color: #ffffff;
+              color: #000000;
+            }
+            .container { 
+              max-width: 600px; 
+              margin: 0 auto; 
+              background: #ffffff; 
+              border: 2px solid #000000; 
+              padding: 0;
+            }
+            .header { 
+              background: #dc2626; 
+              color: #ffffff; 
+              padding: 30px; 
+              text-align: center; 
+              border-bottom: 2px solid #000000;
+            }
+            .early-reminder .header { background: #10b981; }
+            .urgent-reminder .header { background: #f59e0b; }
+            .critical-reminder .header { background: #dc2626; }
+            .overdue-reminder .header { background: #7f1d1d; }
+            .header h1 { 
+              margin: 0; 
+              font-size: 28px; 
+              font-weight: bold;
+            }
+            .content { 
+              padding: 30px; 
+              background: #ffffff;
+            }
+            .reminder-box { 
+              background: #fef2f2; 
+              border: 2px solid #dc2626; 
+              padding: 20px; 
+              margin: 20px 0; 
+              text-align: center;
+            }
+            .urgent-reminder .reminder-box { 
+              background: #fef3c7; 
+              border-color: #f59e0b; 
+            }
+            .critical-reminder .reminder-box { 
+              background: #fef2f2; 
+              border-color: #dc2626; 
+            }
+            .overdue-reminder .reminder-box { 
+              background: #fef2f2; 
+              border-color: #7f1d1d; 
+            }
+            .booking-details { 
+              background: #f5f5f5; 
+              border: 2px solid #000000; 
+              padding: 20px; 
+              margin: 20px 0; 
+            }
+            .detail-row { 
+              display: flex; 
+              justify-content: space-between; 
+              margin: 12px 0; 
+              padding: 10px 0; 
+              border-bottom: 1px solid #cccccc; 
+            }
+            .detail-label { 
+              font-weight: bold; 
+              color: #000000; 
+            }
+            .detail-value { 
+              color: #333333; 
+              text-align: right;
+            }
+            .return-date-highlight { 
+              font-size: 24px; 
+              font-weight: bold; 
+              color: #dc2626; 
+              text-align: center;
+              margin: 20px 0;
+            }
+            .charges-warning { 
+              background: #7f1d1d; 
+              color: #ffffff; 
+              border: 2px solid #7f1d1d; 
+              padding: 20px; 
+              margin: 20px 0; 
+              text-align: center;
+            }
+            .footer { 
+              background: #f5f5f5; 
+              padding: 20px; 
+              text-align: center; 
+              color: #666666; 
+              font-size: 14px; 
+              border-top: 2px solid #000000;
+            }
+            .action-buttons {
+              text-align: center;
+              margin: 30px 0;
+            }
+            .contact-info {
+              background: #e5e7eb;
+              border: 1px solid #9ca3af;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 5px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container ${urgencyClass}">
+            <div class="header">
+              <h1>🚨 RETURN REMINDER</h1>
+              <p style="margin: 10px 0 0 0;">${reminderType}</p>
+            </div>
+            
+            <div class="content">
+              <div class="reminder-box">
+                <h2 style="margin-top: 0; color: #dc2626;">⏰ ${reminderMessage}</h2>
+                <p style="font-size: 18px; margin: 15px 0;">
+                  <strong>Booking ID:</strong> #${booking._id.toString().slice(-6)}
+                </p>
+              </div>
+              
+              <div class="return-date-highlight">
+                📅 Return Date: ${returnDate.toLocaleDateString('en-US', { 
+                  weekday: 'long',
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+              
+              <div class="booking-details">
+                <h3 style="margin-top: 0; color: #000000; text-align: center;">Rental Details</h3>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Outfit Brand:</span>
+                  <span class="detail-value">${booking.outfit?.brand || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Outfit Model:</span>
+                  <span class="detail-value">${booking.outfit?.model || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Category:</span>
+                  <span class="detail-value">${booking.outfit?.category || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Rental Price:</span>
+                  <span class="detail-value">${process.env.REACT_APP_CURRENCY || 'Rs.'} ${booking.price.toFixed(2)}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Customer Name:</span>
+                  <span class="detail-value">${booking.user?.username || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Phone:</span>
+                  <span class="detail-value">${booking.phone}</span>
+                </div>
+              </div>
+              
+              ${daysUntilReturn <= 0 ? `
+                <div class="charges-warning">
+                  <h3 style="margin: 0 0 15px 0; color: #ffffff;">⚠️ ADDITIONAL CHARGES APPLY</h3>
+                  <p style="margin: 0; font-size: 16px;">
+                    Late return fees are now being applied to your booking. 
+                    Please return the item immediately to minimize additional charges.
+                  </p>
+                </div>
+              ` : `
+                <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; margin: 20px 0;">
+                  <h3 style="margin-top: 0; color: #92400e;">⚠️ Avoid Additional Charges</h3>
+                  <p style="margin: 0; color: #92400e;">
+                    Return your rental item on time to avoid late fees. 
+                    Additional charges will apply for returns after the due date.
+                  </p>
+                </div>
+              `}
+              
+              <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #000000;">📌 Return Instructions</h3>
+                <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+                  <li><strong>Location:</strong> Return to the same outlet where you collected the item</li>
+                  <li><strong>Condition:</strong> Ensure the outfit is clean and in good condition</li>
+                  <li><strong>Time:</strong> Return before closing time on the due date</li>
+                  <li><strong>Documents:</strong> Bring this email and your ID for verification</li>
+                  <li><strong>Payment:</strong> Complete any pending payments at the outlet</li>
+                </ul>
+              </div>
+              
+              <div class="contact-info">
+                <h4 style="margin-top: 0; color: #374151;">📞 Need Help?</h4>
+                <p style="margin: 5px 0; color: #6b7280;">
+                  If you have any questions or need to extend your rental, 
+                  please contact us immediately at the outlet.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f5f5f5; border: 1px solid #cccccc;">
+                <p style="margin: 0; color: #666666; font-size: 14px;">
+                  <strong>Booking Status:</strong> ${booking.status.toUpperCase()}
+                </p>
+                <p style="margin: 10px 0 0 0; color: #666666; font-size: 12px;">
+                  Reminder sent on: ${new Date().toLocaleString()}
+                </p>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p style="margin: 0;"><strong>Outfit Rental Management System</strong></p>
+              <p style="margin: 10px 0;">Thank you for choosing our rental service</p>
+              <p style="margin: 10px 0; font-size: 12px;">© ${new Date().getFullYear()} - All Rights Reserved</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    });
+
+    console.log(`✅ Return reminder email sent to ${recipientEmail}`);
+    return { success: true, messageId: emailResult.messageId };
+  } catch (error) {
+    console.error(`❌ Failed to send return reminder email:`, error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   testEmailConnection,
   sendLowStockAlert,
   sendBulkLowStockAlerts,
-  sendPayOnReturnEmail
+  sendPayOnReturnEmail,
+  sendReturnReminderEmail
 };

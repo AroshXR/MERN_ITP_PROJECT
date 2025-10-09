@@ -327,6 +327,10 @@ const connectToMongoDB = async () => {
     
     console.log("All models loaded successfully");
 
+    // Start the return reminder scheduler
+    const { startReminderScheduler } = require('./services/reminderScheduler');
+    startReminderScheduler();
+
     // Initialize Socket.IO and start the server
     initSocket(server);
     server.listen(PORT, () => {

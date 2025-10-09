@@ -33,4 +33,91 @@ bookingRouter.put('/:bookingId', protect, upload.single('document'), updateBooki
 // Route for sending Pay on Return email
 bookingRouter.post('/send-pay-on-return-email', protect, sendPayOnReturnConfirmation);
 
+// Return reminder routes
+bookingRouter.post('/send-return-reminder/:bookingId', protect, async (req, res) => {
+  try {
+    const { sendManualReminder } = require('../services/reminderScheduler');
+    const result = await sendManualReminder(req.params.bookingId);
+    
+    if (result.success) {
+      res.json({
+        status: 'ok',
+        message: 'Return reminder sent successfully',
+        messageId: result.messageId
+      });
+    } else {
+      res.status(400).json({
+        status: 'error',
+        message: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to send return reminder: ' + error.message
+    });
+  }
+});
+
+// Check upcoming returns that need reminders
+bookingRouter.get('/upcoming-returns', protect, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    today.setHours(0, 0, 0, 0);
+    tomorrow.setHours(23, 59, 59, 999);
+    
+    const upcomingReturns = await Booking.find({
+      returnDate: {
+        $gte: today,
+        $lte: tomorrow
+      },
+      status: 'confirmed'
+    }).populate('user').populate('outfit');
+    
+    res.json({
+      status: 'ok',
+      message: 'Upcoming returns retrieved successfully',
+      count: upcomingReturns.length,
+      data: upcomingReturns.map(booking => ({
+        id: booking._id,
+        bookingId: booking._id.toString().slice(-6),
+        customerName: booking.user?.username || 'N/A',
+        customerEmail: booking.email,
+        outfitBrand: booking.outfit?.brand || 'N/A',
+        outfitModel: booking.outfit?.model || 'N/A',
+        returnDate: booking.returnDate,
+        daysUntilReturn: Math.ceil((new Date(booking.returnDate) - new Date()) / (1000 * 60 * 60 * 24))
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get upcoming returns: ' + error.message
+    });
+  }
+});
+
+// Trigger manual reminder check
+bookingRouter.post('/check-reminders', protect, async (req, res) => {
+  try {
+    const { checkReturnReminders } = require('../services/reminderScheduler');
+    await checkReturnReminders();
+    
+    res.json({
+      status: 'ok',
+      message: 'Return reminder check completed successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to check reminders: ' + error.message
+    });
+  }
+});
+
 module.exports = bookingRouter;  
