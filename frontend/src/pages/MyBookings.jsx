@@ -175,47 +175,73 @@ const MyBookings = () => {
               </div>
               
               {/* Action Buttons */}
-              <div className="flex gap-2">
-                {/* Edit Button - Only show for pending bookings */}
-                {booking.status === 'pending' && (
-                  <button
-                    onClick={() => navigate(`/edit-booking/${booking._id}`)}
-                    className={`${booking.status === 'pending' ? 'flex-1' : ''} supbtn supbtn-neutral`}
-                  >
-                    Edit
-                  </button>
+              <div className="flex flex-col gap-2">
+                {/* Payment Buttons - Only show for confirmed bookings */}
+                {booking.status === 'confirmed' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        // Handle Pay Now logic
+                        alert('Pay Now functionality - to be implemented');
+                      }}
+                      className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded font-medium transition-all duration-300"
+                    >
+                      Pay Now
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Handle Pay on Return logic
+                        alert('Pay on Return functionality - to be implemented');
+                      }}
+                      className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded font-medium transition-all duration-300"
+                    >
+                      Pay on Return
+                    </button>
+                  </div>
                 )}
                 
-                {/* Remove Booking Button */}
-                <button
-                  onClick={async () => {
-                    if (window.confirm('Are you sure you want to remove this booking?')) {
-                      try {
-                        const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
-                        const token = getToken();
-                        
-                        const { data } = await axios.delete(`${BASE_URL}/api/booking/${booking._id}`, {
-                          headers: {
-                            Authorization: `Bearer ${token}`
+                <div className="flex gap-2">
+                  {/* Edit Button - Only show for pending bookings */}
+                  {booking.status === 'pending' && (
+                    <button
+                      onClick={() => navigate(`/edit-booking/${booking._id}`)}
+                      className={`${booking.status === 'pending' ? 'flex-1' : ''} supbtn supbtn-neutral`}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  
+                  {/* Remove Booking Button */}
+                  <button
+                    onClick={async () => {
+                      if (window.confirm('Are you sure you want to remove this booking?')) {
+                        try {
+                          const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+                          const token = getToken();
+                          
+                          const { data } = await axios.delete(`${BASE_URL}/api/booking/${booking._id}`, {
+                            headers: {
+                              Authorization: `Bearer ${token}`
+                            }
+                          });
+                          
+                          if (data?.success) {
+                            alert('Booking removed successfully');
+                            fetchMyBookings(); // Refresh the bookings list
+                          } else {
+                            alert(data?.message || 'Failed to remove booking');
                           }
-                        });
-                        
-                        if (data?.success) {
-                          alert('Booking removed successfully');
-                          fetchMyBookings(); // Refresh the bookings list
-                        } else {
-                          alert(data?.message || 'Failed to remove booking');
+                        } catch (err) {
+                          console.error(err);
+                          alert('Error removing booking');
                         }
-                      } catch (err) {
-                        console.error(err);
-                        alert('Error removing booking');
                       }
-                    }
-                  }}
-                  className={`${booking.status === 'pending' ? 'flex-1' : 'w-full'} supbtn supbtn-danger`}
-                >
-                  Remove
-                </button>
+                    }}
+                    className={`${booking.status === 'pending' ? 'flex-1' : 'w-full'} supbtn supbtn-danger`}
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
 
