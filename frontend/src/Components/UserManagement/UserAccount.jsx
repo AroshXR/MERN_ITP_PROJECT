@@ -29,6 +29,11 @@ const UserAccount = () => {
     const [ordersLoading, setOrdersLoading] = useState(false);
     const [ordersError, setOrdersError] = useState('');
 
+    // Bookings state
+    const [bookings, setBookings] = useState([]);
+    const [bookingsLoading, setBookingsLoading] = useState(false);
+    const [bookingsError, setBookingsError] = useState('');
+
     const [formState, setFormState] = useState({
         username: '',
         email: '',
@@ -128,6 +133,36 @@ const UserAccount = () => {
         }
     };
 
+    // Load authenticated user's bookings
+    const fetchMyBookings = async () => {
+        if (!userId) return;
+        setBookingsLoading(true);
+        setBookingsError('');
+        try {
+            const token = typeof getToken === 'function' ? getToken() : null;
+            const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+            
+            const response = await axios.get(`${BASE_URL}/api/booking/user`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined
+            });
+            
+            if (response.data?.success) {
+                // Filter only confirmed bookings for the profile page
+                const confirmedBookings = response.data.bookings.filter(booking => booking.status === 'confirmed');
+                // Sort by creation date, newest first
+                confirmedBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setBookings(confirmedBookings);
+            } else {
+                setBookingsError('Failed to fetch bookings');
+            }
+        } catch (error) {
+            console.error('Failed to load bookings:', error);
+            setBookingsError(error.response?.data?.message || 'Unable to load your bookings.');
+        } finally {
+            setBookingsLoading(false);
+        }
+    };
+
     // Reusable notifications loader
     const fetchNotifications = async () => {
         if (!userId) return;
@@ -179,6 +214,7 @@ const UserAccount = () => {
         loadProfile();
         fetchNotifications();
         fetchMyOrders();
+        fetchMyBookings();
         // Poll every 15s while on this page to reflect new notifications automatically
         const interval = setInterval(fetchNotifications, 15000);
         return () => clearInterval(interval);
@@ -596,6 +632,79 @@ const UserAccount = () => {
                         </div>
                     )}
                     <p className="panel-description">Orders placed via the customizer will appear here.</p>
+                </section>
+
+                {/* Bookings Panel */}
+                <section className="panel">
+                    <div className="panel-header">
+                        <h2>
+                            <i className="bx bx-calendar-check"></i> Your Bookings
+                        </h2>
+                        <div className="panel-header__right">
+                            <button
+                                type="button"
+                                className="header-nav-btn secondary"
+                                onClick={fetchMyBookings}
+                                disabled={bookingsLoading}
+                            >
+                                <i className="bx bx-refresh"></i>
+                                {bookingsLoading ? 'Refreshing...' : 'Refresh'}
+                            </button>
+                        </div>
+                    </div>
+                    {bookingsLoading ? (
+                        <p>Loading your bookings...</p>
+                    ) : bookingsError ? (
+                        <p className="form-feedback error">{bookingsError}</p>
+                    ) : !bookings.length ? (
+                        <p className="empty-state">You have no confirmed bookings yet.</p>
+                    ) : (
+                        <div className="bookings-list">
+                            {bookings.map((booking, index) => (
+                                <div key={booking._id} className="booking-card">
+                                    <div className="booking-image">
+                                        <img src={booking.outfit.image} alt={`${booking.outfit.brand} ${booking.outfit.model}`} />
+                                    </div>
+                                    <div className="booking-details">
+                                        <div className="booking-header">
+                                            <h4>{booking.outfit.brand} {booking.outfit.model}</h4>
+                                            <span className="booking-status confirmed">Confirmed</span>
+                                        </div>
+                                        <div className="booking-info">
+                                            <div className="booking-info-item">
+                                                <i className="bx bx-calendar"></i>
+                                                <span>{booking.reservationDate.split('T')[0]} to {booking.returnDate.split('T')[0]}</span>
+                                            </div>
+                                            <div className="booking-info-item">
+                                                <i className="bx bx-map"></i>
+                                                <span>{booking.outfit.location}</span>
+                                            </div>
+                                            <div className="booking-info-item">
+                                                <i className="bx bx-dollar"></i>
+                                                <span>${booking.price}</span>
+                                            </div>
+                                        </div>
+                                        <div className="booking-meta">
+                                            <small>
+                                                <i className="bx bx-time"></i>
+                                                Booked on {new Date(booking.createdAt).toLocaleDateString()}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div className="booking-actions">
+                                        <button
+                                            type="button"
+                                            className="header-nav-btn primary"
+                                            onClick={() => navigate('/my-bookings')}
+                                        >
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <p className="panel-description">Your confirmed rental bookings appear here. Visit My Bookings for full details and payment options.</p>
                 </section>
             </main>
             <Footer />
