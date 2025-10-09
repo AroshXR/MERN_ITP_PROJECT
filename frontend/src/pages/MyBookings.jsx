@@ -181,8 +181,7 @@ const MyBookings = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        // Handle Pay Now logic
-                        alert('Pay Now functionality - to be implemented');
+                        navigate('/paymentManagement');
                       }}
                       className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded font-medium transition-all duration-300"
                     >
