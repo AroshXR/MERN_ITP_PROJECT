@@ -52,6 +52,7 @@ import AdminHub from './Components/AdminHub/AdminHub';
 import AdminCustomOrders from './pages/admin/CustomOrders';
 import AdminCustomOrderDetail from './pages/admin/CustomOrderDetail';
 import AdminTailors from './pages/admin/Tailors';
+import AdminClothCustomizer from './Components/clothing-customizer/admin-cloth-customizer';
 
 // Gate that redirects logged-in customers to UserHome on outlet routes only
 import { useAuth } from './AuthGuard/AuthGuard';
@@ -203,6 +204,14 @@ function App() {
           element={(
             <ProtectedRoute allowedUserTypes="Admin">
               <AdminTailors />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin-cloth-customizer"
+          element={(
+            <ProtectedRoute allowedUserTypes="Admin">
+              <AdminClothCustomizer />
             </ProtectedRoute>
           )}
         />

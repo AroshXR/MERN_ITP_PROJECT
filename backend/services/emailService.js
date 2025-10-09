@@ -35,24 +35,24 @@ const transporter = nodemailer.createTransport(getEmailConfig());
 const testEmailConnection = async () => {
   try {
     await transporter.verify();
-    console.log('✅ Email service is ready to send messages');
+    console.log('Email service is ready to send messages');
     return true;
   } catch (error) {
-    console.log('❌ Email service configuration error:', error.message);
+    console.log('Email service configuration error:', error.message);
     return false;
   }
 };
 
 // Send low stock alert email - AUTOMATIC ONLY
 const sendLowStockAlert = async (item, recipientEmail = 'kadavishkakanakasekara@gmail.com') => {
-  console.log(`🚨 AUTOMATIC LOW STOCK ALERT: ${item.itemName} (${item.quantity}/${item.minimumStock} ${item.unit})`);
+  console.log(`AUTOMATIC LOW STOCK ALERT: ${item.itemName} (${item.quantity}/${item.minimumStock} ${item.unit})`);
   
   try {
     // Try to send real email
     const emailResult = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: recipientEmail,
-      subject: `🚨 LOW STOCK ALERT - ${item.itemName}`,
+      subject: `LOW STOCK ALERT - ${item.itemName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -79,18 +79,18 @@ const sendLowStockAlert = async (item, recipientEmail = 'kadavishkakanakasekara@
         <body>
           <div class="container">
             <div class="header">
-              <h1>🚨 INVENTORY ALERT</h1>
+              <h1>INVENTORY ALERT</h1>
               <p>Klassy T Shirts - Stock Management System</p>
             </div>
             
             <div class="content">
               <div class="alert-box">
-                <h2 style="color: #dc2626; margin-top: 0;">⚠️ LOW STOCK WARNING</h2>
+                <h2 style="color: #dc2626; margin-top: 0;">LOW STOCK WARNING</h2>
                 <p>The following inventory item has reached critically low stock levels and requires immediate attention:</p>
               </div>
               
               <div class="item-details">
-                <h3 style="margin-top: 0; color: #1f2937;">📦 Item Details</h3>
+                <h3 style="margin-top: 0; color: #1f2937;">Item Details</h3>
                 
                 <div class="detail-row">
                   <span class="detail-label">Item Name:</span>
@@ -110,7 +110,7 @@ const sendLowStockAlert = async (item, recipientEmail = 'kadavishkakanakasekara@
                 <div class="detail-row">
                   <span class="detail-label">Status:</span>
                   <span class="status-badge ${item.status === 'out_of_stock' ? 'status-out' : 'status-low'}">
-                    ${item.status === 'out_of_stock' ? '🔴 OUT OF STOCK' : '🟡 LOW STOCK'}
+                    ${item.status === 'out_of_stock' ? 'OUT OF STOCK' : 'LOW STOCK'}
                   </span>
                 </div>
                 
@@ -141,7 +141,7 @@ const sendLowStockAlert = async (item, recipientEmail = 'kadavishkakanakasekara@
               </div>
               
               <div class="action-needed">
-                <h3 style="margin-top: 0; color: #1e40af;">📋 Recommended Actions</h3>
+                <h3 style="margin-top: 0; color: #1e40af;">Recommended Actions</h3>
                 <ul style="margin: 0; padding-left: 20px;">
                   <li><strong>Immediate:</strong> Check current production requirements</li>
                   <li><strong>Contact Supplier:</strong> Place urgent reorder with ${item.supplierName}</li>
@@ -159,7 +159,7 @@ const sendLowStockAlert = async (item, recipientEmail = 'kadavishkakanakasekara@
             
             <div class="footer">
               <p><strong>Klassy T Shirts</strong> - Inventory Management System</p>
-              <p>📧 For support, contact: admin@klassytshirts.com</p>
+              <p>For support, contact: admin@klassytshirts.com</p>
               <p>© 2025 Klassy T Shirts - All Rights Reserved</p>
             </div>
           </div>
@@ -168,10 +168,10 @@ const sendLowStockAlert = async (item, recipientEmail = 'kadavishkakanakasekara@
       `
     });
 
-    console.log(`✅ AUTOMATIC EMAIL SENT: ${item.itemName} to ${recipientEmail}`);
+    console.log(`AUTOMATIC EMAIL SENT: ${item.itemName} to ${recipientEmail}`);
     return { success: true, messageId: emailResult.messageId };
   } catch (error) {
-    console.error(`❌ Failed to send low stock alert for ${item.itemName}:`, error.message);
+    console.error(`Failed to send low stock alert for ${item.itemName}:`, error.message);
     return { success: false, error: error.message };
   }
 };
@@ -189,7 +189,7 @@ const sendBulkLowStockAlerts = async (items, recipientEmail = 'kadavishkakanakas
     const mailOptions = {
       from: process.env.EMAIL_USER || 'noreply@klassytshirts.com',
       to: recipientEmail,
-      subject: `📊 INVENTORY SUMMARY - ${lowStockItems.length + outOfStockItems.length} Items Need Attention`,
+      subject: `INVENTORY SUMMARY - ${lowStockItems.length + outOfStockItems.length} Items Need Attention`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -211,20 +211,20 @@ const sendBulkLowStockAlerts = async (items, recipientEmail = 'kadavishkakanakas
         <body>
           <div class="container">
             <div class="header">
-              <h1>📊 INVENTORY SUMMARY ALERT</h1>
+              <h1>INVENTORY SUMMARY ALERT</h1>
               <p>Klassy T Shirts - Daily Stock Report</p>
             </div>
             
             <div class="content">
               <div class="summary-box">
-                <h2 style="color: #dc2626; margin-top: 0;">📋 Stock Alert Summary</h2>
+                <h2 style="color: #dc2626; margin-top: 0;">Stock Alert Summary</h2>
                 <p><strong>Out of Stock Items:</strong> ${outOfStockItems.length}</p>
                 <p><strong>Low Stock Items:</strong> ${lowStockItems.length}</p>
                 <p><strong>Total Items Requiring Attention:</strong> ${lowStockItems.length + outOfStockItems.length}</p>
               </div>
               
               ${outOfStockItems.length > 0 ? `
-                <h3 style="color: #dc2626;">🔴 OUT OF STOCK ITEMS (CRITICAL)</h3>
+                <h3 style="color: #dc2626;">OUT OF STOCK ITEMS (CRITICAL)</h3>
                 <table class="item-table">
                   <thead>
                     <tr>
@@ -250,7 +250,7 @@ const sendBulkLowStockAlerts = async (items, recipientEmail = 'kadavishkakanakas
               ` : ''}
               
               ${lowStockItems.length > 0 ? `
-                <h3 style="color: #d97706;">🟡 LOW STOCK ITEMS</h3>
+                <h3 style="color: #d97706;">LOW STOCK ITEMS</h3>
                 <table class="item-table">
                   <thead>
                     <tr>
@@ -287,17 +287,17 @@ const sendBulkLowStockAlerts = async (items, recipientEmail = 'kadavishkakanakas
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log(`✅ Bulk low stock alert sent to ${recipientEmail}`);
+    console.log(`Bulk low stock alert sent to ${recipientEmail}`);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error(`❌ Failed to send bulk low stock alert:`, error.message);
+    console.error(`Failed to send bulk low stock alert:`, error.message);
     return { success: false, error: error.message };
   }
 };
 
 // Send Pay on Return confirmation email
 const sendPayOnReturnEmail = async (booking, recipientEmail) => {
-  console.log(`📧 Sending Pay on Return confirmation to: ${recipientEmail}`);
+  console.log(`Sending Pay on Return confirmation to: ${recipientEmail}`);
   
   try {
     const emailResult = await transporter.sendMail({
@@ -398,7 +398,7 @@ const sendPayOnReturnEmail = async (booking, recipientEmail) => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>📋 PAYMENT ON RETURN CONFIRMED</h1>
+              <h1>PAYMENT ON RETURN CONFIRMED</h1>
               <p style="margin: 10px 0 0 0;">Outfit Rental Booking Confirmation</p>
             </div>
             
@@ -416,7 +416,7 @@ const sendPayOnReturnEmail = async (booking, recipientEmail) => {
               
               <div style="margin: 30px 0;">
                 <h3 style="color: #000000; border-bottom: 2px solid #000000; padding-bottom: 10px;">
-                  👔 Outfit Information
+                  Outfit Information
                 </h3>
                 
                 <div class="detail-row">
@@ -442,7 +442,7 @@ const sendPayOnReturnEmail = async (booking, recipientEmail) => {
               
               <div style="margin: 30px 0;">
                 <h3 style="color: #000000; border-bottom: 2px solid #000000; padding-bottom: 10px;">
-                  📅 Rental Period
+                  Rental Period
                 </h3>
                 
                 <div class="detail-row">
@@ -491,14 +491,14 @@ const sendPayOnReturnEmail = async (booking, recipientEmail) => {
               </div>
               
               <div class="important-box">
-                <h3 style="margin: 0 0 15px 0; color: #ffffff;">💰 TOTAL AMOUNT TO PAY ON RETURN</h3>
+                <h3 style="margin: 0 0 15px 0; color: #ffffff;">TOTAL AMOUNT TO PAY ON RETURN</h3>
                 <p class="price-highlight" style="color: #ffffff; margin: 0;">
                   ${process.env.REACT_APP_CURRENCY || 'Rs.'} ${booking.price.toFixed(2)}
                 </p>
               </div>
               
               <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #000000;">📌 Important Instructions</h3>
+                <h3 style="margin-top: 0; color: #000000;">Important Instructions</h3>
                 <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
                   <li><strong>Present this email</strong> to the outlet staff when returning the outfit</li>
                   <li><strong>Payment Method:</strong> Cash or Card accepted at outlet</li>
@@ -529,17 +529,17 @@ const sendPayOnReturnEmail = async (booking, recipientEmail) => {
       `
     });
 
-    console.log(`✅ Pay on Return email sent to ${recipientEmail}`);
+    console.log(`Pay on Return email sent to ${recipientEmail}`);
     return { success: true, messageId: emailResult.messageId };
   } catch (error) {
-    console.error(`❌ Failed to send Pay on Return email:`, error.message);
+    console.error(`Failed to send Pay on Return email:`, error.message);
     return { success: false, error: error.message };
   }
 };
 
 // Send return reminder email
 const sendReturnReminderEmail = async (booking, recipientEmail) => {
-  console.log(`📧 Sending return reminder to: ${recipientEmail}`);
+  console.log(`Sending return reminder to: ${recipientEmail}`);
   
   try {
     const returnDate = new Date(booking.returnDate);
@@ -571,7 +571,7 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
     const emailResult = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: recipientEmail,
-      subject: `🚨 ${reminderType} - Booking #${booking._id.toString().slice(-6)}`,
+      subject: `${reminderType} - Booking #${booking._id.toString().slice(-6)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -690,20 +690,20 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
         <body>
           <div class="container ${urgencyClass}">
             <div class="header">
-              <h1>🚨 RETURN REMINDER</h1>
+              <h1>RETURN REMINDER</h1>
               <p style="margin: 10px 0 0 0;">${reminderType}</p>
             </div>
             
             <div class="content">
               <div class="reminder-box">
-                <h2 style="margin-top: 0; color: #dc2626;">⏰ ${reminderMessage}</h2>
+                <h2 style="margin-top: 0; color: #dc2626;">${reminderMessage}</h2>
                 <p style="font-size: 18px; margin: 15px 0;">
                   <strong>Booking ID:</strong> #${booking._id.toString().slice(-6)}
                 </p>
               </div>
               
               <div class="return-date-highlight">
-                📅 Return Date: ${returnDate.toLocaleDateString('en-US', { 
+                Return Date: ${returnDate.toLocaleDateString('en-US', { 
                   weekday: 'long',
                   year: 'numeric', 
                   month: 'long', 
@@ -747,7 +747,7 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
               
               ${daysUntilReturn <= 0 ? `
                 <div class="charges-warning">
-                  <h3 style="margin: 0 0 15px 0; color: #ffffff;">⚠️ ADDITIONAL CHARGES APPLY</h3>
+                  <h3 style="margin: 0 0 15px 0; color: #ffffff;">ADDITIONAL CHARGES APPLY</h3>
                   <p style="margin: 0; font-size: 16px;">
                     Late return fees are now being applied to your booking. 
                     Please return the item immediately to minimize additional charges.
@@ -755,7 +755,7 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
                 </div>
               ` : `
                 <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; margin: 20px 0;">
-                  <h3 style="margin-top: 0; color: #92400e;">⚠️ Avoid Additional Charges</h3>
+                  <h3 style="margin-top: 0; color: #92400e;">Avoid Additional Charges</h3>
                   <p style="margin: 0; color: #92400e;">
                     Return your rental item on time to avoid late fees. 
                     Additional charges will apply for returns after the due date.
@@ -764,7 +764,7 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
               `}
               
               <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #000000;">📌 Return Instructions</h3>
+                <h3 style="margin-top: 0; color: #000000;">Return Instructions</h3>
                 <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
                   <li><strong>Location:</strong> Return to the same outlet where you collected the item</li>
                   <li><strong>Condition:</strong> Ensure the outfit is clean and in good condition</li>
@@ -775,7 +775,7 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
               </div>
               
               <div class="contact-info">
-                <h4 style="margin-top: 0; color: #374151;">📞 Need Help?</h4>
+                <h4 style="margin-top: 0; color: #374151;">Need Help?</h4>
                 <p style="margin: 5px 0; color: #6b7280;">
                   If you have any questions or need to extend your rental, 
                   please contact us immediately at the outlet.
@@ -803,10 +803,10 @@ const sendReturnReminderEmail = async (booking, recipientEmail) => {
       `
     });
 
-    console.log(`✅ Return reminder email sent to ${recipientEmail}`);
+    console.log(`Return reminder email sent to ${recipientEmail}`);
     return { success: true, messageId: emailResult.messageId };
   } catch (error) {
-    console.error(`❌ Failed to send return reminder email:`, error.message);
+    console.error(`Failed to send return reminder email:`, error.message);
     return { success: false, error: error.message };
   }
 };

@@ -1396,6 +1396,252 @@ For questions about this report, contact: admin@klassytshirts.com
     URL.revokeObjectURL(url)
   }
 
+  const downloadReportAsPDF = () => {
+    if (!reportContent) {
+      alert('Please generate a report first before downloading.')
+      return
+    }
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Get the current report data
+    const reportData = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Klassy T Shirts - ${reportFilters.reportType.toUpperCase()} Report</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    line-height: 1.6;
+                    color: #333;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    border-bottom: 3px solid #2563eb;
+                    padding-bottom: 20px;
+                }
+                .header h1 { 
+                    color: #1e40af; 
+                    margin: 0; 
+                    font-size: 2.2em;
+                }
+                .header h2 { 
+                    color: #64748b; 
+                    margin: 5px 0; 
+                    font-weight: normal;
+                }
+                .report-info { 
+                    background: #f8fafc; 
+                    padding: 15px; 
+                    border-radius: 8px; 
+                    margin-bottom: 25px; 
+                    border-left: 4px solid #2563eb;
+                }
+                .report-content { 
+                    white-space: pre-wrap; 
+                    font-family: 'Courier New', monospace; 
+                    background: #f9f9f9; 
+                    padding: 20px; 
+                    border-radius: 8px; 
+                    border: 1px solid #e2e8f0;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                .footer { 
+                    margin-top: 30px; 
+                    padding-top: 20px; 
+                    border-top: 2px solid #e2e8f0; 
+                    text-align: center; 
+                    color: #64748b; 
+                    font-size: 0.9em;
+                }
+                .summary-section {
+                    margin-bottom: 20px;
+                }
+                .summary-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }
+                .summary-table th, .summary-table td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                .summary-table th {
+                    background-color: #2563eb;
+                    color: white;
+                }
+                .supplier-table, .order-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                    font-size: 11px;
+                }
+                .supplier-table th, .supplier-table td,
+                .order-table th, .order-table td {
+                    border: 1px solid #ddd;
+                    padding: 6px;
+                    text-align: left;
+                }
+                .supplier-table th, .order-table th {
+                    background-color: #1e40af;
+                    color: white;
+                }
+                .status-active { color: #059669; font-weight: bold; }
+                .status-inactive { color: #dc2626; font-weight: bold; }
+                .status-pending { color: #d97706; font-weight: bold; }
+                .status-completed { color: #059669; font-weight: bold; }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>KLASSY T SHIRTS</h1>
+                <h2>Supplier Management System</h2>
+                <h3>${reportFilters.reportType.toUpperCase()} REPORT</h3>
+            </div>
+            
+            <div class="report-info">
+                <p><strong>Generated:</strong> ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                <p><strong>Report Period:</strong> ${reportFilters.dateFrom || "All time"} to ${reportFilters.dateTo || "Present"}</p>
+                <p><strong>Filters Applied:</strong></p>
+                <ul>
+                    <li>Supplier: ${reportFilters.supplierFilter === "all" ? "All Suppliers" : suppliers.find(s => s._id === reportFilters.supplierFilter)?.name || "Unknown"}</li>
+                    <li>Status: ${reportFilters.statusFilter === "all" ? "All Statuses" : reportFilters.statusFilter}</li>
+                </ul>
+            </div>
+            
+            <div class="summary-section">
+                <h3>Executive Summary</h3>
+                <table class="summary-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Total Suppliers</td>
+                        <td>${suppliers.length}</td>
+                    </tr>
+                    <tr>
+                        <td>Active Suppliers</td>
+                        <td>${suppliers.filter(s => s.status === "active").length}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Orders</td>
+                        <td>${orders.length}</td>
+                    </tr>
+                    <tr>
+                        <td>Pending Orders</td>
+                        <td>${orders.filter(o => o.status === "pending").length}</td>
+                    </tr>
+                    <tr>
+                        <td>Completed Orders</td>
+                        <td>${orders.filter(o => o.status === "completed").length}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Order Value</td>
+                        <td>$${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Average Order Value</td>
+                        <td>$${orders.length > 0 ? (orders.reduce((sum, o) => sum + o.total, 0) / orders.length).toFixed(2) : "0.00"}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            ${reportFilters.reportType === "suppliers" || reportFilters.reportType === "detailed" ? `
+            <div class="summary-section">
+                <h3>Supplier Details</h3>
+                <table class="supplier-table">
+                    <thead>
+                        <tr>
+                            <th>Supplier Name</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Total Orders</th>
+                            <th>Last Order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${suppliers.map(s => `
+                            <tr>
+                                <td>${s.name}</td>
+                                <td>${s.contact}</td>
+                                <td>${s.email}</td>
+                                <td>${s.phone}</td>
+                                <td class="status-${s.status}">${s.status.toUpperCase()}</td>
+                                <td>${s.totalOrders || 0}</td>
+                                <td>${s.lastOrder || "N/A"}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            ` : ''}
+            
+            ${reportFilters.reportType === "orders" || reportFilters.reportType === "detailed" ? `
+            <div class="summary-section">
+                <h3>Order Details</h3>
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Supplier</th>
+                            <th>Order Date</th>
+                            <th>Delivery Date</th>
+                            <th>Status</th>
+                            <th>Total Amount</th>
+                            <th>Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.map(o => `
+                            <tr>
+                                <td>${o._id}</td>
+                                <td>${o.supplierName}</td>
+                                <td>${o.orderDate}</td>
+                                <td>${o.deliveryDate}</td>
+                                <td class="status-${o.status}">${o.status.toUpperCase()}</td>
+                                <td>$${o.total.toFixed(2)}</td>
+                                <td>${o.items || "N/A"}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            ` : ''}
+            
+            <div class="report-content">${reportContent}</div>
+            
+            <div class="footer">
+                <p><strong>Report Summary:</strong></p>
+                <p>Total Data Points Analyzed: ${suppliers.length + orders.length} | Generated: ${new Date().toISOString()}</p>
+                <p><strong>Disclaimer:</strong> This report contains confidential business information.</p>
+                <p>© 2025 Klassy T Shirts - All Rights Reserved</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(reportData);
+    printWindow.document.close();
+    
+    // Wait for content to load, then trigger print dialog
+    printWindow.onload = () => {
+        printWindow.print();
+    };
+  }
+
   const generateCSVReport = downloadReportAsCSV // Keep backward compatibility
 
 
@@ -1832,6 +2078,14 @@ For questions about this report, contact: admin@klassytshirts.com
                       title="Download formatted HTML report for web viewing"
                     >
                       🌐 Download HTML
+                    </button>
+                    <button
+                      className="supbtn"
+                      onClick={downloadReportAsPDF}
+                      style={{ marginLeft: "10px" }}
+                      title="Download PDF report for printing and sharing"
+                    >
+                      📄 Download PDF
                     </button>
                     <button
                       className="btn btn-secondary"

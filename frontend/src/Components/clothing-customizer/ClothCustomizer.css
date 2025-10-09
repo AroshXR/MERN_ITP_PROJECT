@@ -1096,3 +1096,338 @@
     min-width: auto;
   }
 }
+
+/* Admin Cloth Customizer Styles */
+.arosh-admin-cloth-customizer-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #000000 0%, #2a2a2a 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.arosh-admin-cloth-customizer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 90vh;
+}
+
+.arosh-admin-cloth-customizer__header {
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.arosh-admin-cloth-customizer__header h1 {
+  margin: 0;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.arosh-admin-cloth-customizer__header p {
+  margin: 10px 0 0 0;
+  color: #e0e0e0;
+  font-size: 1.1rem;
+}
+
+.arosh-message {
+  margin: 15px 0;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.arosh-message.success {
+  background: #4caf50;
+  color: white;
+}
+
+.arosh-message.error {
+  background: #f44336;
+  color: white;
+}
+
+.arosh-admin-cloth-customizer__content {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.arosh-pricing-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.arosh-pricing-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.arosh-pricing-section h3 {
+  color: white;
+  margin: 0 0 20px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.arosh-price-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.arosh-price-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.arosh-price-input label {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.arosh-price-input input {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+}
+
+.arosh-price-input input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.arosh-base-price-input {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgb(0, 0, 0);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.arosh-base-price-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  transform: scale(1.02);
+}
+
+.arosh-base-price-input:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+
+
+
+
+.arosh-size-price-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.arosh-size-price-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.arosh-size-price-input label {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.arosh-size-price-input input {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+}
+
+.arosh-size-price-input input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.arosh-preset-designs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.arosh-preset-design {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.arosh-preset-design.inactive {
+  opacity: 0.6;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.arosh-design-info {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.arosh-design-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.arosh-design-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.arosh-design-name-input {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.arosh-design-name-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.arosh-design-price-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arosh-design-price-input label {
+  color: #e0e0e0;
+  font-weight: 500;
+  min-width: 50px;
+}
+
+.arosh-design-price-input input {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  width: 80px;
+}
+
+.arosh-design-price-input input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.arosh-design-preview-input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.arosh-design-preview-input label {
+  color: #e0e0e0;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.arosh-design-preview-url-input {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 12px;
+  width: 100%;
+}
+
+.arosh-design-preview-url-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.arosh-active-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e0e0e0;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.arosh-active-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4caf50;
+}
+
+.arosh-save-section {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.arosh-save-prices-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.arosh-save-prices-btn:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.arosh-save-prices-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.arosh-loading, .arosh-error {
+  text-align: center;
+  color: white;
+  font-size: 18px;
+  padding: 40px;
+}
+
+.arosh-error {
+  color: #f44336;
+}
