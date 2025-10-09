@@ -295,8 +295,251 @@ const sendBulkLowStockAlerts = async (items, recipientEmail = 'kadavishkakanakas
   }
 };
 
+// Send Pay on Return confirmation email
+const sendPayOnReturnEmail = async (booking, recipientEmail) => {
+  console.log(`📧 Sending Pay on Return confirmation to: ${recipientEmail}`);
+  
+  try {
+    const emailResult = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: recipientEmail,
+      subject: `Payment on Return Confirmed - Booking #${booking._id.toString().slice(-6)}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              background-color: #ffffff;
+              color: #000000;
+            }
+            .container { 
+              max-width: 600px; 
+              margin: 0 auto; 
+              background: #ffffff; 
+              border: 2px solid #000000; 
+              padding: 0;
+            }
+            .header { 
+              background: #000000; 
+              color: #ffffff; 
+              padding: 30px; 
+              text-align: center; 
+              border-bottom: 2px solid #000000;
+            }
+            .header h1 { 
+              margin: 0; 
+              font-size: 28px; 
+              font-weight: bold;
+            }
+            .content { 
+              padding: 30px; 
+              background: #ffffff;
+            }
+            .booking-box { 
+              background: #f5f5f5; 
+              border: 2px solid #000000; 
+              padding: 20px; 
+              margin: 20px 0; 
+            }
+            .outfit-image { 
+              width: 100%; 
+              max-width: 400px; 
+              height: auto; 
+              border: 2px solid #000000; 
+              margin: 20px auto;
+              display: block;
+            }
+            .detail-row { 
+              display: flex; 
+              justify-content: space-between; 
+              margin: 12px 0; 
+              padding: 10px 0; 
+              border-bottom: 1px solid #cccccc; 
+            }
+            .detail-label { 
+              font-weight: bold; 
+              color: #000000; 
+            }
+            .detail-value { 
+              color: #333333; 
+              text-align: right;
+            }
+            .important-box { 
+              background: #000000; 
+              color: #ffffff; 
+              border: 2px solid #000000; 
+              padding: 20px; 
+              margin: 20px 0; 
+              text-align: center;
+            }
+            .footer { 
+              background: #f5f5f5; 
+              padding: 20px; 
+              text-align: center; 
+              color: #666666; 
+              font-size: 14px; 
+              border-top: 2px solid #000000;
+            }
+            .price-highlight { 
+              font-size: 24px; 
+              font-weight: bold; 
+              color: #000000; 
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📋 PAYMENT ON RETURN CONFIRMED</h1>
+              <p style="margin: 10px 0 0 0;">Outfit Rental Booking Confirmation</p>
+            </div>
+            
+            <div class="content">
+              <div class="booking-box">
+                <h2 style="margin-top: 0; color: #000000; text-align: center;">Booking Details</h2>
+                <p style="text-align: center; font-size: 18px; margin: 10px 0;">
+                  <strong>Booking ID:</strong> #${booking._id.toString().slice(-6)}
+                </p>
+              </div>
+              
+              ${booking.outfit?.image ? `
+                <img src="${booking.outfit.image}" alt="Outfit" class="outfit-image" />
+              ` : ''}
+              
+              <div style="margin: 30px 0;">
+                <h3 style="color: #000000; border-bottom: 2px solid #000000; padding-bottom: 10px;">
+                  👔 Outfit Information
+                </h3>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Brand:</span>
+                  <span class="detail-value">${booking.outfit?.brand || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Model:</span>
+                  <span class="detail-value">${booking.outfit?.model || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Category:</span>
+                  <span class="detail-value">${booking.outfit?.category || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Location:</span>
+                  <span class="detail-value">${booking.outfit?.location || 'N/A'}</span>
+                </div>
+              </div>
+              
+              <div style="margin: 30px 0;">
+                <h3 style="color: #000000; border-bottom: 2px solid #000000; padding-bottom: 10px;">
+                  📅 Rental Period
+                </h3>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Reservation Date:</span>
+                  <span class="detail-value">${new Date(booking.reservationDate).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Return Date:</span>
+                  <span class="detail-value">${new Date(booking.returnDate).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Duration:</span>
+                  <span class="detail-value">${Math.ceil((new Date(booking.returnDate) - new Date(booking.reservationDate)) / (1000 * 60 * 60 * 24))} day(s)</span>
+                </div>
+              </div>
+              
+              <div style="margin: 30px 0;">
+                <h3 style="color: #000000; border-bottom: 2px solid #000000; padding-bottom: 10px;">
+                  👤 Customer Information
+                </h3>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Name:</span>
+                  <span class="detail-value">${booking.user?.username || 'N/A'}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Email:</span>
+                  <span class="detail-value">${booking.email}</span>
+                </div>
+                
+                <div class="detail-row">
+                  <span class="detail-label">Phone:</span>
+                  <span class="detail-value">${booking.phone}</span>
+                </div>
+              </div>
+              
+              <div class="important-box">
+                <h3 style="margin: 0 0 15px 0; color: #ffffff;">💰 TOTAL AMOUNT TO PAY ON RETURN</h3>
+                <p class="price-highlight" style="color: #ffffff; margin: 0;">
+                  ${process.env.REACT_APP_CURRENCY || 'Rs.'} ${booking.price.toFixed(2)}
+                </p>
+              </div>
+              
+              <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #000000;">📌 Important Instructions</h3>
+                <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+                  <li><strong>Present this email</strong> to the outlet staff when returning the outfit</li>
+                  <li><strong>Payment Method:</strong> Cash or Card accepted at outlet</li>
+                  <li><strong>Return Time:</strong> Please return before closing time on the return date</li>
+                  <li><strong>Condition:</strong> Ensure the outfit is in good condition</li>
+                  <li><strong>Late Returns:</strong> Additional charges may apply for late returns</li>
+                </ul>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f5f5f5; border: 1px solid #cccccc;">
+                <p style="margin: 0; color: #666666; font-size: 14px;">
+                  <strong>Booking Status:</strong> ${booking.status.toUpperCase()}
+                </p>
+                <p style="margin: 10px 0 0 0; color: #666666; font-size: 12px;">
+                  Booked on: ${new Date(booking.createdAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p style="margin: 0;"><strong>Outfit Rental Management System</strong></p>
+              <p style="margin: 10px 0;">For any queries, please contact us at the outlet</p>
+              <p style="margin: 10px 0; font-size: 12px;">© ${new Date().getFullYear()} - All Rights Reserved</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    });
+
+    console.log(`✅ Pay on Return email sent to ${recipientEmail}`);
+    return { success: true, messageId: emailResult.messageId };
+  } catch (error) {
+    console.error(`❌ Failed to send Pay on Return email:`, error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   testEmailConnection,
   sendLowStockAlert,
-  sendBulkLowStockAlerts
+  sendBulkLowStockAlerts,
+  sendPayOnReturnEmail
 };

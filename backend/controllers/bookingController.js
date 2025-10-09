@@ -1,5 +1,6 @@
 const Booking = require("../models/Booking");
 const Outfit = require("../models/Outfit");
+const { sendPayOnReturnEmail } = require("../services/emailService");
 
 // Function to check the availability of the Outfit at a given date
 const checkAvailability = async (outfit, reservationDate, returnDate) => {
@@ -373,6 +374,52 @@ const updateBooking = async (req, res) => {
 };
 
 // Exporting functions using CommonJS
+// API to send Pay on Return email
+const sendPayOnReturnConfirmation = async (req, res) => {
+    try {
+        const { bookingId } = req.body;
+        const userId = req.user._id;
+
+        // Find the booking and populate outfit and user details
+        const booking = await Booking.findById(bookingId)
+            .populate('outfit')
+            .populate('user');
+
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+
+        // Verify the booking belongs to the user
+        if (booking.user._id.toString() !== userId.toString()) {
+            return res.json({ success: false, message: "Unauthorized access" });
+        }
+
+        // Check if booking is confirmed
+        if (booking.status !== 'confirmed') {
+            return res.json({ success: false, message: "Only confirmed bookings can use Pay on Return" });
+        }
+
+        // Send the email
+        const emailResult = await sendPayOnReturnEmail(booking, booking.email);
+
+        if (emailResult.success) {
+            res.json({ 
+                success: true, 
+                message: "Pay on Return confirmation email sent successfully",
+                messageId: emailResult.messageId 
+            });
+        } else {
+            res.json({ 
+                success: false, 
+                message: "Failed to send email: " + emailResult.error 
+            });
+        }
+    } catch (error) {
+        console.error('Error sending Pay on Return email:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     checkAvailabilityOfOutfit,
     createBooking,
@@ -382,5 +429,6 @@ module.exports = {
     deleteBooking,
     getBookingById,
     updateBooking,
-    generateBookingReport
+    generateBookingReport,
+    sendPayOnReturnConfirmation
 };

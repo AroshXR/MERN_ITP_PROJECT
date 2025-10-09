@@ -189,9 +189,30 @@ const MyBookings = () => {
                       Pay Now
                     </button>
                     <button
-                      onClick={() => {
-                        // Handle Pay on Return logic
-                        alert('Pay on Return functionality - to be implemented');
+                      onClick={async () => {
+                        try {
+                          const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+                          const token = getToken();
+                          
+                          const { data } = await axios.post(
+                            `${BASE_URL}/api/booking/send-pay-on-return-email`,
+                            { bookingId: booking._id },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${token}`
+                              }
+                            }
+                          );
+                          
+                          if (data?.success) {
+                            alert('✅ Pay on Return confirmation email sent successfully! Please check your email for booking details.');
+                          } else {
+                            alert(data?.message || 'Failed to send confirmation email');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert('Error sending confirmation email');
+                        }
                       }}
                       className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded font-medium transition-all duration-300"
                     >
