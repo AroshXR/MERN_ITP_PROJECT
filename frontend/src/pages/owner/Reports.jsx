@@ -43,6 +43,46 @@ const Reports = () => {
     }
   }
 
+  const downloadPDFReport = async () => {
+    if (!reportData) return
+
+    try {
+      const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'
+      const token = getToken()
+      
+      const params = new URLSearchParams()
+      if (filters.startDate) params.append('startDate', filters.startDate)
+      if (filters.endDate) params.append('endDate', filters.endDate)
+      if (filters.status !== 'all') params.append('status', filters.status)
+      if (filters.location !== 'all') params.append('location', filters.location)
+
+      const response = await fetch(`${BASE_URL}/api/booking/admin/report/pdf?${params}`, {
+        method: 'GET',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/pdf'
+        }
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `booking-report-${new Date().toISOString().split('T')[0]}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } else {
+        alert('Failed to download PDF report')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error downloading PDF report')
+    }
+  }
+
   const generateHTMLReport = () => {
     if (!reportData) return
 
@@ -242,12 +282,20 @@ const Reports = () => {
           </button>
           
           {reportData && (
-            <button
-              onClick={generateHTMLReport}
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-medium shadow-lg transition-all duration-300 hover:shadow-xl"
-            >
-              📄 View HTML Report
-            </button>
+            <>
+              <button
+                onClick={generateHTMLReport}
+                className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-xl font-medium shadow-lg transition-all duration-300 hover:shadow-xl"
+              >
+                📄 View HTML Report
+              </button>
+              <button
+                onClick={downloadPDFReport}
+                className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-xl font-medium shadow-lg transition-all duration-300 hover:shadow-xl"
+              >
+                📥 Download PDF
+              </button>
+            </>
           )}
         </div>
 

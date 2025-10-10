@@ -1,6 +1,7 @@
 const Booking = require("../models/Booking");
 const Outfit = require("../models/Outfit");
 const { sendPayOnReturnEmail } = require("../services/emailService");
+const puppeteer = require('puppeteer');
 
 // Function to check the availability of the Outfit at a given date
 const checkAvailability = async (outfit, reservationDate, returnDate) => {
@@ -420,6 +421,235 @@ const sendPayOnReturnConfirmation = async (req, res) => {
     }
 };
 
+//API to generate booking report as PDF
+const generateBookingReportPDF = async (req, res) => {
+    try {
+        const { role, type } = req.user;
+        
+        // Only admin can generate reports
+        if (role !== 'admin' && type !== 'Admin') {
+            return res.json({ success: false, message: "Unauthorized - Admin access required" });
+        }
+
+        const { startDate, endDate, status, location } = req.query;
+        
+        // Build query based on filters
+        let query = {};
+        
+        // Date filter
+        if (startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate + 'T23:59:59.999Z')
+            };
+        }
+        
+        // Status filter
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        // Get all bookings with populated data
+        let bookings = await Booking.find(query)
+            .populate({
+                path: 'outfit',
+                select: 'brand model category pricePerDay location image'
+            })
+            .populate({
+                path: 'user',
+                select: 'username email'
+            })
+            .populate({
+                path: 'owner',
+                select: 'username email'
+            })
+            .sort({ createdAt: -1 });
+
+        // Location filter (after population)
+        if (location && location !== 'all') {
+            bookings = bookings.filter(booking => 
+                booking.outfit && booking.outfit.location === location
+            );
+        }
+
+        // Calculate summary statistics
+        const totalBookings = bookings.length;
+        const totalRevenue = bookings
+            .filter(booking => booking.status === 'confirmed')
+            .reduce((sum, booking) => sum + booking.price, 0);
+        
+        const statusCounts = bookings.reduce((acc, booking) => {
+            acc[booking.status] = (acc[booking.status] || 0) + 1;
+            return acc;
+        }, {});
+
+        const summary = {
+            totalBookings,
+            totalRevenue,
+            statusCounts,
+            reportPeriod: {
+                startDate: startDate || 'All time',
+                endDate: endDate || 'Present'
+            }
+        };
+
+        // Get current user info for the report
+        const currentUser = req.user;
+        const currency = 'Rs.';
+
+        // Generate HTML content for PDF
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Booking Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; color: #000; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+                .header h1 { color: #000; margin: 0; }
+                .header p { margin: 5px 0; color: #333; }
+                .summary { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ccc; }
+                .summary h2 { color: #000; margin-top: 0; }
+                .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+                .summary-item { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #000; border: 1px solid #ddd; }
+                .summary-item h3 { margin: 0 0 5px 0; color: #000; }
+                .summary-item p { margin: 0; font-size: 18px; font-weight: bold; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000; }
+                th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ccc; }
+                th { background: #000; color: white; font-weight: bold; }
+                tr:nth-child(even) { background: #f9f9f9; }
+                tr:nth-child(odd) { background: white; }
+                .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #000; }
+                .status.pending { background: #e6e6e6; color: #000; }
+                .status.confirmed { background: #d4d4d4; color: #000; }
+                .status.cancelled { background: #b8b8b8; color: #000; }
+                .outfit-info { display: flex; align-items: center; gap: 10px; }
+                .outfit-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+                @media print { body { margin: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📊 Booking Report</h1>
+                <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Owner:</strong> ${currentUser?.username || 'Owner'}</p>
+                <p><strong>Report Period:</strong> ${summary.reportPeriod.startDate} to ${summary.reportPeriod.endDate}</p>
+            </div>
+
+            <div class="summary">
+                <h2>📈 Summary & Analytics</h2>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <h3>Total Bookings</h3>
+                        <p>${summary.totalBookings}</p>
+                    </div>
+                    <div class="summary-item">
+                        <h3>Total Revenue</h3>
+                        <p>${currency}${summary.totalRevenue.toFixed(2)}</p>
+                    </div>
+                    <div class="summary-item">
+                        <h3>Confirmed Bookings</h3>
+                        <p>${summary.statusCounts.confirmed || 0}</p>
+                    </div>
+                    <div class="summary-item">
+                        <h3>Pending Bookings</h3>
+                        <p>${summary.statusCounts.pending || 0}</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2>📋 Detailed Booking Information</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Outfit Details</th>
+                        <th>Customer</th>
+                        <th>Booking Period</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${bookings.map(booking => {
+                        const startDate = new Date(booking.reservationDate).toLocaleDateString()
+                        const endDate = new Date(booking.returnDate).toLocaleDateString()
+                        const duration = Math.ceil((new Date(booking.returnDate) - new Date(booking.reservationDate)) / (1000 * 60 * 60 * 24))
+                        
+                        return `
+                        <tr>
+                            <td>#${booking._id.toString().slice(-6)}</td>
+                            <td>
+                                <div class="outfit-info">
+                                    <div>
+                                        <strong>${booking.outfit?.brand || 'N/A'} - ${booking.outfit?.model || 'N/A'}</strong><br>
+                                        <small>${booking.outfit?.category || 'N/A'} | ${booking.outfit?.location || 'N/A'}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>${booking.user?.username || 'N/A'}</strong><br>
+                                <small>${booking.user?.email || 'N/A'}</small>
+                            </td>
+                            <td>
+                                <strong>Start:</strong> ${startDate}<br>
+                                <strong>End:</strong> ${endDate}
+                            </td>
+                            <td>${duration} day${duration !== 1 ? 's' : ''}</td>
+                            <td><span class="status ${booking.status}">${booking.status.toUpperCase()}</span></td>
+                            <td><strong>${currency}${booking.price.toFixed(2)}</strong></td>
+                        </tr>
+                        `
+                    }).join('')}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+                <p>This report was generated automatically by the Outfit Rental Management System</p>
+                <p>© ${new Date().getFullYear()} - All rights reserved</p>
+            </div>
+        </body>
+        </html>
+        `;
+
+        // Launch puppeteer and generate PDF
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '20px',
+                right: '20px',
+                bottom: '20px',
+                left: '20px'
+            }
+        });
+        
+        await browser.close();
+
+        // Set response headers for PDF download
+        const filename = `booking-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', pdfBuffer.length);
+        
+        // Send the PDF buffer
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     checkAvailabilityOfOutfit,
     createBooking,
@@ -430,5 +660,6 @@ module.exports = {
     getBookingById,
     updateBooking,
     generateBookingReport,
+    generateBookingReportPDF,
     sendPayOnReturnConfirmation
 };
