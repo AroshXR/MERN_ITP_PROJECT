@@ -72,6 +72,7 @@ const analyticsRouter = require("./routes/AnalyticsRoutes");
 const orderRouter = require("./routes/OrderRoutes");
 const tailorRouter = require("./routes/TailorRoutes");
 const customOrderRouter = require("./routes/CustomOrderRoutes");
+const orderAssignmentRouter = require("./routes/OrderAssignmentRoutes");
      //import oenerRouter from "./routes/ownerRoutes.js"
      const ownerRouter = require("./routes/ownerRoutes");
      const bookingRouter = require("./routes/bookingRoutes");
@@ -121,6 +122,7 @@ app.use("/orders", orderRouter);
 // Tailor management & Custom Orders (namespaced under /api)
 app.use("/api/tailors", tailorRouter);
 app.use("/api/custom-orders", customOrderRouter);
+app.use("/api/order-assignments", orderAssignmentRouter);
 
     //pasindu                                                         sdsdsdssdsdsdsdsd
     app.use("/api/owner", ownerRouter);
@@ -318,6 +320,7 @@ const connectToMongoDB = async () => {
     require("./models/ClothCustomizerModel");
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
+    require("./models/OrderAssignment");
     
     require("./models/Booking");
     require("./models/Outfit");

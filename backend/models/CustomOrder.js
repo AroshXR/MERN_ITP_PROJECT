@@ -24,7 +24,26 @@ const ConfigSchema = new mongoose.Schema(
 
 const DesignSchema = new mongoose.Schema(
   {
+    // Primary preview image for the design (e.g., composite/mockup)
     designImageUrl: { type: String },
+    // Raw selected design metadata from the customizer
+    selectedDesign: { type: Object },
+    // Placed designs on the garment with positions/scale/rotation/side
+    placedDesigns: [
+      new mongoose.Schema(
+        {
+          url: String,
+          x: Number,
+          y: Number,
+          scale: Number,
+          rotation: Number,
+          side: { type: String, enum: ['front', 'back', 'left', 'right'], default: 'front' },
+          preview: String,
+        },
+        { _id: false }
+      ),
+    ],
+    // Backwards-compatible field for any custom metadata
     designMeta: { type: Object },
   },
   { _id: false }

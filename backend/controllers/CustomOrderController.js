@@ -44,8 +44,21 @@ exports.migrateFromCustomizer = async (req, res) => {
           quantity: typeof c.quantity === 'number' ? c.quantity : 1,
           notes: c.nickname || undefined,
         },
-        // Basic projection; advanced mapping of designs could be added if needed
-        design: c.selectedDesign ? { designImageUrl: c.selectedDesign.preview || undefined, designMeta: c.selectedDesign } : undefined,
+        // Rich design snapshot for read-only 3D viewer
+        design: {
+          designImageUrl: c.selectedDesign?.preview || undefined,
+          selectedDesign: c.selectedDesign || undefined,
+          placedDesigns: Array.isArray(c.placedDesigns) ? c.placedDesigns.map(d => ({
+            url: d?.preview || d?.url || undefined,
+            x: d?.position?.x ?? undefined,
+            y: d?.position?.y ?? undefined,
+            scale: d?.size ?? undefined,
+            rotation: d?.rotation ?? 0,
+            side: d?.side || 'front',
+            preview: d?.preview || undefined,
+          })) : [],
+          designMeta: c.selectedDesign || undefined,
+        },
         status: 'pending',
         price: typeof c.totalPrice === 'number' ? c.totalPrice : undefined,
         previewGallery: Array.isArray(c.placedDesigns) ? c.placedDesigns.map(d => d?.preview).filter(Boolean) : [],

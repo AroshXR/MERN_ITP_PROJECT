@@ -22,6 +22,7 @@ export default function AdminCustomOrders() {
   const [updatingStatusId, setUpdatingStatusId] = useState('');
   const [info] = useState('');
   const [lastAssigned, setLastAssigned] = useState(null);
+  const [assignmentByOrder, setAssignmentByOrder] = useState({}); // orderId -> { _id, status, tailor }
 
   const statusFilter = searchParams.get('status') || '';
   const tailorFilter = searchParams.get('tailorId') || '';
@@ -59,8 +60,57 @@ export default function AdminCustomOrders() {
         if (!res.data || !Array.isArray(res.data.data)) {
             throw new Error('Invalid response format');
         }
-        
-        setOrders(res.data.data);
+        // Normalize to a common shape. If coming from ClothCustomizer (legacy),
+        // build config/customer/status fields expected by the UI and mark as legacy.
+        const normalized = res.data.data.map((o) => {
+          if (o && o.config) return { ...o, isLegacy: false };
+          return {
+            _id: o._id,
+            customerId: o.userId ? { username: o.userId.username, email: o.userId.email } : null,
+            config: {
+              clothingType: o.clothingType,
+              color: o.color,
+              size: o.size,
+              quantity: typeof o.quantity === 'number' ? o.quantity : 1,
+            },
+            price: o.totalPrice,
+            status: 'pending',
+            createdAt: o.createdAt,
+            assignedTailor: null,
+            isLegacy: true,
+          };
+        });
+
+        setOrders(normalized);
+
+        // After orders load, fetch assignment for each
+        try {
+          const token2 = getToken();
+          const pairs = await Promise.all(normalized.map(async (o) => {
+            const src = o.isLegacy ? 'ClothCustomizer' : 'CustomOrder';
+            try {
+              const r = await axios.get(`${API_BASE_URL}/api/order-assignments/by-order`, {
+                headers: { Authorization: `Bearer ${token2}` },
+                params: { orderSource: src, orderId: o._id }
+              });
+              const data = r.data?.data || null;
+              return [o._id, data];
+            } catch (_) {
+              return [o._id, null];
+            }
+          }));
+          const map = {};
+          for (const [oid, data] of pairs) {
+            if (data && data.assignment) {
+              map[oid] = {
+                _id: data.assignment._id,
+                status: data.assignment.status,
+                tailor: data.assignment.tailorId || null,
+              };
+            }
+          }
+          setAssignmentByOrder(map);
+        } catch { /* non-blocking */ }
     } catch (e) {
         console.error('Detailed fetch error:', {
             message: e.message,
@@ -104,18 +154,44 @@ export default function AdminCustomOrders() {
       setAssigning(orderId);
       const token = getToken();
       
-      await axios.patch(
-        `${API_BASE_URL}/api/custom-orders/${orderId}/assign`,
-        { tailorId },
-        { 
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
+      // Decide endpoint based on order source
+      const ord = orders.find(o => o._id === orderId);
+      if (ord && ord.isLegacy) {
+        // Legacy ClothCustomizer orders -> use OrderAssignment endpoint
+        await axios.post(
+          `${API_BASE_URL}/api/order-assignments/assign`,
+          { orderSource: 'ClothCustomizer', orderId, tailorId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      } else {
+        // New CustomOrder -> assign directly on the order (new system)
+        await axios.post(
+          `${API_BASE_URL}/api/custom-orders/${orderId}/assign`,
+          { tailorId },
+          { 
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            } 
+          }
+        );
+      }
 
       setLastAssigned(orderId);
+      // Optimistically update UI with assigned tailor name
+      const assigned = tailors.find(x => x._id === tailorId);
+      if (assigned) {
+        setOrders(prev => prev.map(o => (
+          o._id === orderId ? { ...o, assignedTailor: { name: assigned.name } } : o
+        )));
+      }
+      // Notify success via popup
+      alert('Tailor assigned successfully!');
       setTimeout(() => setLastAssigned(null), 3000);
 
       // Clear selection for this order only
@@ -147,6 +223,25 @@ export default function AdminCustomOrders() {
       alert('Failed to update status');
     } finally {
       setUpdatingStatusId('');
+    }
+  };
+
+  // Update assignment status via OrderAssignment controller
+  const updateAssignmentStatus = async (orderId, next) => {
+    try {
+      if (!next) return;
+      const a = assignmentByOrder[orderId];
+      if (!a?._id) return alert('No assignment found for this order');
+      const token = getToken();
+      await axios.patch(`${API_BASE_URL}/api/order-assignments/${a._id}/status`, { status: next }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAssignmentByOrder(prev => ({
+        ...prev,
+        [orderId]: { ...prev[orderId], status: next }
+      }));
+    } catch (e) {
+      alert('Failed to update assignment status');
     }
   };
 
@@ -218,7 +313,10 @@ export default function AdminCustomOrders() {
                       <div style={{ textAlign: 'right' }}>
                         <div><strong>Price:</strong> {typeof order.price === 'number' ? `Rs. ${order.price.toFixed(2)}` : '—'}</div>
                         <div><strong>Created:</strong> {order.createdAt ? new Date(order.createdAt).toLocaleString() : '—'}</div>
-                        <div><strong>Assigned Tailor:</strong> {order.assignedTailor?.name || '—'}</div>
+                        <div><strong>Assigned Tailor:</strong> {assignmentByOrder[order._id]?.tailor?.name || order.assignedTailor?.name || '—'}</div>
+                        {assignmentByOrder[order._id] && (
+                          <div><strong>Assignment Status:</strong> {assignmentByOrder[order._id]?.status || '—'}</div>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
@@ -237,13 +335,16 @@ export default function AdminCustomOrders() {
                       <button disabled={assigning === order._id} onClick={() => onAssign(order._id)}>
                         {assigning === order._id ? 'Assigning...' : 'Assign Tailor'}
                       </button>
-                      <select defaultValue="" onChange={(e) => updateStatus(order._id, e.target.value)} disabled={updatingStatusId === order._id}>
-                        <option value="" disabled>Update status...</option>
-                        {['accepted','in_progress','completed','delivered','cancelled'].map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                      {updatingStatusId === order._id && <span>Updating...</span>}
+                      {assignmentByOrder[order._id]?.status && (
+                        <>
+                          <select defaultValue="" onChange={(e) => updateAssignmentStatus(order._id, e.target.value)}>
+                            <option value="" disabled>Update assignment status...</option>
+                            {['assigned','accepted','in_progress','completed','rejected'].map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </>
+                      )}
                     </div>
                     {lastAssigned === order._id && <div style={{ color: 'green', marginTop: 8 }}>Tailor assigned successfully!</div>}
                   </div>

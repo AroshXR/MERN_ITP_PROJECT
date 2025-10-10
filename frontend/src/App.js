@@ -16,6 +16,8 @@ import OrderManagement from './Components/OrderManagement/OrderManagement';
 import PaymentManagement from './Components/PaymentManagement/PaymentManagement';
 import PaymentDetailsDisplay from './Components/PaymentDetailsDisplay/PaymentDetailsDisplay';
 import TailorHome from './Components/Home/Tailor_Interface/TailorHome';
+import TailorMyOrders from './pages/tailor/MyOrders';
+import TailorOrderDetail from './pages/tailor/OrderDetail';
 import UserHome from './Components/Home/UserHome/UserHome';
 import SupplierManagement from './Components/Supplier-management/SupplierManagement';
 import MaterialInventoryManagement from './Components/MaterialInventory-management/MaterialInventoryManagement';
@@ -135,6 +137,22 @@ function App() {
           element={(
             <ProtectedRoute allowedUserTypes="Tailor">
               <TailorHome />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/tailor/orders"
+          element={(
+            <ProtectedRoute allowedUserTypes="Tailor">
+              <TailorMyOrders />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/tailor/orders/:id"
+          element={(
+            <ProtectedRoute allowedUserTypes="Tailor">
+              <TailorOrderDetail />
             </ProtectedRoute>
           )}
         />
