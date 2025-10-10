@@ -377,7 +377,7 @@ const updateBooking = async (req, res) => {
 // API to send Pay on Return email
 const sendPayOnReturnConfirmation = async (req, res) => {
     try {
-        const { bookingId } = req.body;
+        const { bookingId } = req.body;  // Gets booking ID from request
         const userId = req.user._id;
 
         // Find the booking and populate outfit and user details

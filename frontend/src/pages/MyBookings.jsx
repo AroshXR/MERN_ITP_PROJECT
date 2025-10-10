@@ -193,6 +193,8 @@ const MyBookings = () => {
                           const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
                           const token = getToken();
                           
+                          // Customer clicks "Pay on Return" button
+// Frontend sends request to backend
                           const { data } = await axios.post(
                             `${BASE_URL}/api/booking/send-pay-on-return-email`,
                             { bookingId: booking._id },

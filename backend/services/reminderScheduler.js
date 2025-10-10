@@ -24,7 +24,7 @@ const checkReturnReminders = async () => {
         $gte: today,
         $lte: twoDaysFromNow
       },
-      status: 'confirmed'
+      status: 'confirmed'      //Only confirmed bookings get reminders
     }).populate('user').populate('outfit');
     
     console.log(`Found ${upcomingReturns.length} bookings with upcoming return dates`);

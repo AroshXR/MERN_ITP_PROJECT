@@ -31,7 +31,7 @@ bookingRouter.get('/:bookingId', protect, getBookingById);
 bookingRouter.put('/:bookingId', protect, upload.single('document'), updateBooking);
 
 // Route for sending Pay on Return email
-bookingRouter.post('/send-pay-on-return-email', protect, sendPayOnReturnConfirmation);
+bookingRouter.post('/send-pay-on-return-email', protect, sendPayOnReturnConfirmation); // Route handles the request
 
 // Return reminder routes
 bookingRouter.post('/send-return-reminder/:bookingId', protect, async (req, res) => {
