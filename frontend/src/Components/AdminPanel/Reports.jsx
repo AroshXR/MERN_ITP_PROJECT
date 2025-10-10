@@ -132,6 +132,245 @@ export default function Reports() {
     }
   };
 
+  const downloadAnalyticsPDF = () => {
+    if (!analytics) {
+      alert('No analytics data available. Please refresh the page and try again.');
+      return;
+    }
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Get the current report data
+    const reportData = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Klassy T Shirts - Recruitment Analytics Report</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    line-height: 1.6;
+                    color: #333;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    border-bottom: 3px solid #2563eb;
+                    padding-bottom: 20px;
+                }
+                .header h1 { 
+                    color: #1e40af; 
+                    margin: 0; 
+                    font-size: 2.2em;
+                }
+                .header h2 { 
+                    color: #64748b; 
+                    margin: 5px 0; 
+                    font-weight: normal;
+                }
+                .report-info { 
+                    background: #f8fafc; 
+                    padding: 15px; 
+                    border-radius: 8px; 
+                    margin-bottom: 25px; 
+                    border-left: 4px solid #2563eb;
+                }
+                .summary-section {
+                    margin-bottom: 20px;
+                }
+                .summary-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }
+                .summary-table th, .summary-table td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                .summary-table th {
+                    background-color: #2563eb;
+                    color: white;
+                }
+                .position-table, .interview-table, .pending-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                    font-size: 11px;
+                }
+                .position-table th, .position-table td,
+                .interview-table th, .interview-table td,
+                .pending-table th, .pending-table td {
+                    border: 1px solid #ddd;
+                    padding: 6px;
+                    text-align: left;
+                }
+                .position-table th, .interview-table th, .pending-table th {
+                    background-color: #1e40af;
+                    color: white;
+                }
+                .status-pending { color: #d97706; font-weight: bold; }
+                .status-approved { color: #059669; font-weight: bold; }
+                .status-rejected { color: #dc2626; font-weight: bold; }
+                .footer { 
+                    margin-top: 30px; 
+                    padding-top: 20px; 
+                    border-top: 2px solid #e2e8f0; 
+                    text-align: center; 
+                    color: #64748b; 
+                    font-size: 0.9em;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>KLASSY T SHIRTS</h1>
+                <h2>Career Management System</h2>
+                <h3>RECRUITMENT ANALYTICS REPORT</h3>
+            </div>
+            
+            <div class="report-info">
+                <p><strong>Generated:</strong> ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                <p><strong>Report Type:</strong> Recruitment Analytics</p>
+                <p><strong>Total Applicants:</strong> ${analytics.summary.totalApplicants}</p>
+            </div>
+            
+            <div class="summary-section">
+                <h3>Summary Statistics</h3>
+                <table class="summary-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Percentage</th>
+                    </tr>
+                    <tr>
+                        <td>Total Applicants</td>
+                        <td>${analytics.summary.totalApplicants}</td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>Pending Applications</td>
+                        <td>${analytics.summary.pending}</td>
+                        <td>${analytics.summary.pendingRatio || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td>Approved Applications</td>
+                        <td>${analytics.summary.approved}</td>
+                        <td>${analytics.summary.shortlistedRatio || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td>Rejected Applications</td>
+                        <td>${analytics.summary.rejected}</td>
+                        <td>${analytics.summary.rejectedRatio || 'N/A'}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="summary-section">
+                <h3>Applicants by Position</h3>
+                <table class="position-table">
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Total</th>
+                            <th>Pending</th>
+                            <th>Approved</th>
+                            <th>Rejected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(analytics.applicantsByPosition).map(([position, data]) => `
+                            <tr>
+                                <td>${position}</td>
+                                <td>${data.total}</td>
+                                <td class="status-pending">${data.pending}</td>
+                                <td class="status-approved">${data.approved}</td>
+                                <td class="status-rejected">${data.rejected}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            ${analytics.interviewSchedules.length > 0 ? `
+            <div class="summary-section">
+                <h3>Interview Schedules</h3>
+                <table class="interview-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Date & Time</th>
+                            <th>Mode</th>
+                            <th>Location/Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${analytics.interviewSchedules.map(interview => `
+                            <tr>
+                                <td>${interview.name}</td>
+                                <td>${interview.position}</td>
+                                <td>${new Date(interview.scheduledAt).toLocaleString()}</td>
+                                <td>${interview.mode}</td>
+                                <td>${interview.meetingLink ? 'Online Meeting' : (interview.location || 'N/A')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            ` : ''}
+            
+            <div class="summary-section">
+                <h3>Pending Applications</h3>
+                <table class="pending-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Position</th>
+                            <th>Applied Date</th>
+                            <th>Resume File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${analytics.pendingApplications.map(app => `
+                            <tr>
+                                <td>${app.name}</td>
+                                <td>${app.email}</td>
+                                <td>${app.position}</td>
+                                <td>${new Date(app.appliedAt).toLocaleDateString()}</td>
+                                <td>${app.resume?.filename || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Report Summary:</strong></p>
+                <p>Total Data Points Analyzed: ${analytics.summary.totalApplicants} | Generated: ${new Date().toISOString()}</p>
+                <p><strong>Disclaimer:</strong> This report contains confidential business information.</p>
+                <p>© 2025 Klassy T Shirts - All Rights Reserved</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(reportData);
+    printWindow.document.close();
+    
+    // Wait for content to load, then trigger print dialog
+    printWindow.onload = () => {
+        printWindow.print();
+    };
+  };
+
   const downloadApplicantReport = async (format = 'json') => {
     try {
       setReportGenerating(true);
@@ -176,6 +415,11 @@ export default function Reports() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        return;
+      }
+
+      if (format === 'pdf') {
+        downloadApplicantReportAsPDF(applicants, sectionLabel, fileLabel);
         return;
       }
 
@@ -238,6 +482,187 @@ export default function Reports() {
     }
   };
 
+  const downloadApplicantReportAsPDF = (applicants, sectionLabel, fileLabel) => {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Get the current report data
+    const reportData = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Klassy T Shirts - ${sectionLabel} Report</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    line-height: 1.6;
+                    color: #333;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    border-bottom: 3px solid #2563eb;
+                    padding-bottom: 20px;
+                }
+                .header h1 { 
+                    color: #1e40af; 
+                    margin: 0; 
+                    font-size: 2.2em;
+                }
+                .header h2 { 
+                    color: #64748b; 
+                    margin: 5px 0; 
+                    font-weight: normal;
+                }
+                .report-info { 
+                    background: #f8fafc; 
+                    padding: 15px; 
+                    border-radius: 8px; 
+                    margin-bottom: 25px; 
+                    border-left: 4px solid #2563eb;
+                }
+                .summary-section {
+                    margin-bottom: 20px;
+                }
+                .summary-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }
+                .summary-table th, .summary-table td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                .summary-table th {
+                    background-color: #2563eb;
+                    color: white;
+                }
+                .applicant-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                    font-size: 11px;
+                }
+                .applicant-table th, .applicant-table td {
+                    border: 1px solid #ddd;
+                    padding: 6px;
+                    text-align: left;
+                }
+                .applicant-table th {
+                    background-color: #1e40af;
+                    color: white;
+                }
+                .status-pending { color: #d97706; font-weight: bold; }
+                .status-approved { color: #059669; font-weight: bold; }
+                .status-rejected { color: #dc2626; font-weight: bold; }
+                .footer { 
+                    margin-top: 30px; 
+                    padding-top: 20px; 
+                    border-top: 2px solid #e2e8f0; 
+                    text-align: center; 
+                    color: #64748b; 
+                    font-size: 0.9em;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>KLASSY T SHIRTS</h1>
+                <h2>Career Management System</h2>
+                <h3>${sectionLabel.toUpperCase()} REPORT</h3>
+            </div>
+            
+            <div class="report-info">
+                <p><strong>Generated:</strong> ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                <p><strong>Report Type:</strong> ${sectionLabel}</p>
+                <p><strong>Total Applicants:</strong> ${applicants.length}</p>
+            </div>
+            
+            <div class="summary-section">
+                <h3>Summary Statistics</h3>
+                <table class="summary-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Total Applicants</td>
+                        <td>${applicants.length}</td>
+                    </tr>
+                    <tr>
+                        <td>Pending Applications</td>
+                        <td>${applicants.filter(a => a.status === 'pending').length}</td>
+                    </tr>
+                    <tr>
+                        <td>Approved Applications</td>
+                        <td>${applicants.filter(a => a.status === 'approved').length}</td>
+                    </tr>
+                    <tr>
+                        <td>Rejected Applications</td>
+                        <td>${applicants.filter(a => a.status === 'rejected').length}</td>
+                    </tr>
+                    <tr>
+                        <td>Unique Positions</td>
+                        <td>${[...new Set(applicants.map(a => a.position))].length}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="summary-section">
+                <h3>Applicant Details</h3>
+                <table class="applicant-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Position</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Applied Date</th>
+                            <th>Resume File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${applicants.map(applicant => `
+                            <tr>
+                                <td>${applicant.name}</td>
+                                <td>${applicant.email}</td>
+                                <td>${applicant.position}</td>
+                                <td>${applicant.department || 'N/A'}</td>
+                                <td class="status-${applicant.status}">${applicant.status.toUpperCase()}</td>
+                                <td>${applicant.appliedAt ? new Date(applicant.appliedAt).toLocaleDateString() : 'N/A'}</td>
+                                <td>${applicant.resume?.filename || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Report Summary:</strong></p>
+                <p>Total Data Points Analyzed: ${applicants.length} | Generated: ${new Date().toISOString()}</p>
+                <p><strong>Disclaimer:</strong> This report contains confidential business information.</p>
+                <p>© 2025 Klassy T Shirts - All Rights Reserved</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(reportData);
+    printWindow.document.close();
+    
+    // Wait for content to load, then trigger print dialog
+    printWindow.onload = () => {
+        printWindow.print();
+    };
+  };
+
   if (loading) return <div className="reports-loading">Loading analytics...</div>;
   if (error) return (
     <div className="reports-error">
@@ -255,6 +680,7 @@ export default function Reports() {
         <div className="reports__actions">
           <button onClick={downloadReport} className="btn btn--primary">Download JSON Report</button>
           <button onClick={downloadCSV} className="btn btn--secondary">Download CSV</button>
+          <button onClick={downloadAnalyticsPDF} className="btn btn--secondary" title="Download PDF report for printing and sharing">📄 Download PDF</button>
           <button onClick={fetchAnalytics} className="btn btn--ghost">Refresh</button>
         </div>
       </div>
@@ -333,6 +759,14 @@ export default function Reports() {
             disabled={reportGenerating}
           >
             {reportGenerating ? 'Preparing...' : 'Download CSV'}
+          </button>
+          <button
+            onClick={() => downloadApplicantReport('pdf')}
+            className="btn btn--secondary"
+            disabled={reportGenerating}
+            title="Download PDF report for printing and sharing"
+          >
+            {reportGenerating ? 'Preparing...' : '📄 Download PDF'}
           </button>
         </div>
       </div>

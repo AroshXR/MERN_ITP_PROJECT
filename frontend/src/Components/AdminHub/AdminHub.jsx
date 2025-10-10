@@ -77,6 +77,12 @@ export default function AdminHub() {
             <p>Assign tailors and track order statuses.</p>
           </button>
 
+          <button className="hub-card" onClick={() => navigate('/admin-cloth-customizer')}>
+            <i className='bx bx-customize'></i>
+            <h3>Admin Cloth Customizer</h3>
+            <p>Manage customizer assets and presets.</p>
+          </button>
+
           <button className="hub-card" onClick={() => navigate('/admin-applicants')}>
             <i className='bx bx-id-card'></i>
             <h3>Applicants</h3>

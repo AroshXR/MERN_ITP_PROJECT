@@ -218,6 +218,153 @@ export default function OrderSummaryPage() {
         URL.revokeObjectURL(url);
     };
 
+    const handleDownloadPDF = () => {
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        
+        // Get the current report data
+        const reportData = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Order Summary Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .header h1 { color: #2980b9; margin-bottom: 10px; }
+                    .summary-section { margin-bottom: 30px; }
+                    .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    .summary-table th, .summary-table td { 
+                        border: 1px solid #ddd; 
+                        padding: 8px; 
+                        text-align: left; 
+                    }
+                    .summary-table th { background-color: #3498db; color: white; }
+                    .orders-table { width: 100%; border-collapse: collapse; }
+                    .orders-table th, .orders-table td { 
+                        border: 1px solid #ddd; 
+                        padding: 6px; 
+                        text-align: left; 
+                        font-size: 12px;
+                    }
+                    .orders-table th { background-color: #2980b9; color: white; }
+                    .status-completed { color: #27ae60; font-weight: bold; }
+                    .status-pending { color: #f39c12; font-weight: bold; }
+                    .status-cancelled { color: #e74c3c; font-weight: bold; }
+                    .status-canceled { color: #e74c3c; font-weight: bold; }
+                    .status-failed { color: #e74c3c; font-weight: bold; }
+                    .status-processing { color: #f39c12; font-weight: bold; }
+                    @media print {
+                        body { margin: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Order Summary Report</h1>
+                    <p><strong>Report Period:</strong> ${startDate || "All"} - ${endDate || "All"}</p>
+                    <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+                
+                <div class="summary-section">
+                    <h2>Summary</h2>
+                    <table class="summary-table">
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Total Orders</td>
+                            <td>${filteredSummary.totalOrders}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Revenue</td>
+                            <td>${formatCurrency(filteredSummary.totalRevenue)}</td>
+                        </tr>
+                        <tr>
+                            <td>Average Order Value</td>
+                            <td>${formatCurrency(filteredSummary.averageOrderValue)}</td>
+                        </tr>
+                        <tr>
+                            <td>Completed Orders</td>
+                            <td>${filteredSummary.completedOrders}</td>
+                        </tr>
+                        <tr>
+                            <td>Pending Orders</td>
+                            <td>${filteredSummary.pendingOrders}</td>
+                        </tr>
+                        <tr>
+                            <td>Cancelled Orders</td>
+                            <td>${filteredSummary.cancelledOrders}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="orders-section">
+                    <h2>Order Details</h2>
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredOrders.map((o) => `
+                                <tr>
+                                    <td>${o.id || o._id || o.OrderID || ""}</td>
+                                    <td>${
+                                        o.CustomerName ||
+                                        o.customerName ||
+                                        o.customer ||
+                                        (o.deliveryDetails && 
+                                            (o.deliveryDetails.firstName && o.deliveryDetails.lastName
+                                                ? `${o.deliveryDetails.firstName} ${o.deliveryDetails.lastName}`
+                                                : o.deliveryDetails.email)) ||
+                                        (o.AdminID && typeof o.AdminID === 'object' &&
+                                            (o.AdminID.firstName && o.AdminID.lastName
+                                                ? `${o.AdminID.firstName} ${o.AdminID.lastName}`
+                                                : o.AdminID.email)) ||
+                                        (o.userId &&
+                                            (o.userId.firstName && o.userId.lastName
+                                                ? `${o.userId.firstName} ${o.userId.lastName}`
+                                                : o.userId.email)) ||
+                                        o.user?.name ||
+                                        o.user?.email ||
+                                        ""
+                                    }</td>
+                                    <td class="status-${String(o.status || "").toLowerCase()}">${o.status || ""}</td>
+                                    <td>${formatCurrency(computeOrderTotal(o))}</td>
+                                    <td>${o.createdAt || o.orderDate || o.date || o.CreatedAt || ""}</td>
+                                </tr>
+                            `).join('')}
+                            ${!filteredOrders.length ? `
+                                <tr>
+                                    <td colspan="5" style="text-align: center; font-style: italic;">
+                                        No orders for the selected period.
+                                    </td>
+                                </tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(reportData);
+        printWindow.document.close();
+        
+        // Wait for content to load, then trigger print dialog
+        printWindow.onload = () => {
+            printWindow.print();
+        };
+    };
+
     return (
         <div className="orderSummaryPage">
             <header className="header">
@@ -298,6 +445,13 @@ export default function OrderSummaryPage() {
                                     disabled={!filteredOrders.length}
                                 >
                                     Download CSV
+                                </button>
+                                <button
+                                    className="btn"
+                                    onClick={handleDownloadPDF}
+                                    disabled={!filteredOrders.length}
+                                >
+                                    Download PDF
                                 </button>
                             </div>
                         </div>

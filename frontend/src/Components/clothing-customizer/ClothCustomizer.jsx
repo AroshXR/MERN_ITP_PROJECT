@@ -36,6 +36,36 @@ function ClothCustomizer() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [nickname, setNickname] = useState('');
+  const [customizerPrices, setCustomizerPrices] = useState(null);
+  const [loadingPrices, setLoadingPrices] = useState(true);
+
+  // Fetch customizer prices from API
+  const fetchCustomizerPrices = async () => {
+    try {
+      const response = await axios.get('http://localhost:5001/customizer-prices');
+      if (response.data.status === "ok") {
+        setCustomizerPrices(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching customizer prices:', error);
+      // Fallback to hardcoded prices if API fails
+      setCustomizerPrices({
+        basePrices: { tshirt: 25 },
+        sizePrices: { S: 0, M: 0, L: 3, XL: 5, XXL: 8 },
+        presetDesigns: [
+          { id: 1, name: "Design 1", price: 15, preview: "print1", isActive: true },
+          { id: 2, name: "Design 2", price: 20, preview: "print2", isActive: true },
+          { id: 3, name: "Design 3", price: 18, preview: "print3", isActive: true },
+          { id: 4, name: "Design 4", price: 12, preview: "print4", isActive: true },
+          { id: 5, name: "Design 5", price: 10, preview: "print5", isActive: true },
+          { id: 6, name: "Design 6", price: 8, preview: "print6", isActive: true }
+        ],
+        customUploadPrice: 25
+      });
+    } finally {
+      setLoadingPrices(false);
+    }
+  };
 
   // Fetch cart items count for the authenticated user
   const fetchCartCount = async () => {
@@ -68,6 +98,7 @@ function ClothCustomizer() {
 
   // Load edit data if in edit mode
   useEffect(() => {
+    fetchCustomizerPrices();
     if (isEditMode) {
       loadEditData();
     } else {
@@ -160,14 +191,44 @@ function ClothCustomizer() {
   const controlsRef = React.useRef();
   const [selectedSize, setSelectedSize] = useState(null);
 
-  // Sample preset designs
+  // Use hardcoded images with database prices
   const presetDesigns = [
-    { id: 1, name: "Design 1", price: 15, preview: print1 },
-    { id: 2, name: "Design 2", price: 20, preview: print2 },
-    { id: 3, name: "Design 3", price: 18, preview: print3 },
-    { id: 4, name: "Design 4", price: 12, preview: print4 },
-    { id: 5, name: "Design 5", price: 10, preview: print5 },
-    { id: 6, name: "Design 6", price: 8, preview: print6 },
+    { 
+      id: 1, 
+      name: customizerPrices?.presetDesigns?.[0]?.name || "Design 1", 
+      price: customizerPrices?.presetDesigns?.[0]?.price || 15, 
+      preview: print1 
+    },
+    { 
+      id: 2, 
+      name: customizerPrices?.presetDesigns?.[1]?.name || "Design 2", 
+      price: customizerPrices?.presetDesigns?.[1]?.price || 20, 
+      preview: print2 
+    },
+    { 
+      id: 3, 
+      name: customizerPrices?.presetDesigns?.[2]?.name || "Design 3", 
+      price: customizerPrices?.presetDesigns?.[2]?.price || 18, 
+      preview: print3 
+    },
+    { 
+      id: 4, 
+      name: customizerPrices?.presetDesigns?.[3]?.name || "Design 4", 
+      price: customizerPrices?.presetDesigns?.[3]?.price || 12, 
+      preview: print4 
+    },
+    { 
+      id: 5, 
+      name: customizerPrices?.presetDesigns?.[4]?.name || "Design 5", 
+      price: customizerPrices?.presetDesigns?.[4]?.price || 10, 
+      preview: print5 
+    },
+    { 
+      id: 6, 
+      name: customizerPrices?.presetDesigns?.[5]?.name || "Design 6", 
+      price: customizerPrices?.presetDesigns?.[5]?.price || 8, 
+      preview: print6 
+    },
   ];
 
   const colors = [
@@ -222,7 +283,7 @@ function ClothCustomizer() {
           const customDesign = {
             id: `custom-${Date.now()}`,
             name: "Custom Image",
-            price: 25,
+            price: customizerPrices?.customUploadPrice || 25,
             preview: imageUrl,
             position: designPosition,
             size: designSize,
@@ -277,10 +338,14 @@ function ClothCustomizer() {
   };
 
   const getSizeExtraPrice = () => {
-    if (selectedSize === "L") return 3;
-    if (selectedSize === "XL") return 5;
-    if (selectedSize === "XXL") return 8;
-    return 0;
+    if (!customizerPrices?.sizePrices) {
+      // Fallback to hardcoded prices
+      if (selectedSize === "L") return 3;
+      if (selectedSize === "XL") return 5;
+      if (selectedSize === "XXL") return 8;
+      return 0;
+    }
+    return customizerPrices.sizePrices[selectedSize] || 0;
   };
 
   const [quantity, setQuantity] = useState(1);
@@ -290,8 +355,7 @@ function ClothCustomizer() {
   };
 
   // Calculate total price including placed designs
-
-  const basePrice = clothingType === "tshirt" ? 25 : 35;
+  const basePrice = customizerPrices?.basePrices?.[clothingType] || (clothingType === "tshirt" ? 25 : 35);
   const designPrice = selectedDesign ? selectedDesign.price : 0;
   const sizeExtraPrice = getSizeExtraPrice();
   const totalPrice = basePrice + designPrice + sizeExtraPrice;
@@ -426,20 +490,6 @@ function ClothCustomizer() {
                   >
                     Logout
                   </button>
-                  {/* <button 
-                    className="debug-btn"
-                    onClick={() => {
-                      console.log('=== DEBUG INFO ===');
-                      console.log('isAuthenticated():', isAuthenticated());
-                      console.log('token:', getToken());
-                      console.log('currentUser:', currentUser);
-                      console.log('localStorage token:', localStorage.getItem('token'));
-                      console.log('==================');
-                    }}
-                    style={{ fontSize: '12px', padding: '4px 8px', marginLeft: '10px' }}
-                  >
-                    Debug
-                  </button> */}
                 </div>
               ) : (
                 <div className="guest-info">
@@ -698,25 +748,6 @@ function ClothCustomizer() {
                   designSize={designSize}
                 />
               </Bounds>
-
-              {/* <Bounds fit clip observe margin={1.2}>
-                {clothingType === "tshirt" ? (
-                  <TShirtModel
-                    selectedColor={selectedColor}
-                    chestDesignUrl={selectedDesign?.preview || null}
-                    position={[0, 0, 0]}
-                    scale={2}
-                  />
-                ) : (
-                  <CropTopModel
-                    selectedColor={selectedColor}
-                    frontDesigns={frontDesigns}
-                    backDesigns={backDesigns}
-                    position={[0, 0, 0]}
-                    scale={3}
-                  />
-                )}
-              </Bounds> */}
 
               <OrbitControls
                 ref={controlsRef}

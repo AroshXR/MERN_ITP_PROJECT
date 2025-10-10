@@ -148,7 +148,7 @@ const getAllOutfits = async (req, res) => {
     }
 };
 
-//API to toggle car availability
+//API to toggle outfit availability
 const toggleOutfitAvailability = async (req, res) => {
     try {
         const { _id } = req.user;

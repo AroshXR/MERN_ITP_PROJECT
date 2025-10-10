@@ -44,4 +44,15 @@ const protect = async (req, res, next) => {
     }
 }
 
-module.exports = { protect };
+const adminOnly = (req, res, next) => {
+    if (req.user && req.user.type === 'Admin') {
+        next();
+    } else {
+        return res.status(403).json({
+            status: "error",
+            message: "Access denied. Admin privileges required."
+        });
+    }
+};
+
+module.exports = { protect, adminOnly };

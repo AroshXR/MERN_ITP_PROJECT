@@ -62,6 +62,7 @@ const applicantRouter = require("./routes/ApplicantRoutes");
 const jobRouter = require("./routes/JobRoutes");
 const supplierRouter = require("./routes/SupplierRoutes");
 const clothCustomizerRouter = require("./routes/ClothCustomizerRoutes");
+const customizerPricesRouter = require("./routes/CustomizerPricesRoutes");
 const uploadRouter = require("./routes/UploadRoutes");
 const paymentRouter = require("./routes/PaymentRoutes");
 const inventoryRouter = require("./routes/InventoryRoutes");
@@ -111,6 +112,7 @@ app.use("/applicant", applicantRouter);
 app.use("/jobs", jobRouter);
 app.use("/supplier", supplierRouter);
 app.use("/cloth-customizer", clothCustomizerRouter);
+app.use("/customizer-prices", customizerPricesRouter);
 app.use("/upload", uploadRouter);
 app.use("/payment", paymentRouter);
 app.use("/inventory", inventoryRouter);
@@ -316,6 +318,7 @@ const connectToMongoDB = async () => {
     require("./models/SupplierModel");
     require("./models/SupplierOrderModel");
     require("./models/ClothCustomizerModel");
+    require("./models/CustomizerPricesModel");
     require("./models/PaymentDetailsModel");
     require("./models/OrderModel");
     
@@ -326,6 +329,10 @@ const connectToMongoDB = async () => {
     require("./models/MaterialInventoryModel");
     
     console.log("All models loaded successfully");
+
+    // Start the return reminder scheduler
+    const { startReminderScheduler } = require('./services/reminderScheduler');
+    startReminderScheduler();
 
     // Initialize Socket.IO and start the server
     initSocket(server);
