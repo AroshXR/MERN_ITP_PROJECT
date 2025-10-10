@@ -21,7 +21,7 @@ const AdminJobManagement = () => {
     requirements: [''],
     responsibilities: [''],
     benefits: [''],
-    salary: { min: '', max: '', currency: 'USD' },
+    salary: { min: '', max: '', currency: 'LKR' },
     deadline: ''
   });
 
@@ -149,12 +149,51 @@ const AdminJobManagement = () => {
     }));
   };
 
+  const handleSalaryChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      salary: {
+        ...prev.salary,
+        [field]: field === 'currency' ? value : value
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       setLoading(true);
       setError('');
+
+      // Ensure numeric min/max for backend validation
+      const salaryData = {
+        min: formData.salary?.min === '' ? null : Number(formData.salary.min),
+        max: formData.salary?.max === '' ? null : Number(formData.salary.max),
+        currency: formData.salary?.currency || 'LKR'
+      };
+
+      // Frontend validation for salary
+      if (salaryData.min == null || isNaN(salaryData.min)) {
+        setLoading(false);
+        setError('Minimum salary is required');
+        return;
+      }
+      if (salaryData.max == null || isNaN(salaryData.max)) {
+        setLoading(false);
+        setError('Maximum salary is required');
+        return;
+      }
+      if (salaryData.min < 0 || salaryData.max < 0) {
+        setLoading(false);
+        setError('Salary values cannot be negative');
+        return;
+      }
+      if (salaryData.max < salaryData.min) {
+        setLoading(false);
+        setError('Maximum salary must be greater than or equal to minimum salary');
+        return;
+      }
 
       const jobData = {
         title: formData.title,
@@ -166,7 +205,7 @@ const AdminJobManagement = () => {
         requirements: formData.requirements.filter(req => req.trim() !== ''),
         responsibilities: formData.responsibilities.filter(resp => resp.trim() !== ''),
         benefits: formData.benefits.filter(benefit => benefit.trim() !== ''),
-        salary: formData.salary,
+        salary: salaryData,
         deadline: formData.deadline,
         status: 'active'
       };
@@ -236,7 +275,7 @@ const AdminJobManagement = () => {
       requirements: job.requirements && job.requirements.length > 0 ? job.requirements : [''],
       responsibilities: job.responsibilities && job.responsibilities.length > 0 ? job.responsibilities : [''],
       benefits: job.benefits && job.benefits.length > 0 ? job.benefits : [''],
-      salary: job.salary || { min: '', max: '', currency: 'USD' },
+      salary: job.salary || { min: '', max: '', currency: 'LKR' },
       deadline: job.deadline || ''
     });
     setShowJobForm(true);
@@ -512,6 +551,60 @@ const AdminJobManagement = () => {
                       rows="4"
                       required
                     />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="salaryMin">Minimum Salary *</label>
+                      <input
+                        type="number"
+                        id="salaryMin"
+                        name="salaryMin"
+                        value={formData.salary.min}
+                        onChange={(e) => handleSalaryChange('min', Number(e.target.value))}
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="salaryMax">Maximum Salary *</label>
+                      <input
+                        type="number"
+                        id="salaryMax"
+                        name="salaryMax"
+                        value={formData.salary.max}
+                        onChange={(e) => handleSalaryChange('max', Number(e.target.value))}
+                        min="0"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="currency">Currency</label>
+                      <select
+                        id="currency"
+                        name="currency"
+                        value={formData.salary.currency}
+                        onChange={(e) => handleSalaryChange('currency', e.target.value)}
+                      >
+                        <option value="LKR">LKR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="INR">INR</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="deadline">Application Deadline</label>
+                      <input
+                        type="date"
+                        id="deadline"
+                        name="deadline"
+                        value={formData.deadline}
+                        onChange={handleInputChange}
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group">
