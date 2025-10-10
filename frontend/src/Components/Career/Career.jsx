@@ -204,7 +204,7 @@ const Career = () => {
             ) : (
               <div className="jobs-grid">
                 {jobOpenings.map((job) => (
-                  <div key={job.id} className="job-card">
+                  <div key={job._id || job.id} className="job-card">
                     <div className="job-header">
                       <h3>{job.title}</h3>
                       <span className="job-type">{job.type}</span>
@@ -213,6 +213,21 @@ const Career = () => {
                       <p><i className="bx bx-building"></i> {job.department}</p>
                       <p><i className="bx bx-map"></i> {job.location}</p>
                       <p><i className="bx bx-time"></i> {job.experience}</p>
+                      {job.salary && (job.salary.min !== undefined || job.salary.max !== undefined) && (
+                        <p>
+                          <i className="bx bx-money"></i>{' '}
+                          {job.salary.currency || 'LKR'}{' '}
+                          {job.salary.min !== undefined ? job.salary.min : '-'}
+                          {' - '}
+                          {job.salary.max !== undefined ? job.salary.max : '-'}
+                        </p>
+                      )}
+                      {job.deadline && (
+                        <p>
+                          <i className="bx bx-calendar"></i>{' '}
+                          Apply before: {new Date(job.deadline).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                     <p className="job-description">{job.description}</p>
                     <div className="job-requirements">
