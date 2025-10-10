@@ -405,6 +405,22 @@ const ClothingInventoryManagement = () => {
           </div>
         </div>
 
+        {/* Report Toolbar */}
+        <div className="report-toolbar" style={{ position: 'sticky', top: 64, zIndex: 5, background: '#fff', padding: '8px 0', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button type="button" className={`btn ${reportMode ? 'btn-secondary' : 'btn-primary'}`} onClick={() => { setReportMode(v => !v); setSelectedIds([]); setReportData(null); setReportError(''); }}>
+            {reportMode ? 'Exit Report Mode' : 'Report Mode'}
+          </button>
+          {reportMode && (
+            <>
+              <button type="button" className="btn btn-secondary" onClick={selectAllInView}>Select All (visible)</button>
+              <button type="button" className="btn btn-primary" onClick={generateReport} disabled={reportLoading}>
+                {reportLoading ? 'Generating...' : `Generate Report (${selectedIds.length} selected)`}
+              </button>
+              {reportError && <span style={{ color: '#b91c1c' }}>{reportError}</span>}
+            </>
+          )}
+        </div>
+
         {/* Add/Edit Form */}
         {showAddForm && (
           <div className="inventory-form-overlay">

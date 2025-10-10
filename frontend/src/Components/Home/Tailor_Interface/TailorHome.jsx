@@ -21,7 +21,7 @@ function Tailor_Home() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
   const [latestStatuses, setLatestStatuses] = useState({}); // key: clothCustomizerId -> latest status entry
-  const [updatingStatusId, setUpdatingStatusId] = useState('');
+  const [updatingAssignmentId, setUpdatingAssignmentId] = useState('');
 
   // Custom Orders (new): assigned to me via /api/custom-orders/assigned
   const [customOrders, setCustomOrders] = useState([]);
@@ -34,10 +34,7 @@ function Tailor_Home() {
   const [ccLoading, setCcLoading] = useState(false);
   const [ccError, setCcError] = useState('');
 
-  const allowedTransitions = useMemo(() => ({
-    // free-form for now; tailor can set any of these except 'assigned'
-    options: ['accepted','in_progress','completed','delivered','cancelled'],
-  }), []);
+  // removed per request: tailor updates assignment status only
 
   // design/color handlers removed (unused)
 
@@ -50,8 +47,8 @@ function Tailor_Home() {
       await axios.patch(`${API_BASE_URL}/api/custom-orders/${orderId}/status`, { status: nextStatus }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Refresh list after update
-      const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned`, {
+      // Refresh list after update (new system endpoint)
+      const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCustomOrders(res.data?.data || []);
@@ -59,6 +56,28 @@ function Tailor_Home() {
       alert('Failed to update order status');
     } finally {
       setUpdatingOrderId('');
+    }
+  };
+
+  // Update status on OrderAssignment (tailor-controlled)
+  const updateAssignmentStatus = async (assignmentId, next) => {
+    try {
+      if (!next || !assignmentId) return;
+      setUpdatingAssignmentId(assignmentId);
+      const token = getToken();
+      await axios.patch(`${API_BASE_URL}/api/order-assignments/${assignmentId}/status`, { status: next }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // reflect in local assignments list
+      setAssignments(prev => prev.map(x => {
+        if ((x?.assignment?._id || x?._id) !== assignmentId) return x;
+        if (x.assignment) return { ...x, assignment: { ...x.assignment, status: next } };
+        return { ...x, status: next };
+      }));
+    } catch (e) {
+      alert('Failed to update assignment status');
+    } finally {
+      setUpdatingAssignmentId('');
     }
   };
 
@@ -84,7 +103,7 @@ function Tailor_Home() {
           setAssignments([]);
           return;
         }
-        const res = await axios.get(`${API_BASE_URL}/api/assignments/mine`, {
+        const res = await axios.get(`${API_BASE_URL}/api/order-assignments/mine`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAssignments(res.data?.data || []);
@@ -105,7 +124,7 @@ function Tailor_Home() {
         setCustomOrdersError('');
         const token = getToken();
         if (!token) { setCustomOrders([]); return; }
-        const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned`, {
+        const res = await axios.get(`${API_BASE_URL}/api/custom-orders/assigned/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCustomOrders(res.data?.data || []);
@@ -137,27 +156,7 @@ function Tailor_Home() {
     run();
   }, [assignments, API_BASE_URL, getToken]);
 
-  const submitStatus = async (clothCustomizerId, status) => {
-    try {
-      if (!status) return;
-      setUpdatingStatusId(clothCustomizerId);
-      const token = getToken();
-      await axios.post(`${API_BASE_URL}/api/order-status`, {
-        clothCustomizerId,
-        status,
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      // refresh latest
-      const res = await axios.get(`${API_BASE_URL}/api/order-status/latest`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { ids: clothCustomizerId }
-      });
-      setLatestStatuses(prev => ({ ...prev, ...(res.data?.data || {}) }));
-    } catch (e) {
-      alert('Failed to update status');
-    } finally {
-      setUpdatingStatusId('');
-    }
-  };
+  // removed per request: direct order status updates from tailor UI
 
   return (
     <div className="tailor-container">
@@ -190,15 +189,31 @@ function Tailor_Home() {
               ) : (
                 <div style={{ display: 'grid', gap: 8 }}>
                   {assignments.map((a) => {
-                    const o = a.clothCustomizerId || {};
+                    // Support both shapes:
+                    // - New: { assignment, order }
+                    // - Legacy: { clothCustomizerId, ... }
+                    const o = a?.order || a?.clothCustomizerId || {};
+                    const aid = a?.assignment?._id || a?._id;
+                    const astatus = a?.assignment?.status || a?.status || '—';
                     return (
                     <div key={a._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                         <div style={{ display: 'grid', gap: 4 }}>
                           <div><strong>Assignment:</strong> {a._id}</div>
-                          <div><strong>Order:</strong> {o?._id || '—'}</div>
-                          <div><strong>Type:</strong> {o?.clothingType || '—'}</div>
-                          <div><strong>Size/Color:</strong> {o?.size || '—'} / {o?.color || '—'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span><strong>Order:</strong> {o?._id || '—'}</span>
+                            {o?._id && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  try { navigator.clipboard.writeText(o._id); alert('Order ID copied'); } catch (e) { alert('Copy failed'); }
+                                }}
+                                style={{ padding: '4px 8px', fontSize: 12 }}
+                              >
+                                Copy ID
+                              </button>
+                            )}
+                          </div>
                           {typeof o?.quantity === 'number' && (
                             <div><strong>Quantity:</strong> {o.quantity}</div>
                           )}
@@ -208,17 +223,24 @@ function Tailor_Home() {
                               return entry?.status || '—';
                             })()}
                           </div>
+                          <div>
+                            <strong>Assignment Status:</strong> {astatus}
+                          </div>
                         </div>
                         {/* If you store previews in customizer, show them here if available */}
                       </div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                        <select defaultValue="" onChange={(e) => submitStatus(o?._id, e.target.value)} disabled={updatingStatusId === o?._id}>
-                          <option value="" disabled>Update status...</option>
-                          {allowedTransitions.options.map(s => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
-                        {updatingStatusId === o?._id && <span>Updating...</span>}
+                        {aid && (
+                          <>
+                            <select defaultValue="" onChange={(e) => updateAssignmentStatus(aid, e.target.value)} disabled={updatingAssignmentId === aid}>
+                              <option value="" disabled>Update assignment status...</option>
+                              {['assigned','accepted','in_progress','completed','rejected'].map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                            {updatingAssignmentId === aid && <span>Updating...</span>}
+                          </>
+                        )}
                       </div>
                     </div>
                   );})}
@@ -227,34 +249,7 @@ function Tailor_Home() {
               )}
             </div>
 
-            {/* ClothCustomizer sessions (direct) */}
-            <div style={{ marginTop: 24 }}>
-              <h2 style={{ margin: '12px 0' }}>My ClothCustomizer Sessions</h2>
-              {ccError && <div style={{ color: 'red', marginBottom: 8 }}>{ccError}</div>}
-              {ccLoading ? (
-                <div>Loading customizer data...</div>
-              ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {ccItems.map((c) => (
-                    <div key={c._id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
-                      <div style={{ display: 'grid', gap: 4 }}>
-                        <div><strong>ID:</strong> {c._id}</div>
-                        <div><strong>Nickname:</strong> {c.nickname || '—'}</div>
-                        <div><strong>Type/Size/Color:</strong> {(c.clothingType||'—')} • {(c.size||'—')} • {(c.color||'—')}</div>
-                        {typeof c.quantity === 'number' && (
-                          <div><strong>Quantity:</strong> {c.quantity}</div>
-                        )}
-                        {typeof c.totalPrice === 'number' && (
-                          <div><strong>Total Price:</strong> ${c.totalPrice.toFixed(2)}</div>
-                        )}
-                        <div><strong>Created:</strong> {c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</div>
-                      </div>
-                    </div>
-                  ))}
-                  {ccItems.length === 0 && <div>No customizer sessions found.</div>}
-                </div>
-              )}
-            </div>
+            {/* ClothCustomizer sessions panel removed as requested */}
           </div>
 
           {/* Left Column: Clothing Type + T-Shirt Preview */}
