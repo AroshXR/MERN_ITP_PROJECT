@@ -258,7 +258,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 30px;
 }
 
 .job-form-modal {
@@ -592,4 +592,40 @@
   color: #c53030;
   font-size: 1.1rem;
   margin: 0;
+}
+
+.jobs-toolbar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+}
+
+.job-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #888;
+  font-size: 1.1rem;
+}
+
+.job-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 36px; /* left padding for icon */
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.job-search-input:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
 }
