@@ -226,25 +226,30 @@
   gap: 6px;
 }
 
-.edit-btn {
-  background: #000000;
-  color: white;
-}
+  .edit-btn,
+  .delete-btn {
+    background: #000000;
+    color: #ffffff;
+  }
 
-.edit-btn:hover {
-  background: #333333;
-  transform: translateY(-1px);
-}
+  .edit-btn:hover,
+  .delete-btn:hover {
+    background: #333333;
+    transform: translateY(-1px);
+  }
 
-.delete-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #c82333;
-  transform: translateY(-1px);
-}
+  /* Force override with higher specificity in the job actions area */
+  .job-actions .edit-btn,
+  .job-actions .delete-btn {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+  }
+  .job-actions .edit-btn:hover,
+  .job-actions .delete-btn:hover {
+    background-color: #333333 !important;
+    border-color: #333333 !important;
+  }
 
 /* Job Form Modal */
 .job-form-overlay {
