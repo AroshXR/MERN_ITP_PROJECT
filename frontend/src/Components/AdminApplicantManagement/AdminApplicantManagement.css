@@ -23,6 +23,14 @@
   color: #fff;
 }
 
+.admin-applicants__subtitle {
+  margin: 6px 0 0 0;
+  color: #e5e7eb;
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
 .header-nav-actions {
   display: flex;
   align-items: center;

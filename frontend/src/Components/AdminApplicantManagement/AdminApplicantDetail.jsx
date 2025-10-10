@@ -34,6 +34,102 @@ export default function AdminApplicantDetail() {
     }
   };
 
+  const loadJsPDF = async () => {
+    if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+    return window.jspdf.jsPDF;
+  };
+
+  const downloadApplicantPDF = async () => {
+    if (!applicant) return;
+    try {
+      const JS = await loadJsPDF();
+      const doc = new JS({ unit: 'pt', format: 'a4' });
+
+      const margin = 40;
+      let y = margin;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const contentWidth = pageWidth - margin * 2;
+
+      // Header: Brand title and timestamp
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text('Klassy Shirts - Applicant Details', pageWidth / 2, y, { align: 'center' });
+      y += 20;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, y, { align: 'center' });
+      y += 14;
+      // Divider line
+      doc.setDrawColor(200);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 16;
+
+      const fields = [
+        ['ID', applicant._id || applicant.id || ''],
+        ['Name', applicant.name || ''],
+        ['Email', applicant.gmail || ''],
+        ['Phone', applicant.phone || ''],
+        ['Age', applicant.age || ''],
+        ['Address', applicant.address || ''],
+        ['Applied At', applicant.appliedAt ? new Date(applicant.appliedAt).toLocaleString() : ''],
+        ['Status', applicant.status || ''],
+        ['Position', applicant.position || ''],
+        ['Department', applicant.department || ''],
+        ['Experience', applicant.experience || ''],
+        ['Education', applicant.education || ''],
+        ['Skills', Array.isArray(applicant.skills) ? applicant.skills.join(', ') : (applicant.skills || '')],
+        ['Cover Letter', applicant.coverLetter || ''],
+        ['Resume File', applicant?.resume?.filename || ''],
+        ['Interview Scheduled', applicant?.interview?.scheduledAt ? new Date(applicant.interview.scheduledAt).toLocaleString() : ''],
+        ['Interview Mode', applicant?.interview?.mode || ''],
+        ['Interview Location', applicant?.interview?.location || ''],
+        ['Interview Link', applicant?.interview?.meetingLink || ''],
+        ['Interview Notes', applicant?.interview?.notes || ''],
+      ];
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+
+      fields.forEach(([key, val]) => {
+        const label = `${key}: `;
+        const text = String(val ?? '');
+        const labelWidth = doc.getTextWidth(label);
+        const lines = doc.splitTextToSize(text, contentWidth - labelWidth);
+
+        if (y > doc.internal.pageSize.getHeight() - margin - 40) {
+          doc.addPage();
+          y = margin;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, margin, y);
+        doc.setFont('helvetica', 'normal');
+        if (Array.isArray(lines)) {
+          // Draw value starting after label
+          doc.text(lines, margin + labelWidth, y);
+          y += (lines.length * 16);
+        } else {
+          doc.text(String(lines), margin + labelWidth, y);
+          y += 16;
+        }
+      });
+
+      const filename = `applicant_${(applicant._id || applicant.id || 'details')}.pdf`;
+      doc.save(filename);
+    } catch (e) {
+      console.error('Failed to generate PDF:', e);
+      alert('Failed to generate PDF. Please check your network connection and try again.');
+    }
+  };
+
   const fetchNotifications = async () => {
     if (!applicant?.gmail) return;
     try {
@@ -185,7 +281,13 @@ export default function AdminApplicantDetail() {
   return (
     <div className="admin-applicants detail">
       <div className="admin-applicants__header">
-        <h2>Applicant Details</h2>
+        <h2>Klassy Shirts - Applicant Details</h2>
+        {applicant && (
+          <p className="admin-applicants__subtitle">
+            {applicant.name || 'Applicant'}
+            {applicant.position ? ` · ${applicant.position}` : ''}
+          </p>
+        )}
         <div className="header-nav-actions">
           <button
             type="button"
@@ -242,7 +344,12 @@ export default function AdminApplicantDetail() {
             <div className="detail__row"><span>Skills</span><b>{applicant.skills}</b></div>
             <div className="detail__row column"><span>Cover Letter</span><p>{applicant.coverLetter}</p></div>
             <div className="detail__row"><span>Resume</span>{resumeUrl ? <a href={resumeUrl} target="_blank" rel="noreferrer" className="btn">Download</a> : <b>-</b>}</div>
-            <div className="detail__row"><span>Full Details</span><button className="btn btn--download" onClick={downloadApplicantDetails}>Download CSV</button></div>
+            <div className="detail__row"><span>Full Details</span>
+              <div className="actions">
+                <button className="btn btn--download" onClick={downloadApplicantDetails}>Download CSV</button>
+                <button className="btn btn--pdf" onClick={downloadApplicantPDF}>Download PDF</button>
+              </div>
+            </div>
           </div>
 
           <div className="detail__card">

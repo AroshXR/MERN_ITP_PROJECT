@@ -400,13 +400,13 @@
 }
 
 .edit-btn,
-.delete-btn {
+.delete-btn,
+.download-btn {
   padding: 11px 22px;
   border: none;
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 600;
-  cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: inline-flex;
   align-items: center;
@@ -424,15 +424,26 @@
   box-shadow: 0 16px 24px rgba(0, 0, 0, 0.25);
 }
 
+.download-btn {
+  background: linear-gradient(135deg, #000000 0%, #1f1f1f 100%);
+  color: white;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.25);
+}
+
 .delete-btn {
   background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
-  box-shadow: 0 10px 20px rgba(220, 53, 69, 0.35);
+  box-shadow: 0 10px 20px rgba(231, 220, 221, 0.35);
 }
 
 .delete-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 24px rgba(220, 53, 69, 0.4);
+  box-shadow: 0 16px 24px rgba(220, 205, 207, 0.4);
 }
 
 .loading {
@@ -481,8 +492,8 @@
   }
 
   .edit-btn,
-  .delete-btn {
-    width: 100%;
+  .delete-btn,
+  .download-btn {    width: 100%;
     justify-content: center;
   }
 }

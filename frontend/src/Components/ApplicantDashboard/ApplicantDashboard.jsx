@@ -20,6 +20,97 @@ const ApplicantDashboard = () => {
   const [searchEmail, setSearchEmail] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Lazy-load jsPDF from CDN when needed
+  const loadJsPDF = async () => {
+    if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+    return window.jspdf.jsPDF;
+  };
+
+  const downloadApplicationPDF = async (application) => {
+    try {
+      const JS = await loadJsPDF();
+      const doc = new JS({ unit: 'pt', format: 'a4' });
+
+      const margin = 40;
+      let y = margin;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const contentWidth = pageWidth - margin * 2;
+
+      // Header: Brand title and timestamp
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text('Klassy Shirts - My Application', pageWidth / 2, y, { align: 'center' });
+      y += 20;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.text(`Generated: ${new Date().toLocaleString()}` , pageWidth / 2, y, { align: 'center' });
+      y += 14;
+      doc.setDrawColor(200);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 16;
+
+      const skillsText = Array.isArray(application.skills)
+        ? application.skills.join(', ')
+        : (application.skills || '');
+
+      const fields = [
+        ['ID', application._id || application.id || ''],
+        ['Name', application.name || ''],
+        ['Email', application.gmail || ''],
+        ['Phone', application.phone || ''],
+        ['Age', application.age || ''],
+        ['Address', application.address || ''],
+        ['Applied At', application.appliedAt ? new Date(application.appliedAt).toLocaleString() : ''],
+        ['Status', application.status || ''],
+        ['Position', application.position || ''],
+        ['Department', application.department || ''],
+        ['Experience', application.experience || ''],
+        ['Education', application.education || ''],
+        ['Skills', skillsText],
+        ['Cover Letter', application.coverLetter || ''],
+      ];
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      fields.forEach(([key, val]) => {
+        const label = `${key}: `;
+        const text = String(val ?? '');
+        const labelWidth = doc.getTextWidth(label);
+        const lines = doc.splitTextToSize(text, contentWidth - labelWidth);
+
+        if (y > doc.internal.pageSize.getHeight() - margin - 40) {
+          doc.addPage();
+          y = margin;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, margin, y);
+        doc.setFont('helvetica', 'normal');
+        if (Array.isArray(lines)) {
+          doc.text(lines, margin + labelWidth, y);
+          y += (lines.length * 16);
+        } else {
+          doc.text(String(lines), margin + labelWidth, y);
+          y += 16;
+        }
+      });
+
+      const filename = `my_application_${(application._id || application.id || 'details')}.pdf`;
+      doc.save(filename);
+    } catch (e) {
+      console.error('Failed to generate PDF:', e);
+      setError('Failed to generate PDF. Please try again.');
+    }
+  };
+
   const statusSummary = useMemo(() => {
     if (!applications.length) {
       return { total: 0, statuses: [] };
@@ -482,6 +573,13 @@ const ApplicantDashboard = () => {
                         title={isApproved ? 'Deletion is disabled after approval' : 'Delete this application'}
                       >
                         <i className="bx bx-trash"></i> Delete
+                      </button>
+                      <button
+                        onClick={() => downloadApplicationPDF(application)}
+                        className="download-btn"
+                        title="Download a PDF copy of this application"
+                      >
+                        <i className="bx bxs-file-pdf"></i> Download PDF
                       </button>
                     </div>
                   </div>
