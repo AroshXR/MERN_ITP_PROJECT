@@ -140,6 +140,48 @@ export default function AdminApplicantDetail() {
 
   const resumeUrl = applicant?.resume?.filename ? `${API_BASE_URL}/uploads/resumes/${applicant.resume.filename}` : '';
 
+  const downloadApplicantDetails = () => {
+    if (!applicant) return;
+    const entries = [
+      ['ID', applicant._id || applicant.id || ''],
+      ['Name', applicant.name || ''],
+      ['Email', applicant.gmail || ''],
+      ['Phone', applicant.phone || ''],
+      ['Age', applicant.age || ''],
+      ['Address', applicant.address || ''],
+      ['Applied At', applicant.appliedAt ? new Date(applicant.appliedAt).toLocaleString() : ''],
+      ['Status', applicant.status || ''],
+      ['Position', applicant.position || ''],
+      ['Department', applicant.department || ''],
+      ['Experience', applicant.experience || ''],
+      ['Education', applicant.education || ''],
+      ['Skills', Array.isArray(applicant.skills) ? applicant.skills.join(', ') : (applicant.skills || '')],
+      ['Cover Letter', applicant.coverLetter || ''],
+      ['Resume File', applicant?.resume?.filename || ''],
+      ['Interview Scheduled', applicant?.interview?.scheduledAt ? new Date(applicant.interview.scheduledAt).toLocaleString() : ''],
+      ['Interview Mode', applicant?.interview?.mode || ''],
+      ['Interview Location', applicant?.interview?.location || ''],
+      ['Interview Link', applicant?.interview?.meetingLink || ''],
+      ['Interview Notes', applicant?.interview?.notes || ''],
+    ];
+
+    const escape = (val) => {
+      const s = String(val ?? '').replace(/"/g, '""');
+      return `"${s}` + `"`;
+    };
+
+    const csv = entries.map(([k, v]) => `${escape(k)},${escape(v)}`).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `applicant_${(applicant._id || applicant.id || 'details')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="admin-applicants detail">
       <div className="admin-applicants__header">
@@ -200,6 +242,7 @@ export default function AdminApplicantDetail() {
             <div className="detail__row"><span>Skills</span><b>{applicant.skills}</b></div>
             <div className="detail__row column"><span>Cover Letter</span><p>{applicant.coverLetter}</p></div>
             <div className="detail__row"><span>Resume</span>{resumeUrl ? <a href={resumeUrl} target="_blank" rel="noreferrer" className="btn">Download</a> : <b>-</b>}</div>
+            <div className="detail__row"><span>Full Details</span><button className="btn btn--download" onClick={downloadApplicantDetails}>Download CSV</button></div>
           </div>
 
           <div className="detail__card">
@@ -229,7 +272,7 @@ export default function AdminApplicantDetail() {
             {applicant.interview?.notes && (
               <div className="detail__row column"><span>Notes</span><p>{applicant.interview.notes}</p></div>
             )}
-            <button className="btn" onClick={() => navigate('/admin-applicants')}>Back to Management</button>
+            <button className="btn btn--backto" onClick={() => navigate('/admin-applicants')}>Back to Management</button>
           </div>
         </div>
       )}

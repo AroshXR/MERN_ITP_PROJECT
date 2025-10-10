@@ -179,6 +179,8 @@
   background: linear-gradient(180deg, #22c55e, #16a34a);
   color: #fff;
   border-color: #15803d;
+  width: 100px;
+  height:30px;
 }
 .btn--approve:hover {
   background: #15803d;
@@ -190,16 +192,25 @@
   background: linear-gradient(180deg, #ef4444, #dc2626);
   color: #fff;
   border-color: #b91c1c;
+  width: 100px;
+  height:30px;
 }
 .btn--reject:hover {
   background: #b91c1c;
   border-color: #991b1b;
 }
 
+.btn--backto{
+  width: 200px;
+  height:50px;
+
+}
 .btn--schedule {
   background: linear-gradient(180deg, #9aa3ab, #6b7280);
   color: #fff;
   border-color: #4b5563;
+  width: 100px;
+  height:30px;
 }
 .btn--schedule:hover {
   background: #4b5563;
